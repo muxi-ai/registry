@@ -41,14 +41,14 @@ muxi push agent summarizer.yaml --tag 1.0.0
 ```
 
 * Requires login.
-* Defaults to `muxihub.com`, override with `--registry`.
+* Defaults to `registry.muxihub.com`, override with `--registry`.
 
 ### `muxi pull <schema-ref>`
 
 Download a schema from a registry or GitHub.
 
 ```bash
-muxi pull muxihub.com/myorg/support-bot:1.0.0
+muxi pull myorg/support-bot:1.0.0
 muxi pull github.com/user/repo
 ```
 
