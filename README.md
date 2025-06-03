@@ -100,3 +100,6 @@ View schema statistics (installs, downloads, etc.).
 * `POST /schemas/:type`
 * `DELETE /schemas/:org/:name/:tag`
 * `GET /schemas/search`
+
+## NOTE:
+This should also serve as an a2a registry.
