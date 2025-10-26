@@ -1,0 +1,35 @@
+{
+  "name": "automazeio/website",
+  "description": "Automaze Website",
+  "type": "project",
+  "require": {
+    "ext-curl": "*",
+    "ext-dom": "*",
+    "ext-fileinfo": "*",
+    "ext-imagick": "*",
+    "ext-libxml": "*",
+    "ext-memcached": "*",
+    "ext-mysqli": "*",
+    "ext-openssl": "*",
+    "ext-pgsql": "*",
+    "ext-simplexml": "*",
+    "ext-sqlite3": "*",
+    "ext-zip": "*",
+    "ext-zlib": "*",
+    "vlucas/phpdotenv": "^5.5",
+    "dragonmantank/cron-expression": "^3.3",
+    "theiconic/name-parser": "^1.2",
+    "sentry/sentry": "^4.9",
+    "twilio/sdk": "^5.0",
+    "symfony/http-client": "^7.2",
+    "nyholm/psr7": "^1.8"
+  },
+  "config": {
+    "allow-plugins": {
+      "php-http/discovery": true
+    }
+  },
+  "require-dev": {
+    "squizlabs/php_codesniffer": "^3.10"
+  }
+}
