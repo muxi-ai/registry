@@ -26,4 +26,25 @@ node_modules/
 
 # Task files
 tasks.json
-tasks/ 
+tasks/
+
+# GitHub App credentials (NEVER COMMIT THESE!)
+*.pem
+*.private-key.pem
+config/github-app-private-key.pem
+muxi-registry.*.private-key.pem
+
+# Database
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# PHP vendor
+vendor/
+
+# Secrets & Config
+config/secrets.php
+config/github-app.php
+credentials.json
+.env.local 
