@@ -130,12 +130,10 @@ CREATE INDEX idx_tokens_user ON tokens(user_id);
 CREATE INDEX idx_tokens_hash ON tokens(token_hash);
 
 -- ============================================
--- SEARCH OPTIMIZATION (Optional - for FTS)
+-- SEARCH OPTIMIZATION (FTS5 + Spellfix1)
 -- ============================================
 
--- Full-text search virtual table (if needed for better search)
--- Uncomment if you want to use SQLite FTS5
-/*
+-- Full-text search virtual table for better search performance
 CREATE VIRTUAL TABLE formations_fts USING fts5(
   name,
   description,
@@ -161,6 +159,116 @@ END;
 CREATE TRIGGER formations_fts_delete AFTER DELETE ON formations BEGIN
   DELETE FROM formations_fts WHERE rowid = old.id;
 END;
+
+-- ============================================
+-- SPELLFIX1 FOR FUZZY SEARCH
+-- ============================================
+-- Spellfix1 virtual table for handling typos and misspellings
+-- NOTE: Requires SQLite to be compiled with SQLITE_ENABLE_FTS5 and spellfix1 extension
+-- To enable: You may need to load the extension with: SELECT load_extension('spellfix1');
+
+CREATE VIRTUAL TABLE IF NOT EXISTS formations_spellfix USING spellfix1;
+
+-- Populate spellfix with formation names and important terms
+-- This should be done after inserting formations
+-- Example trigger to auto-populate:
+CREATE TRIGGER formations_spellfix_insert AFTER INSERT ON formations BEGIN
+  INSERT INTO formations_spellfix(word) VALUES (new.name);
+END;
+
+CREATE TRIGGER formations_spellfix_update AFTER UPDATE OF name ON formations BEGIN
+  DELETE FROM formations_spellfix WHERE word = old.name;
+  INSERT INTO formations_spellfix(word) VALUES (new.name);
+END;
+
+CREATE TRIGGER formations_spellfix_delete AFTER DELETE ON formations BEGIN
+  DELETE FROM formations_spellfix WHERE word = old.name;
+END;
+
+-- ============================================
+-- FUZZY SEARCH EXAMPLE QUERIES
+-- ============================================
+
+/*
+EXAMPLE 1: Basic typo correction with fuzzy search
+------------------------------------------------------
+User searches for "custmer-suport" (with typos)
+
+Step 1: Get spelling suggestions using Spellfix1
+*/
+-- SELECT word FROM formations_spellfix 
+-- WHERE word MATCH 'custmer-suport' 
+-- AND top=3
+-- ORDER BY score;
+-- Result: 'customer-support', 'customer-service', etc.
+
+/*
+Step 2: Use corrected spelling in FTS5 search
+*/
+-- SELECT f.*, rank 
+-- FROM formations_fts 
+-- JOIN formations f ON f.id = formations_fts.rowid
+-- WHERE formations_fts MATCH 'customer-support'
+-- ORDER BY rank;
+
+/*
+EXAMPLE 2: Combined fuzzy search with fallback
+------------------------------------------------------
+Automatically correct typos and search in one query
+*/
+-- WITH corrected_terms AS (
+--   SELECT word, score 
+--   FROM formations_spellfix 
+--   WHERE word MATCH 'custmer' AND top=1
+-- )
+-- SELECT DISTINCT f.id, f.name, f.description, f.github_stars
+-- FROM formations f
+-- LEFT JOIN formations_fts fts ON fts.rowid = f.id
+-- WHERE fts MATCH (SELECT word FROM corrected_terms)
+--    OR f.name LIKE '%' || (SELECT word FROM corrected_terms) || '%'
+-- ORDER BY f.github_stars DESC, f.total_downloads DESC
+-- LIMIT 20;
+
+/*
+EXAMPLE 3: Multi-word fuzzy search
+------------------------------------------------------
+Search for "ai chatbut asistant" (multiple typos)
+*/
+-- WITH RECURSIVE split_terms(term, rest) AS (
+--   SELECT '', 'ai chatbut asistant' || ' '
+--   UNION ALL
+--   SELECT 
+--     substr(rest, 1, instr(rest, ' ') - 1),
+--     substr(rest, instr(rest, ' ') + 1)
+--   FROM split_terms WHERE rest != ''
+-- ),
+-- corrected AS (
+--   SELECT GROUP_CONCAT(
+--     (SELECT word FROM formations_spellfix 
+--      WHERE word MATCH split_terms.term AND top=1), 
+--     ' '
+--   ) as corrected_query
+--   FROM split_terms WHERE term != ''
+-- )
+-- SELECT f.*, rank
+-- FROM formations_fts fts
+-- JOIN formations f ON f.id = fts.rowid
+-- WHERE fts MATCH (SELECT corrected_query FROM corrected)
+-- ORDER BY rank
+-- LIMIT 20;
+
+/*
+PERFORMANCE TIPS:
+-----------------
+1. Regularly rebuild spellfix index for better suggestions:
+   DELETE FROM formations_spellfix; 
+   INSERT INTO formations_spellfix(word) SELECT DISTINCT name FROM formations;
+
+2. Add common search terms manually:
+   INSERT INTO formations_spellfix(word) VALUES ('support'), ('customer'), ('automation');
+
+3. For very large datasets, consider using editdist3 parameter:
+   SELECT word FROM formations_spellfix WHERE word MATCH 'custmer' AND top=5 AND editdist3=200;
 */
 
 -- ============================================
