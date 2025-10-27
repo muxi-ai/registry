@@ -1,83 +1,146 @@
 # GitHub App Authentication Flow
 
-**MUXI Registry - "Check First" Approach**
+**MUXI Registry - OAuth Scope Approach**
 
 ---
 
 ## 🎯 Core Concept
 
-GitHub Apps have **two separate flows**:
+We use a **GitHub App with minimal permissions** + **OAuth scopes for repo access**.
 
-1. **Installation** - Grants repository permissions (done ONCE)
-2. **OAuth** - Authenticates user identity (done EVERY login)
+**Why this approach?**
+- ✅ No repo selection during installation (users don't need existing repos)
+- ✅ OAuth token grants permission to create/manage repos
+- ✅ Clean user experience (no confusing "select repositories" screen)
+- ✅ More trustworthy than legacy OAuth Apps
 
-We use a **"Check First"** approach to determine which flow to use.
+**Two components:**
+1. **GitHub App Installation** - Identity only (done ONCE)
+2. **OAuth with Scopes** - Grants repo creation powers (done EVERY login)
 
 ---
 
-## 🔑 The Two URLs
+## ⚙️ GitHub App Settings
 
-### Installation URL
+**CRITICAL:** Your GitHub App should have **minimal permissions**:
+
+### Repository Permissions
+```
+✅ Metadata: Read-only (automatic, can't remove)
+❌ Contents: No access (REMOVE THIS!)
+❌ Everything else: No access
+```
+
+### Account Permissions
+```
+✅ Email addresses: Read-only
+❌ Everything else: No access
+```
+
+**Important:** Even with minimal permissions (just Metadata), GitHub **will still ask users to select repositories** during installation. This is normal behavior because Metadata is a repository-level permission.
+
+**Guidance for users:**
+```
+"You'll be asked to grant repository access.
+Select 'All repositories' or any repository - we only 
+read public metadata (repo names, stars). Your code 
+remains private. We use OAuth to create NEW repos when 
+you publish formations."
+```
+
+---
+
+## 🔑 The Installation + OAuth Flow
+
+### Step 1: Installation URL
 ```
 https://github.com/apps/muxi-registry/installations/new
 ```
 
 **What it does:**
 - ✅ Installs the app on user's account
-- ✅ User selects which repositories to grant access
-- ✅ Grants permissions (read/write code, metadata, etc.)
-- ✅ Also authenticates the user
-- ✅ Redirects to callback with **BOTH** `code` AND `installation_id`
+- ✅ User selects which repositories to grant access (even with minimal permissions)
+- ✅ Redirects to callback with `code` + `installation_id`
 
-**Use when:**
-- User has never installed the app
-- User's installation was deleted/revoked
-- First-time users
+**GitHub shows:**
+```
+Install MUXI Registry
+
+Repository access:
+○ All repositories (recommended)
+● Only select repositories
+
+Permissions:
+  ✓ Read access to metadata
+  ✓ Read your email address
+
+[Install]  [Cancel]
+```
+
+**Note:** Repository selection is required even though we only have "Metadata: Read-only" permission. This is GitHub's standard behavior for apps with any repository-level permission.
 
 ---
 
-### OAuth URL
+### Step 2: OAuth with Scopes
 ```
-https://github.com/login/oauth/authorize?client_id=YOUR_CLIENT_ID&redirect_uri=...&scope=user:email
+https://github.com/login/oauth/authorize?
+  client_id=YOUR_CLIENT_ID
+  &redirect_uri=YOUR_CALLBACK_URL
+  &scope=public_repo user:email
+  &state=RANDOM_STATE
 ```
+
+**OAuth Scopes (CRITICAL):**
+- `public_repo` - Create and manage public repositories
+- `user:email` - Read user email address
 
 **What it does:**
-- ✅ Authenticates user identity only
-- ✅ Quick authorization screen (already installed)
-- ✅ Redirects to callback with **ONLY** `code` (no installation_id)
+- ✅ Grants permission to create/manage repos
+- ✅ Returns OAuth token with repo creation powers
+- ✅ Redirects to callback with `code` (may include `installation_id` on first install)
 
-**Use when:**
-- User has already installed the app
-- We have their `installation_id` in database
-- Returning users
+**GitHub shows:**
+```
+Authorize MUXI Registry
+
+MUXI Registry by @muxi-ai would like permission to:
+  ✓ Create public repositories
+  ✓ Commit code and create releases
+  ✓ Read your email address
+
+[Authorize]  [Cancel]
+```
+
+**Use `repo` scope instead of `public_repo` if you need private repo support**
 
 ---
 
-## 🔄 "Check First" Flow
+## 🔄 Simplified Flow
+
+**Key insight:** Always use the **Installation URL** - GitHub handles everything!
 
 ### User Journey
 
 ```
 1. User clicks "Login with GitHub"
    ↓
-2. Backend checks database:
-   "Does this user exist with installation_id?"
+2. Redirect to: Installation URL
    ↓
-   ├─ NO (new user OR no installation)
-   │   ├─ Redirect to: Installation URL
-   │   ├─ GitHub shows: "Install MUXI Registry"
-   │   │  - Grant access to repositories
-   │   │  - Review permissions
+3. GitHub determines:
+   ├─ NOT INSTALLED?
+   │   ├─ Show: "Install MUXI Registry" (minimal permissions)
    │   ├─ User clicks "Install"
-   │   └─ Callback receives: code + installation_id
+   │   ├─ THEN show: "Authorize MUXI Registry" (with repo scopes)
+   │   ├─ User clicks "Authorize"
+   │   └─ Callback: code + installation_id
    │
-   └─ YES (returning user with installation)
-       ├─ Redirect to: OAuth URL
-       ├─ GitHub shows: "Authorize MUXI Registry"
-       │  - Quick confirmation screen
+   └─ ALREADY INSTALLED?
+       ├─ Show: "Authorize MUXI Registry" (just OAuth with scopes)
        ├─ User clicks "Authorize"
-       └─ Callback receives: code only
+       └─ Callback: code + installation_id
 ```
+
+**No "check first" needed!** GitHub handles it automatically.
 
 ---
 
@@ -87,82 +150,42 @@ https://github.com/login/oauth/authorize?client_id=YOUR_CLIENT_ID&redirect_uri=.
 
 **Route:** `GET /auth/login`
 
-**Logic:**
+**Simple approach - always use installation URL:**
 
 ```php
 public function login(): void
 {
-    // Check if user is already authenticated
-    if ($existingUser = $this->getAuthenticatedUser()) {
-        // Check if they have an installation_id
-        $user = $this->getUserFromDatabase($existingUser['github_id']);
-        
-        if ($user && $user['github_installation_id']) {
-            // User has installation → use OAuth flow
-            $this->redirectToOAuth();
-        } else {
-            // User exists but no installation → use installation flow
-            $this->redirectToInstallation();
-        }
-    } else {
-        // New user → use installation flow
-        $this->redirectToInstallation();
-    }
+    // Generate CSRF token
+    $state = bin2hex(random_bytes(16));
+    $_SESSION['github_state'] = $state;
+    
+    // Always redirect to installation URL
+    // GitHub automatically handles:
+    // - New users: Install + OAuth
+    // - Returning users: Just OAuth re-auth
+    $url = "https://github.com/apps/muxi-registry/installations/new?state={$state}";
+    
+    header("Location: {$url}");
+    exit;
 }
 ```
-
-**Alternative Simpler Approach:**
-
-Just check if a user cookie/session exists:
-
-```php
-public function login(): void
-{
-    // For new users, always go to installation
-    // For returning users, they're already logged in
-    $this->redirectToInstallation();
-}
-```
-
----
-
-### Step 2A: Installation Flow
-
-**Redirect to:**
-```
-https://github.com/apps/muxi-registry/installations/new?state=RANDOM_STATE
-```
-
-**Parameters:**
-- `state` - Random CSRF token (store in session)
 
 **What GitHub Does:**
-1. Shows installation screen
-2. User selects repositories
+
+**First time (not installed):**
+1. Shows "Install MUXI Registry" with repository selection
+2. User selects repos (recommend "All repositories")
 3. User clicks "Install"
-4. Redirects to: `YOUR_CALLBACK_URL?code=ABC&installation_id=12345&state=RANDOM_STATE`
+4. Then shows "Authorize MUXI Registry" with scopes (public_repo, user:email)
+5. User clicks "Authorize"
+6. Redirects to callback with `code` + `installation_id`
 
----
+**Returning (already installed):**
+1. Shows "Authorize MUXI Registry" with scopes
+2. User clicks "Authorize"  
+3. Redirects to callback with `code` + `installation_id`
 
-### Step 2B: OAuth Flow
-
-**Redirect to:**
-```
-https://github.com/login/oauth/authorize?client_id=YOUR_CLIENT_ID&redirect_uri=YOUR_CALLBACK_URL&state=RANDOM_STATE&scope=user:email
-```
-
-**Parameters:**
-- `client_id` - Your GitHub App's client ID
-- `redirect_uri` - Your callback URL
-- `state` - Random CSRF token
-- `scope` - Minimal: `user:email` (just identity)
-
-**What GitHub Does:**
-1. Shows "Authorize MUXI Registry" screen
-2. User clicks "Authorize"
-3. Redirects to: `YOUR_CALLBACK_URL?code=XYZ&state=RANDOM_STATE`
-
-**Note:** No `installation_id` because app is already installed!
+**Note:** Installation URL handles OAuth automatically! The callback gets the OAuth `code` which you exchange for a token with the requested scopes.
 
 ---
 
@@ -170,21 +193,15 @@ https://github.com/login/oauth/authorize?client_id=YOUR_CLIENT_ID&redirect_uri=Y
 
 **Route:** `GET /auth/callback`
 
-**Receives:**
-
-### Installation Callback
+**Always Receives:**
 ```
 ?code=AUTHORIZATION_CODE
 &installation_id=12345678
 &state=CSRF_TOKEN
-&setup_action=install  (optional)
+&setup_action=install  (optional, only on first install)
 ```
 
-### OAuth Callback
-```
-?code=AUTHORIZATION_CODE
-&state=CSRF_TOKEN
-```
+**Note:** With installation URL approach, you always get `installation_id`!
 
 ---
 
@@ -195,7 +212,7 @@ public function callback(): void
 {
     // 1. VERIFY STATE (CSRF protection)
     $state = $_GET['state'] ?? '';
-    $sessionState = $this->getSessionState();
+    $sessionState = $_SESSION['github_state'] ?? '';
     
     if ($state !== $sessionState) {
         throw new Exception('Invalid state - CSRF protection');
@@ -207,157 +224,92 @@ public function callback(): void
         throw new Exception('Missing authorization code');
     }
     
-    // 3. CHECK IF THIS IS AN INSTALLATION
+    // 3. GET INSTALLATION ID (always present with installation URL)
     $installationId = $_GET['installation_id'] ?? null;
-    $isInstallation = $installationId !== null;
-    
-    // 4. EXCHANGE CODE FOR ACCESS TOKEN
-    $accessToken = $this->exchangeCodeForToken($code);
-    
-    // 5. GET USER INFO FROM GITHUB
-    $githubUser = $this->getGitHubUser($accessToken);
-    
-    // 6. HANDLE BASED ON FLOW TYPE
-    if ($isInstallation) {
-        $this->handleInstallationCallback($githubUser, $installationId);
-    } else {
-        $this->handleOAuthCallback($githubUser);
+    if (!$installationId) {
+        throw new Exception('Missing installation_id');
     }
     
-    // 7. REDIRECT TO SUCCESS PAGE
-    $this->showSuccessPage();
+    // 4. EXCHANGE CODE FOR OAUTH ACCESS TOKEN
+    // This token has public_repo + user:email scopes!
+    $oauthToken = $this->exchangeCodeForToken($code);
+    
+    // 5. GET USER INFO FROM GITHUB
+    $githubUser = $this->getGitHubUser($oauthToken);
+    
+    // 6. CREATE OR UPDATE USER
+    $user = $this->createOrUpdateUser($githubUser, $installationId, $oauthToken);
+    
+    // 7. GENERATE CLI TOKEN
+    $cliToken = $this->generateCliToken($user['id']);
+    
+    // 8. SET SESSION
+    $this->setUserSession($user);
+    
+    // 9. SHOW SUCCESS PAGE
+    $this->showSuccessPage($user, $cliToken);
 }
 ```
 
 ---
 
-## 📦 Installation Callback Handler
+## 📦 Create or Update User
 
-**Purpose:** Handle first-time app installation
-
-**Receives:**
-- `code` - Authorization code
-- `installation_id` - GitHub App installation ID
-- User info from GitHub API
+**Purpose:** Handle user creation/update with OAuth token storage
 
 **What to do:**
 
 ```php
-private function handleInstallationCallback($githubUser, $installationId): void
+private function createOrUpdateUser($githubUser, $installationId, $oauthToken): array
 {
     // 1. Check if user exists in database
     $existingUser = $this->findUserByGitHubId($githubUser['id']);
     
+    // 2. Resolve registry username (check reserved mappings)
+    $registryUsername = $this->resolveRegistryUsername($githubUser['login']);
+    
+    // 3. Prepare user data
+    $userData = [
+        'github_id' => $githubUser['id'],
+        'github_username' => $githubUser['login'],
+        'registry_username' => $registryUsername,
+        'github_avatar' => $githubUser['avatar_url'] ?? null,
+        'github_email' => $githubUser['email'] ?? null,
+        'github_installation_id' => $installationId,
+        'github_oauth_token' => $this->encryptToken($oauthToken), // ← CRITICAL!
+        'last_seen_at' => date('Y-m-d H:i:s'),
+    ];
+    
     if ($existingUser) {
-        // User exists, just update installation_id
-        $this->updateUser($existingUser['id'], [
-            'github_installation_id' => $installationId,
-            'last_seen_at' => date('Y-m-d H:i:s'),
-        ]);
-        
+        // UPDATE existing user
+        $this->updateUser($existingUser['id'], $userData);
         $userId = $existingUser['id'];
     } else {
-        // New user - create account
-        $registryUsername = $this->resolveRegistryUsername($githubUser['login']);
-        
-        $userId = $this->createUser([
-            'github_id' => $githubUser['id'],
-            'github_username' => $githubUser['login'],
-            'registry_username' => $registryUsername,
-            'github_avatar' => $githubUser['avatar_url'],
-            'github_installation_id' => $installationId,  // ← Store this!
-            'created_at' => date('Y-m-d H:i:s'),
-        ]);
+        // CREATE new user
+        $userData['created_at'] = date('Y-m-d H:i:s');
+        $userId = $this->insertUser($userData);
     }
     
-    // 2. Generate CLI token
-    $cliToken = $this->generateCliToken($userId);
-    
-    // 3. Set session cookie
-    $this->setUserSession($userId);
-    
-    // 4. Store success data for display
-    $this->setSuccessData([
-        'user' => $this->getUserById($userId),
-        'cli_token' => $cliToken,
-        'is_new_installation' => true,
-    ]);
+    // 4. Return complete user data
+    return $this->getUserById($userId);
 }
 ```
 
 **Key Points:**
-- ✅ **Store `installation_id`** in database
+- ✅ **Store `installation_id`** - for app identity
+- ✅ **Store `oauth_token` (ENCRYPTED!)** - for repo operations
 - ✅ Create new user if doesn't exist
 - ✅ Update existing user if exists
-- ✅ Generate CLI token for `muxi` command
-- ✅ Set session cookie for web
-
----
-
-## 🔐 OAuth Callback Handler
-
-**Purpose:** Handle returning user authentication (app already installed)
-
-**Receives:**
-- `code` - Authorization code
-- User info from GitHub API
-- **NO installation_id** (already in database)
-
-**What to do:**
-
-```php
-private function handleOAuthCallback($githubUser): void
-{
-    // 1. Find user in database
-    $user = $this->findUserByGitHubId($githubUser['id']);
-    
-    if (!$user) {
-        // User doesn't exist - they need to install first!
-        throw new Exception('App not installed. Please install the app first.');
-    }
-    
-    if (!$user['github_installation_id']) {
-        // User exists but no installation - redirect to installation
-        $this->redirectToInstallation();
-        return;
-    }
-    
-    // 2. Update last seen
-    $this->updateUser($user['id'], [
-        'last_seen_at' => date('Y-m-d H:i:s'),
-    ]);
-    
-    // 3. Generate NEW CLI token (optional - or reuse existing)
-    $cliToken = $this->generateCliToken($user['id']);
-    
-    // 4. Set session cookie
-    $this->setUserSession($user['id']);
-    
-    // 5. Store success data for display
-    $this->setSuccessData([
-        'user' => $user,
-        'cli_token' => $cliToken,
-        'is_new_installation' => false,
-    ]);
-}
-```
-
-**Key Points:**
-- ✅ User **must exist** in database
-- ✅ User **must have** `installation_id`
-- ✅ Use existing `installation_id` from database
-- ✅ Update last_seen timestamp
-- ✅ Optionally generate new CLI token
+- ✅ OAuth token has `public_repo` scope for creating repos
 
 ---
 
 ## 🎨 Success Page
 
-After either callback, show a success page with:
+After callback, show success page:
 
-### For Installation (First Time)
 ```
-✓ MUXI Registry Installed Successfully!
+✓ Authentication Successful!
 
 Welcome, @username!
 
@@ -367,7 +319,7 @@ Your CLI authentication token:
 │ [Copy Token]                            │
 └─────────────────────────────────────────┘
 
-This token is shown ONCE. Copy it now.
+⚠️ This token is shown ONCE. Copy it now.
 
 Next steps:
 1. Run: muxi login
@@ -377,19 +329,41 @@ Next steps:
 [Go to Dashboard]
 ```
 
-### For OAuth (Returning User)
-```
-✓ Welcome back, @username!
+**Implementation:**
 
-You're logged in and ready to go.
+```php
+// views/auth/success.php
+<div class="success-page">
+    <h1>✓ Authentication Successful!</h1>
+    <p>Welcome, <strong>@<?= $user['registry_username'] ?></strong>!</p>
+    
+    <div class="cli-token">
+        <label>Your CLI authentication token:</label>
+        <div class="token-box">
+            <code id="token"><?= $cli_token ?></code>
+            <button onclick="copyToken()">Copy Token</button>
+        </div>
+        <p class="warning">⚠️ This token is shown ONCE. Copy it now.</p>
+    </div>
+    
+    <div class="next-steps">
+        <h3>Next steps:</h3>
+        <ol>
+            <li>Run: <code>muxi login</code></li>
+            <li>Paste your token when prompted</li>
+            <li>Start publishing formations!</li>
+        </ol>
+    </div>
+    
+    <a href="/dashboard" class="btn">Go to Dashboard</a>
+</div>
 
-Need a new CLI token?
-┌─────────────────────────────────────────┐
-│ mxr_xyz789ghi012...                     │
-│ [Copy Token]                            │
-└─────────────────────────────────────────┘
-
-[Go to Dashboard]
+<script>
+function copyToken() {
+    navigator.clipboard.writeText(document.getElementById('token').textContent);
+    alert('Token copied to clipboard!');
+}
+</script>
 ```
 
 ---
@@ -419,7 +393,25 @@ private function exchangeCodeForToken(string $code): string
 }
 ```
 
-**Note:** Both installation and OAuth flows use the **same token exchange endpoint**!
+**Note:** This returns an OAuth token with the scopes you requested (public_repo + user:email)!
+
+---
+
+### Encrypt/Decrypt Token
+
+```php
+private function encryptToken(string $token): string
+{
+    return tiny::cypher()->encrypt($token, $_ENV['CRYPTO_SECRET']);
+}
+
+private function decryptToken(string $encrypted): string
+{
+    return tiny::cypher()->decrypt($encrypted, $_ENV['CRYPTO_SECRET']);
+}
+```
+
+**CRITICAL:** Never store OAuth tokens in plain text!
 
 ---
 
@@ -457,7 +449,7 @@ private function getGitHubUser(string $accessToken): array
 
 ## 🗄️ Database Schema
 
-Make sure your `users` table has:
+Update your `users` table:
 
 ```sql
 CREATE TABLE users (
@@ -466,47 +458,60 @@ CREATE TABLE users (
   github_username TEXT NOT NULL,
   registry_username TEXT UNIQUE NOT NULL,
   github_avatar TEXT,
-  github_installation_id INTEGER,  -- ← CRITICAL!
+  github_email TEXT,
+  github_installation_id INTEGER,        -- ← For app identity
+  github_oauth_token TEXT,               -- ← ENCRYPTED! For repo operations
   is_verified BOOLEAN DEFAULT 0,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   last_seen_at DATETIME
 );
 ```
 
-**Note:** `github_installation_id` can be NULL initially if user does OAuth before installation (shouldn't happen with "Check First" approach).
+**CRITICAL Fields:**
+- `github_installation_id` - App installation ID (future webhooks, identity)
+- `github_oauth_token` - **ENCRYPTED** OAuth token with `public_repo` scope (used for ALL repo operations)
 
 ---
 
 ## 🎯 Summary
 
-### Installation Flow (First Time)
+### Simplified Flow (All Users)
 ```
 User clicks "Login"
-  → No installation in DB
   → Redirect to: github.com/apps/muxi-registry/installations/new
-  → User installs app
+  → GitHub handles: Install (if needed) + OAuth authorization
   → Callback: code + installation_id
-  → Save user + installation_id
-  → Show token
+  → Exchange code for OAuth token (with public_repo scope)
+  → Save user + installation_id + encrypted OAuth token
+  → Show CLI token
 ```
 
-### OAuth Flow (Returning)
-```
-User clicks "Login"
-  → Has installation in DB
-  → Redirect to: github.com/login/oauth/authorize
-  → User authorizes
-  → Callback: code (no installation_id)
-  → Use existing installation_id from DB
-  → Show token
-```
+### Token Types
 
-### Key Difference in Callbacks
+| Token Type | Purpose | Storage | Permissions |
+|-----------|---------|---------|-------------|
+| **OAuth Token** | Create/manage repos | Encrypted in DB | `public_repo` + `user:email` scopes |
+| **Installation ID** | App identity | Plain in DB | For future webhooks/features |
+| **CLI Token** | Authenticate `muxi` commands | Hashed in `tokens` table | Links to user_id |
 
-| Callback Type | Receives | Action |
-|--------------|----------|--------|
-| **Installation** | `code` + `installation_id` | Create/update user, **store installation_id** |
-| **OAuth** | `code` only | Update user, **use existing installation_id** |
+### How to Use OAuth Token
+
+```php
+// When user runs: muxi push
+$user = $this->getUserById($userId);
+$oauthToken = $this->decryptToken($user['github_oauth_token']);
+
+// Create repository
+$this->createRepo($oauthToken, 'muxi-formation-name');
+
+// Push code (Git uses token as password)
+$repoUrl = "https://oauth2:{$oauthToken}@github.com/{$username}/muxi-formation-name.git";
+exec("git remote add origin {$repoUrl}");
+exec("git push origin main");
+
+// Create release
+$this->createRelease($oauthToken, $username, 'muxi-formation-name', 'v1.0.0');
+```
 
 ---
 
@@ -530,17 +535,72 @@ User clicks "Login"
 
 ---
 
-## ✅ Checklist
+## ✅ Implementation Checklist
 
-- [ ] `/auth/login` checks for existing installation
-- [ ] Installation URL used for new users
-- [ ] OAuth URL used for returning users
-- [ ] Callback handles both `code + installation_id` and `code` only
-- [ ] `github_installation_id` stored in database
+### GitHub App Configuration
+- [ ] Remove "Contents" permission from app (should be "No access")
+- [ ] Keep only "Metadata" (read) and "Email addresses" (read)
+- [ ] Set callback URL in app settings
+- [ ] Accept that repo selection will be required (Metadata permission causes this)
+- [ ] Add clear messaging about why repo access is needed
+
+### Code Implementation
+- [ ] `/auth/login` redirects to installation URL
+- [ ] Installation URL includes state parameter (CSRF)
+- [ ] Callback receives: `code` + `installation_id`
+- [ ] Exchange code for OAuth token (has `public_repo` scope)
+- [ ] Store OAuth token **ENCRYPTED** in database
+- [ ] Store `installation_id` in database
 - [ ] CSRF state token verified
 - [ ] CLI token generated and shown once
 - [ ] Session cookie set for web access
-- [ ] Success page shows appropriate message
+
+### Database
+- [ ] `users` table has `github_oauth_token` column
+- [ ] `users` table has `github_installation_id` column
+- [ ] `users` table has `github_email` column
+- [ ] Encryption secret configured in environment
+
+### Testing
+- [ ] Install flow works (first time users)
+- [ ] Re-auth flow works (returning users)
+- [ ] OAuth token can create repositories
+- [ ] OAuth token can push code
+- [ ] OAuth token can create releases
+- [ ] CLI token authentication works
+
+### Security
+- [ ] OAuth tokens stored encrypted
+- [ ] CSRF state tokens validated
+- [ ] Environment secrets not committed to git
+- [ ] Token decryption only happens when needed
+
+---
+
+## 🔧 Using the OAuth Token
+
+When user runs `muxi push`, the CLI will:
+
+```php
+// 1. Get user from CLI token
+$user = $this->getUserFromCliToken($cliToken);
+
+// 2. Decrypt OAuth token
+$oauthToken = $this->decryptToken($user['github_oauth_token']);
+
+// 3. Create repo using OAuth token
+$repo = $this->createGitHubRepo($oauthToken, [
+    'name' => 'muxi-customer-support',
+    'description' => 'AI customer support formation',
+    'private' => false,
+]);
+
+// 4. Push code using OAuth token
+$this->pushToGitHub($oauthToken, $repoUrl, $localPath);
+
+// 5. Create release using OAuth token
+$this->createGitHubRelease($oauthToken, $repoUrl, 'v1.0.0');
+```
 
 ---
 

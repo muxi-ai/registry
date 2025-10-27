@@ -128,7 +128,8 @@ GitHub-backed approach:
 
 **Phase 2+:**
 - ❌ Private formations (everything is public in alpha)
-- ❌ Organizations/teams (users only)
+- ✅ Organizations (users can publish to orgs they have access to - **see Flow 2b**)
+- ❌ Organization teams/management (org pages exist but no admin features)
 - ❌ Partial pulls (agents, MCPs separately)
 - ❌ Dependencies/resolution
 - ❌ Self-hosted registry
@@ -141,10 +142,11 @@ GitHub-backed approach:
 ### Design Constraints
 
 1. **Public-only** - Everything is public, no private repos (simplifies auth, legal)
-2. **Users-only** - No organizations or teams (simplifies permissions)
+2. **Organizations supported for publishing** - Users can publish to orgs they have permissions for (see Flow 2b)
 3. **Full formations only** - No partial pulls of agents/MCPs (simplifies bundling)
 4. **GitHub as source of truth** - Registry is just a cache/index
 5. **Read authentication optional** - Anyone can pull, auth only needed for push
+6. **Organizations can't authenticate** - Only users authenticate; orgs are namespace-only records
 
 ---
 
@@ -371,7 +373,7 @@ formation:
   version: "1.0.0"
   ...
 
-# 3. Push
+# 3. Push (personal account)
 $ muxi push
 
 Reading formation.yaml...
@@ -394,6 +396,49 @@ Creating repository...
 View at: registry.muxi.org/@ranaroussi/customer-support
 GitHub: github.com/ranaroussi/muxi-customer-support
 ```
+
+### Flow 2b: Publishing to Organization
+
+**Goal:** Publish a formation under an organization
+
+```bash
+cd my-formation/
+
+# User is authenticated as @ranaroussi
+# Wants to publish to @muxi organization
+
+$ muxi push --org muxi-ai
+
+Reading formation.yaml...
+→ Formation: customer-support v1.0.0
+
+Checking permissions for muxi-ai...
+✓ You have permission to create repositories in muxi-ai
+
+This will create a PUBLIC repository:
+  github.com/muxi-ai/muxi-customer-support
+
+Continue? [Y/n] y
+
+Creating repository...
+✓ Repository created
+✓ Pushing formation files
+✓ Creating tag v1.0.0
+✓ Creating release with bundle.zip
+✓ Notifying registry
+
+✓ Published @muxi/customer-support v1.0.0!
+
+View at: registry.muxi.org/@muxi/customer-support
+GitHub: github.com/muxi-ai/muxi-customer-support
+```
+
+**How it works:**
+- Organizations can't authenticate directly (only users can)
+- User's OAuth token is used to create repos in the org
+- Registry creates org as a "namespace" user (no OAuth token)
+- Formation is owned by the org, but published by the user
+- Requires user to have repo creation permissions in the org
 
 ### Flow 3: Publishing Update
 
@@ -466,13 +511,17 @@ Registry:
 **Schema:**
 
 ```sql
--- Users (synced from GitHub)
+-- Users (synced from GitHub - includes both users AND organizations)
 CREATE TABLE users (
   id INTEGER PRIMARY KEY,
   github_id INTEGER UNIQUE NOT NULL,
   github_username TEXT NOT NULL,           -- Actual GitHub username (e.g., muxi-ai)
   registry_username TEXT UNIQUE NOT NULL,  -- Display name on registry (e.g., muxi)
   github_avatar TEXT,
+  github_email TEXT,                       -- NULL for organizations
+  github_type TEXT DEFAULT 'User',         -- 'User' or 'Organization'
+  github_installation_id INTEGER,          -- NULL for organizations (they can't auth)
+  github_oauth_token TEXT,                 -- NULL for organizations (they can't auth)
   is_verified BOOLEAN DEFAULT 0,           -- Official/verified account badge
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   last_seen_at DATETIME
@@ -492,24 +541,37 @@ INSERT INTO reserved_usernames VALUES
   ('support', 'muxi-ai', datetime('now')),
   ('official', 'muxi-ai', datetime('now'));
 
+-- NOTE: Organizations are "namespace-only" records
+-- - Created automatically when a user publishes to an org
+-- - github_type = 'Organization'
+-- - github_oauth_token is NULL (orgs can't authenticate)
+-- - Users publish TO orgs using their own OAuth tokens
+
 -- Formations (metadata cache)
 CREATE TABLE formations (
   id INTEGER PRIMARY KEY,
-  user_id INTEGER NOT NULL,
-  name TEXT NOT NULL,                  -- Without 'muxi-' prefix
+  user_id INTEGER NOT NULL,              -- Owner (can be user OR organization)
+  published_by_user_id INTEGER,          -- Who actually published it (for audit/attribution)
+  name TEXT NOT NULL,                    -- Without 'muxi-' prefix
   description TEXT,
-  readme_md TEXT,                      -- Cached from GitHub
+  readme_md TEXT,                        -- Cached from GitHub
   latest_version TEXT,
   license TEXT,
-  github_repo TEXT NOT NULL,           -- Full repo name (e.g., muxi-ai/muxi-customer-support)
+  github_repo TEXT NOT NULL,             -- Full repo name (e.g., muxi-ai/muxi-customer-support)
   github_stars INTEGER DEFAULT 0,
   total_downloads INTEGER DEFAULT 0,
-  is_public BOOLEAN DEFAULT 1,         -- For future
+  is_public BOOLEAN DEFAULT 1,           -- For future
   last_synced_at DATETIME,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(user_id, name),
-  FOREIGN KEY (user_id) REFERENCES users(id)
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  FOREIGN KEY (published_by_user_id) REFERENCES users(id) ON DELETE SET NULL
 );
+
+-- Example: User @ranaroussi publishes to org @muxi
+-- - user_id points to muxi-ai (the org, as owner/namespace)
+-- - published_by_user_id points to ranaroussi (who actually pushed it)
+-- - Formation appears as @muxi/customer-support on registry
 
 -- Versions (tracks all published versions)
 CREATE TABLE versions (
