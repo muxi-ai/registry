@@ -20,6 +20,7 @@
     "tw-animate-css": "^1.3.7"
   },
   "devDependencies": {
+    "basecoat-css": "^0.3.2",
     "@babel/core": "^7.23.0",
     "@babel/preset-react": "^7.22.0",
     "babel-loader": "^9.1.0",

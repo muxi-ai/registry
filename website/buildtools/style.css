@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "basecoat-css";
+
 @source "../app/**/*.{html,php,js}";
 @source "../app/views/**/*.php";
 @source "../app/controllers/**/*.php";

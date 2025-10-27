@@ -1,5 +1,14 @@
+/* Your custom styles go here */
+
 @theme {
 }
 
 /* @import "./htmx.css"; */
 /* @import "./inter.css"; */
+
+p {
+    margin: 1rem 0;
+}
+p a {
+    @apply text-indigo-600
+}

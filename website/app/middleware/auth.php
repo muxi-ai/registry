@@ -26,6 +26,11 @@ class AuthMiddleware
         'rpc',
         'api',
     ];
+    private const DISALLOWED_PATHS = [
+        'account',
+    ];
+
+    private const ACCESS_MODE = 'disallowed';
 
     /**
      * User cookie object containing authentication data
@@ -66,8 +71,13 @@ class AuthMiddleware
      */
     private function isAllowedPath(): bool
     {
-        return in_array(tiny::router()->controller, self::ALLOWED_PATHS) ||
-            in_array(tiny::router()->path, self::ALLOWED_PATHS);
+        if (self::ACCESS_MODE == 'allowed') {
+            return in_array(tiny::router()->controller, self::ALLOWED_PATHS) ||
+                in_array(tiny::router()->path, self::ALLOWED_PATHS);
+        } else {
+            return !in_array(tiny::router()->controller, self::DISALLOWED_PATHS) &&
+                !in_array(tiny::router()->path, self::DISALLOWED_PATHS);
+        }
     }
 
     /**
@@ -94,27 +104,24 @@ class AuthMiddleware
         }
 
         // Decrypt the token to get the project ID
-        $projectId = $this->decryptToken($token);
-        $project = $this->getProjectById($projectId);
+        $userId = $this->decryptToken($token);
 
-        if (!$project) {
-            $this->sendApiError('Cannot authenticate token', 'API-02', 401);
+        if (!$userId) {
+            $this->sendApiError('Cannot authenticate user', 'API-01');
         }
 
         // --- rate limiting ---
         tiny::helpers(['ratelimiter']);
         $rateLimit = tiny::rateLimiter("api", 10, 1); // 10 requests per second
         $rateLimit->add(1000, 600); // max 1000 requests per 10 minutes
-        if (!$rateLimit->check($project['user_id'])) {
+        if (!$rateLimit->check($userId)) {
             $this->sendApiError('Too Many Requests', 'API-03', 429);
         }
         // ---------------------
 
         // Set user data for the authenticated API request
         tiny::user([
-            'id' => $project['user_id'],
-            'workspace' => ['id' => $project['workspace_id']],
-            'activeProjectId' => $projectId
+            'id' => $userId,
         ]);
     }
 
@@ -132,18 +139,14 @@ class AuthMiddleware
         }
 
         // Decrypt user data from the cookie hash
-        $userData = tiny::model('user')->decryptUserHash($this->userCookie->data['hash']);
+        $userData = tiny::model('user')->getSession($this->userCookie->data['hash']);
         if (!$userData) {
             $this->redirectToSignin();
             return;
         }
 
         // Set basic user data from the decrypted hash
-        tiny::user([
-            'id' => $userData['user_id'],
-            'email' => $userData['email'],
-            'is_admin' => $userData['is_admin'] ?? false
-        ]);
+        tiny::user(['id' => $userData]);
     }
 
     /**
@@ -155,8 +158,6 @@ class AuthMiddleware
     {
         // Extract basic user information
         $userId = (int)tiny::user()->id;
-        $email = tiny::user()->email;
-        $isAdmin = tiny::user()->is_admin;
 
         // Create cache key for user data
         $cacheKey = 'user_' . $userId;
@@ -166,16 +167,10 @@ class AuthMiddleware
 
         if (!$u) {
             // Fetch user data from database if not in cache
-            $dbUser = tiny::model('user')->getAccountObject((int)$userId, $email);
+            $dbUser = tiny::model('user')->getUserById((int)$userId);
             if (!$dbUser) {
                 $this->handleInvalidUser();
             }
-
-            // Prepare user data with hash, email, ID and admin status
-            $dbUser['hash'] = $this->userCookie->data['hash'] ?? tiny::cypher()->encrypt($dbUser['account_login_email'] . $dbUser['account_id'], @$_SERVER['CRYPTO_SECRET']);
-            $dbUser['email'] = $dbUser['account']['login_email'];
-            $dbUser['id'] = $dbUser['account']['id'];
-            $dbUser['is_admin'] = $isAdmin;
 
             // Convert to object and replace boolean strings
             $u = json_decode(str_replace(['"f"', '"t"'], ['false', 'true'], json_encode($dbUser)));
@@ -215,17 +210,6 @@ class AuthMiddleware
     }
 
     /**
-     * Retrieves project data by ID
-     *
-     * @param string $projectId The project ID
-     * @return bool|array Project data or false if not found
-     */
-    private function getProjectById(string $projectId): bool|array
-    {
-        return tiny::db()->getOne('projects', ['id' => $projectId], 'created_by_user_id as user_id, workspace_id');
-    }
-
-    /**
      * Sends an API error response
      *
      * @param string $message Error message
@@ -248,13 +232,7 @@ class AuthMiddleware
     {
         // Store current URI for redirect after login
         tiny::flash('login_redir')->set(tiny::router()->uri);
-
-        // Handle custom user path if provided
-        if (isset($_GET['u'])) {
-            tiny::redirect('/auth/u/' . $_GET['u']);
-        } else {
-            tiny::redirect('/auth/login');
-        }
+        tiny::redirect('/auth/login');
     }
 
     /**
@@ -267,7 +245,6 @@ class AuthMiddleware
         // Clear session and cookie data
         session_destroy();
         tiny::cookie('user')->destroy();
-        tiny::cookie('owner')->destroy();
         // Redirect to sign-in page
         $this->redirectToSignin();
     }

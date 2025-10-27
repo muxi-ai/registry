@@ -9,10 +9,19 @@
 CREATE TABLE users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   github_id INTEGER UNIQUE NOT NULL,
-  github_username TEXT NOT NULL,           -- Actual GitHub username (e.g., muxi-ai)
-  registry_username TEXT UNIQUE NOT NULL,  -- Display name on registry (e.g., muxi)
+  github_username TEXT NOT NULL, -- Actual GitHub username (e.g., muxi-ai)
+  registry_username TEXT UNIQUE NOT NULL, -- Display name on registry (e.g., muxi)
   github_avatar TEXT,
-  is_verified BOOLEAN DEFAULT 0,           -- Official/verified account badge
+  github_email TEXT NOT NULL,
+  github_type TEXT,
+  github_installation_id INTEGER,        -- ← For app identity
+  github_oauth_token TEXT,               -- ← ENCRYPTED! For repo operations
+  first_name TEXT,
+  last_name TEXT,
+  company TEXT,
+  bio TEXT,
+  twitter_username TEXT,
+  is_verified BOOLEAN DEFAULT 0, -- Official/verified account badge
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   last_seen_at DATETIME
 );
@@ -32,7 +41,7 @@ CREATE TABLE reserved_usernames (
 );
 
 -- Pre-seed official MUXI mappings
-INSERT INTO reserved_usernames (registry_username, github_username) VALUES 
+INSERT INTO reserved_usernames (registry_username, github_username) VALUES
   ('muxi', 'muxi-ai'),
   ('admin', 'muxi-ai'),
   ('support', 'muxi-ai'),
@@ -45,6 +54,7 @@ INSERT INTO reserved_usernames (registry_username, github_username) VALUES
 CREATE TABLE formations (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL,
+  published_by_user_id INTEGER,            -- Who actually published it (optional audit)
   name TEXT NOT NULL,                      -- Without 'muxi-' prefix (e.g., customer-support)
   description TEXT,
   readme_md TEXT,                          -- Cached README from GitHub
@@ -60,6 +70,7 @@ CREATE TABLE formations (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(user_id, name),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  FOREIGN KEY (published_by_user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
 CREATE INDEX idx_formations_user ON formations(user_id);
@@ -114,20 +125,19 @@ CREATE INDEX idx_formation_stats_version ON formation_stats(version_id);
 -- TOKENS (CLI Authentication)
 -- ============================================
 
-CREATE TABLE tokens (
+CREATE TABLE cli_tokens (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL,
   token_hash TEXT UNIQUE NOT NULL,         -- SHA256 hash of token
   name TEXT,                               -- "My Laptop", "CI/CD", etc.
-  github_installation_id INTEGER,          -- GitHub App installation ID
   expires_at DATETIME,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   last_used_at DATETIME,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_tokens_user ON tokens(user_id);
-CREATE INDEX idx_tokens_hash ON tokens(token_hash);
+CREATE INDEX idx_cli_tokens_user ON cli_tokens(user_id);
+CREATE INDEX idx_cli_tokens_hash ON cli_tokens(token_hash);
 
 -- ============================================
 -- SEARCH OPTIMIZATION (FTS5 + Spellfix1)
@@ -149,9 +159,9 @@ CREATE TRIGGER formations_fts_insert AFTER INSERT ON formations BEGIN
 END;
 
 CREATE TRIGGER formations_fts_update AFTER UPDATE ON formations BEGIN
-  UPDATE formations_fts 
-  SET name = new.name, 
-      description = new.description, 
+  UPDATE formations_fts
+  SET name = new.name,
+      description = new.description,
       readme_md = new.readme_md
   WHERE rowid = new.id;
 END;
@@ -196,8 +206,8 @@ User searches for "custmer-suport" (with typos)
 
 Step 1: Get spelling suggestions using Spellfix1
 */
--- SELECT word FROM formations_spellfix 
--- WHERE word MATCH 'custmer-suport' 
+-- SELECT word FROM formations_spellfix
+-- WHERE word MATCH 'custmer-suport'
 -- AND top=3
 -- ORDER BY score;
 -- Result: 'customer-support', 'customer-service', etc.
@@ -205,8 +215,8 @@ Step 1: Get spelling suggestions using Spellfix1
 /*
 Step 2: Use corrected spelling in FTS5 search
 */
--- SELECT f.*, rank 
--- FROM formations_fts 
+-- SELECT f.*, rank
+-- FROM formations_fts
 -- JOIN formations f ON f.id = formations_fts.rowid
 -- WHERE formations_fts MATCH 'customer-support'
 -- ORDER BY rank;
@@ -217,8 +227,8 @@ EXAMPLE 2: Combined fuzzy search with fallback
 Automatically correct typos and search in one query
 */
 -- WITH corrected_terms AS (
---   SELECT word, score 
---   FROM formations_spellfix 
+--   SELECT word, score
+--   FROM formations_spellfix
 --   WHERE word MATCH 'custmer' AND top=1
 -- )
 -- SELECT DISTINCT f.id, f.name, f.description, f.github_stars
@@ -237,15 +247,15 @@ Search for "ai chatbut asistant" (multiple typos)
 -- WITH RECURSIVE split_terms(term, rest) AS (
 --   SELECT '', 'ai chatbut asistant' || ' '
 --   UNION ALL
---   SELECT 
+--   SELECT
 --     substr(rest, 1, instr(rest, ' ') - 1),
 --     substr(rest, instr(rest, ' ') + 1)
 --   FROM split_terms WHERE rest != ''
 -- ),
 -- corrected AS (
 --   SELECT GROUP_CONCAT(
---     (SELECT word FROM formations_spellfix 
---      WHERE word MATCH split_terms.term AND top=1), 
+--     (SELECT word FROM formations_spellfix
+--      WHERE word MATCH split_terms.term AND top=1),
 --     ' '
 --   ) as corrected_query
 --   FROM split_terms WHERE term != ''
@@ -261,7 +271,7 @@ Search for "ai chatbut asistant" (multiple typos)
 PERFORMANCE TIPS:
 -----------------
 1. Regularly rebuild spellfix index for better suggestions:
-   DELETE FROM formations_spellfix; 
+   DELETE FROM formations_spellfix;
    INSERT INTO formations_spellfix(word) SELECT DISTINCT name FROM formations;
 
 2. Add common search terms manually:
@@ -283,12 +293,12 @@ VALUES (12345678, 'muxi-ai', 'muxi', 'https://avatars.githubusercontent.com/u/12
 
 -- Sample formation
 INSERT INTO formations (
-  user_id, name, description, latest_version, 
+  user_id, name, description, latest_version,
   github_repo, github_stars, total_downloads,
   published_at, last_synced_at
 )
 VALUES (
-  1, 
+  1,
   'customer-support',
   'AI-powered customer support with intelligent escalation',
   '1.0.0',
