@@ -13,7 +13,7 @@ class ApiFormations extends TinyController
 {
     /** @var GitHub GitHub API client instance */
     private GitHub $github;
-    
+
     /**
      * Initialize GitHub API client
      */
@@ -82,7 +82,7 @@ class ApiFormations extends TinyController
      * POST /api/formations/publish
      *
      * Publish a formation from uploaded ZIP file (requires authentication)
-     * 
+     *
      * Accepts multipart/form-data with:
      * - file: formation.zip (required)
      * - org: organization name (optional, defaults to user)
@@ -136,7 +136,7 @@ class ApiFormations extends TinyController
             ], 400);
         }
     }
-    
+
     /**
      * Process uploaded formation ZIP and publish to GitHub
      *
@@ -151,7 +151,7 @@ class ApiFormations extends TinyController
         // Create temp directory
         $tempDir = sys_get_temp_dir() . '/muxi_' . uniqid();
         mkdir($tempDir, 0755, true);
-        
+
         try {
             // 1. Unzip uploaded file
             $zip = new ZipArchive();
@@ -160,18 +160,18 @@ class ApiFormations extends TinyController
             }
             $zip->extractTo($tempDir);
             $zip->close();
-            
+
             // 2. Parse formation.yaml
             $formationYamlPath = $tempDir . '/formation.yaml';
             if (!file_exists($formationYamlPath)) {
                 throw new Exception('formation.yaml not found in ZIP archive');
             }
-            
-            $formationData = yaml_parse_file($formationYamlPath);
+
+            $formationData = $this->parseSimpleYaml($formationYamlPath);
             if (!$formationData) {
                 throw new Exception('Invalid formation.yaml format');
             }
-            
+
             // 3. Validate required fields
             $requiredFields = ['id', 'version', 'description'];
             foreach ($requiredFields as $field) {
@@ -179,12 +179,12 @@ class ApiFormations extends TinyController
                     throw new Exception("Missing or empty required field: $field");
                 }
             }
-            
+
             // Validate version format (semver)
             if (!preg_match('/^\d+\.\d+\.\d+$/', $formationData['version'])) {
                 throw new Exception('Version must be in semver format (e.g., 1.0.0)');
             }
-            
+
             // 4. Check/create README.md
             $readmePath = $tempDir . '/README.md';
             if (!file_exists($readmePath)) {
@@ -193,43 +193,43 @@ class ApiFormations extends TinyController
                 $readme = $this->generateBasicReadme($formationData);
                 file_put_contents($readmePath, $readme);
             }
-            
+
             // 5. Determine GitHub owner (user or org)
             $githubOwner = $orgName ?? $user->github_username;
-            
+
             // 6. If org specified, verify membership
             if ($orgName) {
                 $githubToken = tiny::model('user')->getGitHubAccessTokenByUserId($user->id);
                 $this->github->setToken($githubToken);
-                
+
                 if (!$this->github->isOrgMember($orgName, $user->github_username)) {
                     throw new Exception("You are not a member of organization: $orgName");
                 }
             }
-            
+
             // 7. Create/verify GitHub repository
             $repoName = "muxi-{$formationData['id']}";
             $fullRepoName = "$githubOwner/$repoName";
-            
+
             $githubToken = tiny::model('user')->getGitHubAccessTokenByUserId($user->id);
             $this->github->setToken($githubToken);
-            
+
             $repo = $this->createOrGetGitHubRepo($githubOwner, $repoName, $formationData);
-            
+
             // 8. Push files to GitHub
             $this->pushFilesToGitHub($fullRepoName, $tempDir);
-            
+
             // 9. Create GitHub release
             $version = $formationData['version'];
             $release = $this->createGitHubRelease($fullRepoName, $version, $formationData);
-            
+
             // 10. Repack and upload as release asset
             $zipPath = $this->repackFormation($tempDir, $formationData['id']);
             $asset = $this->uploadReleaseAsset($fullRepoName, $release['id'], $zipPath, 'formation.zip');
-            
+
             // 11. Store formation metadata in database
             $formation = $this->storeFormationInDatabase($user->id, $formationData, $repo, $release);
-            
+
             return [
                 'status' => 'ok',
                 'message' => 'Formation published successfully',
@@ -242,7 +242,7 @@ class ApiFormations extends TinyController
                     'download_url' => $asset['browser_download_url'] ?? null
                 ]
             ];
-            
+
         } finally {
             // Cleanup temp directory
             $this->removeDirectory($tempDir);
@@ -453,7 +453,7 @@ class ApiFormations extends TinyController
             ]);
         }
     }
-    
+
     /**
      * Calculate downloads for the last 7 days
      *
@@ -463,17 +463,17 @@ class ApiFormations extends TinyController
     private function calculateDownloadsThisWeek($formationId)
     {
         $sevenDaysAgo = date('Y-m-d', strtotime('-7 days'));
-        
+
         $result = tiny::db()->getQuery("
             SELECT COALESCE(SUM(download_count), 0) as total
             FROM downloads
             WHERE formation_id = ?
             AND day >= ?
         ", [$formationId, $sevenDaysAgo]);
-        
+
         return (int)($result[0]['total'] ?? 0);
     }
-    
+
     /**
      * Generate basic README from formation data
      * TODO: Replace with LLM-generated comprehensive README
@@ -485,7 +485,7 @@ class ApiFormations extends TinyController
         $version = $formationData['version'];
         $author = $formationData['author'] ?? 'Unknown';
         $license = $formationData['license'] ?? 'MIT';
-        
+
         return <<<MD
 # {$id}
 
@@ -515,7 +515,7 @@ Current version: {$version}
 
 MD;
     }
-    
+
     /**
      * Create GitHub repository or get existing
      */
@@ -533,21 +533,21 @@ MD;
             ]);
         }
     }
-    
+
     /**
      * Push files to GitHub repository using Contents API
      */
     private function pushFilesToGitHub($repoName, $tempDir)
     {
         $files = $this->getFilesRecursive($tempDir);
-        
+
         foreach ($files as $file) {
             $relativePath = str_replace($tempDir . '/', '', $file);
             $content = file_get_contents($file);
-            
+
             // Check if file exists (for updates)
             $sha = $this->github->getFileSha($repoName, $relativePath);
-            
+
             // Create or update file
             $this->github->createOrUpdateFile(
                 $repoName,
@@ -558,14 +558,14 @@ MD;
             );
         }
     }
-    
+
     /**
      * Create GitHub release
      */
     private function createGitHubRelease($repoName, $version, $formationData)
     {
         $tagName = "v{$version}";
-        
+
         // Check if release already exists
         try {
             return $this->github->getRelease($repoName, $tagName);
@@ -580,7 +580,7 @@ MD;
             ]);
         }
     }
-    
+
     /**
      * Upload release asset
      */
@@ -588,29 +588,29 @@ MD;
     {
         return $this->github->uploadReleaseAsset($repoName, $releaseId, $zipPath, $fileName);
     }
-    
+
     /**
      * Repack formation directory into ZIP
      */
     private function repackFormation($dir, $formationId)
     {
         $zipPath = sys_get_temp_dir() . "/{$formationId}_" . time() . '.zip';
-        
+
         $zip = new ZipArchive();
         if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
             throw new Exception('Unable to create ZIP archive');
         }
-        
+
         $files = $this->getFilesRecursive($dir);
         foreach ($files as $file) {
             $relativePath = str_replace($dir . '/', '', $file);
             $zip->addFile($file, $relativePath);
         }
-        
+
         $zip->close();
         return $zipPath;
     }
-    
+
     /**
      * Store formation metadata in database
      */
@@ -629,13 +629,13 @@ MD;
             'last_synced_at' => date('Y-m-d H:i:s'),
             'created_at' => date('Y-m-d H:i:s')
         ];
-        
+
         // Check if formation already exists
         $existing = tiny::db()->getOne('formations', [
             'user_id' => $userId,
             'name' => $formationData['id']
         ]);
-        
+
         if ($existing) {
             // Update existing
             tiny::db()->update('formations', $data, ['id' => $existing['id']]);
@@ -644,13 +644,13 @@ MD;
             // Insert new
             $formationId = tiny::db()->insert('formations', $data);
         }
-        
+
         // Store version info
         $versionExists = tiny::db()->getOne('versions', [
             'formation_id' => $formationId,
             'version' => $formationData['version']
         ]);
-        
+
         if (!$versionExists) {
             tiny::db()->insert('versions', [
                 'formation_id' => $formationId,
@@ -661,10 +661,10 @@ MD;
                 'created_at' => date('Y-m-d H:i:s')
             ]);
         }
-        
+
         return $formationId;
     }
-    
+
     /**
      * Get all files recursively from directory
      */
@@ -674,16 +674,16 @@ MD;
         $iterator = new RecursiveIteratorIterator(
             new RecursiveDirectoryIterator($dir, RecursiveDirectoryIterator::SKIP_DOTS)
         );
-        
+
         foreach ($iterator as $file) {
             if ($file->isFile()) {
                 $files[] = $file->getPathname();
             }
         }
-        
+
         return $files;
     }
-    
+
     /**
      * Remove directory recursively
      */
@@ -692,13 +692,100 @@ MD;
         if (!is_dir($dir)) {
             return;
         }
-        
+
         $files = array_diff(scandir($dir), ['.', '..']);
         foreach ($files as $file) {
             $path = "$dir/$file";
             is_dir($path) ? $this->removeDirectory($path) : unlink($path);
         }
         rmdir($dir);
+    }
+
+    /**
+     * Parse simple YAML file (basic key-value pairs)
+     * 
+     * Supports:
+     * - Simple key: value pairs
+     * - Quoted strings
+     * - Multi-line values (with proper indentation)
+     * - Comments (# lines)
+     * 
+     * @param string $filePath Path to YAML file
+     * @return array|false Parsed data or false on error
+     */
+    private function parseSimpleYaml($filePath)
+    {
+        if (!file_exists($filePath)) {
+            return false;
+        }
+        
+        $content = file_get_contents($filePath);
+        if ($content === false) {
+            return false;
+        }
+        
+        $lines = explode("\n", $content);
+        $data = [];
+        $currentKey = null;
+        $multilineValue = '';
+        $inMultiline = false;
+        
+        foreach ($lines as $line) {
+            // Skip empty lines
+            $trimmed = trim($line);
+            if (empty($trimmed)) {
+                if ($inMultiline) {
+                    $multilineValue .= "\n";
+                }
+                continue;
+            }
+            
+            // Skip comments
+            if (strpos($trimmed, '#') === 0) {
+                continue;
+            }
+            
+            // Check if this is a continuation of multiline value
+            if ($inMultiline && (strpos($line, '  ') === 0 || strpos($line, "\t") === 0)) {
+                $multilineValue .= "\n" . trim($line);
+                continue;
+            }
+            
+            // End multiline if we were in one
+            if ($inMultiline) {
+                $data[$currentKey] = $multilineValue;
+                $inMultiline = false;
+                $multilineValue = '';
+            }
+            
+            // Parse key-value pair
+            if (strpos($trimmed, ':') !== false) {
+                list($key, $value) = explode(':', $trimmed, 2);
+                $key = trim($key);
+                $value = trim($value);
+                
+                // Remove quotes if present
+                if (preg_match('/^["\'](.+)["\']$/', $value, $matches)) {
+                    $value = $matches[1];
+                }
+                
+                // Check if value is empty or multiline indicator (multiline start)
+                if (empty($value) || $value === '|' || $value === '>') {
+                    $currentKey = $key;
+                    $inMultiline = true;
+                    $multilineValue = '';
+                } else {
+                    $data[$key] = $value;
+                }
+            }
+        }
+        
+        // Handle last multiline value
+        if ($inMultiline && $currentKey) {
+            $data[$currentKey] = $multilineValue;
+        }
+        
+        return $data;
     }
 
     /**
