@@ -35,8 +35,10 @@ class AuthCallback extends TinyController
             tiny::redirect('/auth/error');
         }
 
-        // Exchange the OAuth code for a short lived access token.
-        $accessToken = $this->exchangeCodeForToken($code);
+        // Exchange the OAuth code for access token (and refresh token if available)
+        $tokenData = $this->exchangeCodeForToken($code);
+        $accessToken = $tokenData['access_token'];
+        $refreshToken = $tokenData['refresh_token'] ?? null;
 
         // Fetch the authenticated user's GitHub profile and email information.
         $ghUser = $this->getGitHubUser($accessToken);
@@ -46,8 +48,12 @@ class AuthCallback extends TinyController
             tiny::redirect('/auth/error');
         }
 
-        // add oauth token to ghUser
+        // add oauth token and refresh token to ghUser
         $ghUser->github_oauth_token = $accessToken;
+        $ghUser->github_refresh_token = $refreshToken;
+        $ghUser->github_token_expires_at = isset($tokenData['expires_in']) 
+            ? date('Y-m-d H:i:s', time() + $tokenData['expires_in']) 
+            : null;
 
         try {
             // Upsert the GitHub user in our database and capture the Tiny user record.
@@ -78,7 +84,7 @@ class AuthCallback extends TinyController
      * Swap an OAuth code for a GitHub access token using the GitHub token endpoint.
      *
      * @param string $code Short lived code returned by GitHub during OAuth callback.
-     * @return string|null GitHub access token or null on failure.
+     * @return array Token data including access_token, refresh_token (if available), and expires_in
      */
     private function exchangeCodeForToken(string $code)
     {
@@ -102,9 +108,15 @@ class AuthCallback extends TinyController
             tiny::redirect('/auth/error');
         }
 
-        // Return the token if GitHub provided one; allow null to bubble failure.
+        // Return token data (access_token, refresh_token if available, expires_in)
         if ($response->json['access_token']) {
-            return $response->json['access_token'];
+            error_log("🔑 GitHub OAuth: access_token received, expires_in: " . ($response->json['expires_in'] ?? 'unknown') . ", refresh_token: " . (isset($response->json['refresh_token']) ? 'yes' : 'no'));
+            return [
+                'access_token' => $response->json['access_token'],
+                'refresh_token' => $response->json['refresh_token'] ?? null,
+                'expires_in' => $response->json['expires_in'] ?? null,
+                'token_type' => $response->json['token_type'] ?? 'bearer'
+            ];
         }
 
         return null;
