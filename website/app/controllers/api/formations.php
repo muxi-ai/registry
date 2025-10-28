@@ -109,7 +109,7 @@ class ApiFormations extends TinyController
         }
 
         $uploadedFile = $_FILES['file'];
-        $orgName = $_POST['org'] ?? null;
+        $orgName = $_GET['org'] ?? $_POST['org'] ?? null; // Support both query param and POST data
 
         // Validate file is a ZIP
         $finfo = finfo_open(FILEINFO_MIME_TYPE);
