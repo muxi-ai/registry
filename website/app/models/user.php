@@ -185,7 +185,6 @@ class User extends TinyModel
             'github_avatar' => str_replace('?v=4', '', trim($ghUser->avatar_url)),
             'github_email' => trim(strtolower($ghUser->email)),
             'github_type' => strtolower(trim($ghUser->type)),
-            'github_installation_id' => $ghUser->github_installation_id,
             'github_oauth_token' => tiny::cypher()->encrypt($ghUser->github_oauth_token, @$_SERVER['CRYPTO_SECRET']),
             'first_name' => ucwords(trim($ghUser->first_name)),
             'last_name' => ucwords(trim($ghUser->last_name)),
@@ -196,6 +195,9 @@ class User extends TinyModel
             'created_at' => date('Y-m-d H:i:s'),
             'last_seen_at' => date('Y-m-d H:i:s'),
         ];
+        if ($ghUser->github_installation_id) {
+            $payload['github_installation_id'] = $ghUser->github_installation_id;
+        }
 
         // tiny::dd($payload);
 
@@ -213,6 +215,55 @@ class User extends TinyModel
         $payload['id'] = tiny::db()->lastInsertId();
 
         return $payload;
+    }
+
+    /**
+     * Creates a new CLI token for a user
+     *
+     * @param int $userId The user's ID
+     * @param string $name The name of the token
+     * @return string The token
+     */
+    public function createCliToken(int $userId, string $name = 'CLI Token'): string
+    {
+        $token = 'mxr_' . tiny::nanoId(60);
+        $token_hash = tiny::cypher()->encrypt($token, @$_SERVER['CRYPTO_SECRET']);
+        tiny::db()->insert('cli_tokens', [
+            'user_id' => $userId,
+            'token_hash' => $token_hash,
+            'name' => $name,
+            'expires_at' => '2099-12-31 23:59:59', // never expire
+            'created_at' => date('Y-m-d H:i:s'),
+            'last_used_at' => null,
+        ]);
+        return $token;
+    }
+
+    /**
+     * Retrieves a user by their CLI token
+     *
+     * @param string $token The token to search for
+     * @return array|null The user's data as an associative array or null if not found
+     */
+    public function getUserByCliToken(string $token): ?array
+    {
+        $token_hash = tiny::cypher()->encrypt($token, @$_SERVER['CRYPTO_SECRET']);
+        $user = tiny::db()->getOneQuery('
+            SELECT u.*, c.id as token_id, c.name as token_name
+            FROM users u
+            LEFT JOIN cli_tokens c ON u.id = c.user_id
+            WHERE c.token_hash = ? AND c.expires_at > NOW()
+        ', [$token_hash]);
+
+        if (!$user) {
+            return null;
+        }
+
+        tiny::db()->update('cli_tokens', [
+            'last_used_at' => date('Y-m-d H:i:s'),
+        ], ['id' => $user['token_id']]);
+
+        return $user;
     }
 
     /**

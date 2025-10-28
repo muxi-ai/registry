@@ -30,6 +30,10 @@ class AuthMiddleware
         'account',
     ];
 
+    private const PUBLIC_API_ENDPOINTS = [
+        'GET /api/formations',
+    ];
+
     private const ACCESS_MODE = 'disallowed';
 
     /**
@@ -104,9 +108,9 @@ class AuthMiddleware
         }
 
         // Decrypt the token to get the project ID
-        $userId = $this->decryptToken($token);
+        $user = tiny::model('user')->getUserByCliToken($token);
 
-        if (!$userId) {
+        if (!$user) {
             $this->sendApiError('Cannot authenticate user', 'API-01');
         }
 
@@ -114,15 +118,13 @@ class AuthMiddleware
         tiny::helpers(['ratelimiter']);
         $rateLimit = tiny::rateLimiter("api", 10, 1); // 10 requests per second
         $rateLimit->add(1000, 600); // max 1000 requests per 10 minutes
-        if (!$rateLimit->check($userId)) {
+        if (!$rateLimit->check($user['id'])) {
             $this->sendApiError('Too Many Requests', 'API-03', 429);
         }
         // ---------------------
 
         // Set user data for the authenticated API request
-        tiny::user([
-            'id' => $userId,
-        ]);
+        tiny::user($user);
     }
 
     /**

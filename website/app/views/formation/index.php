@@ -3,6 +3,9 @@ $formation = tiny::data()->formation;
 $latestVersion = tiny::data()->latestVersion;
 $stats = tiny::data()->stats;
 $versions = tiny::data()->versions;
+$downloadChart = tiny::data()->downloadChart;
+$downloadsThisWeek = tiny::data()->downloadsThisWeek;
+$weeklyChart = tiny::data()->weeklyChart;
 $homeURL = tiny::getHomeURL('/');
 
 tiny::layout()->default(
@@ -10,6 +13,9 @@ tiny::layout()->default(
     emptyLayout: false
 );
 ?>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
 <div class="max-w-6xl mx-auto">
     <!-- Formation Header -->
@@ -30,12 +36,11 @@ tiny::layout()->default(
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path>
                         </svg>
                         <strong><?= number_format($formation['total_downloads']) ?></strong> pulls
-                    </span>
-                    <span class="flex items-center gap-1">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
-                        </svg>
-                        <strong><?= number_format($formation['github_stars']) ?></strong> stars
+                        <?php if ($downloadsThisWeek > 0): ?>
+                            <span class="ml-2 px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-semibold">
+                                +<?= number_format($downloadsThisWeek) ?> this week
+                            </span>
+                        <?php endif; ?>
                     </span>
                     <span class="text-gray-500">
                         v<?= htmlspecialchars($formation['latest_version']) ?>
@@ -57,6 +62,18 @@ tiny::layout()->default(
                     @<?= htmlspecialchars($formation['registry_username']) ?>
                 </a>
             </div>
+
+            <!-- Weekly Activity Mini Chart -->
+            <?php if (!empty($weeklyChart) && is_array($weeklyChart) && count($weeklyChart) > 0): ?>
+                <div class="mt-4 pt-4 border-t border-gray-200">
+                    <div class="flex items-center gap-4">
+                        <span class="text-xs font-semibold text-gray-600">Last 7 days:</span>
+                        <div style="width: 200px; height: 40px;">
+                            <canvas id="weeklyChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            <?php endif; ?>
         </div>
 
         <!-- Install Command Box -->
@@ -119,6 +136,31 @@ tiny::layout()->default(
                                 <div class="text-sm text-gray-600">Knowledge Base<?= $stats['knowledge_count'] != 1 ? 's' : '' ?></div>
                             </div>
                         <?php endif; ?>
+                    </div>
+                </div>
+            <?php endif; ?>
+
+            <!-- Download Chart -->
+            <?php if (!empty($downloadChart) && is_array($downloadChart) && count($downloadChart) > 0): ?>
+                <?php
+                // Calculate total for display
+                $totalRecent = 0;
+                foreach ($downloadChart as $day) {
+                    if (isset($day['downloads'])) {
+                        $totalRecent += $day['downloads'];
+                    }
+                }
+                ?>
+                <div class="bg-white border border-gray-200 rounded-lg p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-xl font-bold text-gray-900">📈 Downloads (Last 30 Days)</h2>
+                        <div class="text-sm text-gray-600">
+                            <span class="font-semibold text-blue-600"><?= number_format($totalRecent) ?></span> total pulls
+                        </div>
+                    </div>
+
+                    <div style="height: 200px;">
+                        <canvas id="downloadChart"></canvas>
                     </div>
                 </div>
             <?php endif; ?>
@@ -193,5 +235,129 @@ tiny::layout()->default(
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Weekly Chart Data
+    <?php if (!empty($weeklyChart) && count($weeklyChart) > 0): ?>
+    const weeklyData = <?= json_encode($weeklyChart) ?>;
+    const weeklyLabels = weeklyData.map(d => {
+        const date = new Date(d.day);
+        return date.toLocaleDateString('en-US', { weekday: 'short' });
+    });
+    const weeklyDownloads = weeklyData.map(d => d.downloads);
+    
+    new Chart(document.getElementById('weeklyChart'), {
+        type: 'line',
+        data: {
+            labels: weeklyLabels,
+            datasets: [{
+                data: weeklyDownloads,
+                borderColor: '#3b82f6',
+                borderWidth: 2,
+                fill: false,
+                tension: 0.4,
+                pointRadius: 3,
+                pointHoverRadius: 5,
+                pointBackgroundColor: '#3b82f6',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    displayColors: false,
+                    callbacks: {
+                        title: function() {
+                            return '';
+                        },
+                        label: function(context) {
+                            const day = weeklyLabels[context.dataIndex];
+                            const count = context.parsed.y;
+                            return day + ': ' + count + ' pull' + (count !== 1 ? 's' : '');
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    display: false
+                },
+                x: {
+                    display: false
+                }
+            }
+        }
+    });
+    <?php endif; ?>
+
+    // Main Download Chart Data
+    <?php if (!empty($downloadChart) && count($downloadChart) > 0): ?>
+    const downloadData = <?= json_encode($downloadChart) ?>;
+    const downloadLabels = downloadData.map(d => {
+        const date = new Date(d.day);
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    });
+    const downloads = downloadData.map(d => d.downloads);
+    
+    new Chart(document.getElementById('downloadChart'), {
+        type: 'bar',
+        data: {
+            labels: downloadLabels,
+            datasets: [{
+                label: 'Downloads',
+                data: downloads,
+                backgroundColor: '#3b82f6',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.parsed.y + ' pull' + (context.parsed.y !== 1 ? 's' : '');
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { 
+                        font: { size: 11 },
+                        callback: function(value) {
+                            return Number.isInteger(value) ? value : '';
+                        }
+                    },
+                    grid: { color: '#f3f4f6' }
+                },
+                x: {
+                    ticks: { 
+                        font: { size: 10 },
+                        maxRotation: 0,
+                        autoSkip: true,
+                        maxTicksLimit: 15
+                    },
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+    <?php endif; ?>
+});
+</script>
 
 <?php tiny::layout()->default('/'); ?>

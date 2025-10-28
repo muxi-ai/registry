@@ -1,3 +1,3 @@
 <?php
-header('Location: ' . tiny::homeURL('/auth'));
+tiny::redirect('/auth');
 ?>

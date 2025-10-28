@@ -140,6 +140,23 @@ CREATE INDEX idx_cli_tokens_user ON cli_tokens(user_id);
 CREATE INDEX idx_cli_tokens_hash ON cli_tokens(token_hash);
 
 -- ============================================
+-- DOWNLOADS (Daily Tracking)
+-- ============================================
+
+CREATE TABLE downloads (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  formation_id INTEGER NOT NULL,
+  version TEXT NOT NULL,
+  day DATE NOT NULL,                       -- YYYY-MM-DD
+  download_count INTEGER DEFAULT 0,
+  FOREIGN KEY (formation_id) REFERENCES formations(id) ON DELETE CASCADE,
+  UNIQUE(formation_id, version, day)
+);
+
+CREATE INDEX idx_downloads_formation ON downloads(formation_id, day DESC);
+CREATE INDEX idx_downloads_day ON downloads(day DESC);
+
+-- ============================================
 -- SEARCH OPTIMIZATION (FTS5 + Spellfix1)
 -- ============================================
 

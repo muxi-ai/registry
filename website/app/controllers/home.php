@@ -21,21 +21,51 @@ class Home extends TinyController
                 (SELECT SUM(total_downloads) FROM formations) as total_downloads
         ");
 
-        // Fetch the most recently published formations to power the "New arrivals" list.
-        $recentFormations = tiny::db()->getQuery("
-            SELECT f.*, u.registry_username, u.github_username, u.github_type
+        // Fetch trending formations (last 7 days) - the hottest content right now
+        $trendingFormations = tiny::db()->getQuery("
+            SELECT 
+                f.id,
+                f.name,
+                f.description,
+                f.latest_version,
+                f.total_downloads,
+                f.github_stars,
+                u.registry_username,
+                u.github_avatar,
+                COALESCE(SUM(d.download_count), 0) as downloads_7d
             FROM formations f
             JOIN users u ON f.user_id = u.id
-            ORDER BY f.published_at DESC
+            LEFT JOIN downloads d 
+                ON f.id = d.formation_id 
+                AND d.day >= DATE('now', '-7 days')
+            GROUP BY f.id
+            HAVING downloads_7d > 0
+            ORDER BY downloads_7d DESC, f.github_stars DESC
+            LIMIT 8
+        ");
+
+        // Fetch the most recently published formations to power the "New arrivals" list.
+        $recentFormations = tiny::db()->getQuery("
+            SELECT 
+                f.*,
+                u.registry_username,
+                u.github_avatar
+            FROM formations f
+            JOIN users u ON f.user_id = u.id
+            ORDER BY f.published_at DESC, f.created_at DESC
             LIMIT 4
         ");
 
         // Surface the top downloaded formations so visitors see what the community values.
         $popularFormations = tiny::db()->getQuery("
-            SELECT f.*, u.registry_username, u.github_username, u.github_type
+            SELECT 
+                f.*,
+                u.registry_username,
+                u.github_avatar
             FROM formations f
             JOIN users u ON f.user_id = u.id
-            ORDER BY f.total_downloads DESC
+            WHERE f.total_downloads > 0
+            ORDER BY f.total_downloads DESC, f.github_stars DESC
             LIMIT 4
         ");
 
@@ -55,6 +85,7 @@ class Home extends TinyController
         $response->render('home', [
             'stats' => $stats,
             'formations' => [
+                'trending' => $trendingFormations,
                 'recent' => $recentFormations,
                 'popular' => $popularFormations,
             ],

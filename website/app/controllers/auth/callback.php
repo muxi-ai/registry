@@ -69,11 +69,19 @@ class AuthCallback extends TinyController
         tiny::model('user')->setSession($user['id']);
 
         // redirect to install page if installation id is not set
-        if (!$installationId) {
+        if (!$user['github_installation_id']) {
             tiny::redirect('/auth/install');
+            return;
         }
 
-        tiny::redirect('/auth/signin');
+        // redirect to cli token page if auth mode is cli
+        if (tiny::flash('auth_mode')->get() == 'cli') {
+            tiny::redirect('/auth/cli/token');
+            return;
+        }
+
+        // redirect to account page if auth mode is not cli
+        tiny::redirect('/account');
     }
 
     /**
