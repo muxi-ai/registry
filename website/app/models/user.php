@@ -186,8 +186,6 @@ class User extends TinyModel
             'github_email' => trim(strtolower($ghUser->email)),
             'github_type' => strtolower(trim($ghUser->type)),
             'github_oauth_token' => tiny::cypher()->encrypt($ghUser->github_oauth_token, @$_SERVER['CRYPTO_SECRET']),
-            'github_refresh_token' => tiny::cypher()->encrypt($ghUser->github_refresh_token, @$_SERVER['CRYPTO_SECRET']),
-            'github_token_expires_at' => $ghUser->github_token_expires_at,
             'first_name' => ucwords(trim($ghUser->first_name)),
             'last_name' => ucwords(trim($ghUser->last_name)),
             'company' => $ghUser->company,
@@ -197,6 +195,13 @@ class User extends TinyModel
             'created_at' => date('Y-m-d H:i:s'),
             'last_seen_at' => date('Y-m-d H:i:s'),
         ];
+
+        if ($ghUser->github_refresh_token) {
+            $payload['github_refresh_token'] = tiny::cypher()->encrypt($ghUser->github_refresh_token, @$_SERVER['CRYPTO_SECRET']);
+        }
+        if ($ghUser->github_token_expires_at) {
+            $payload['github_token_expires_at'] = $ghUser->github_token_expires_at;
+        }
 
         // tiny::dd($payload);
 
