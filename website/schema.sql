@@ -15,6 +15,8 @@ CREATE TABLE users (
   github_email TEXT NOT NULL,
   github_type TEXT,
   github_oauth_token TEXT,               -- ← ENCRYPTED! For repo operations
+  github_refresh_token TEXT,             -- ← ENCRYPTED! For refresh operations
+  github_token_expires_at DATETIME,      -- ← When token expires
   first_name TEXT,
   last_name TEXT,
   company TEXT,

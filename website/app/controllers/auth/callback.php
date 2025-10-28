@@ -51,8 +51,8 @@ class AuthCallback extends TinyController
         // add oauth token and refresh token to ghUser
         $ghUser->github_oauth_token = $accessToken;
         $ghUser->github_refresh_token = $refreshToken;
-        $ghUser->github_token_expires_at = isset($tokenData['expires_in']) 
-            ? date('Y-m-d H:i:s', time() + $tokenData['expires_in']) 
+        $ghUser->github_token_expires_at = isset($tokenData['expires_in'])
+            ? date('Y-m-d H:i:s', time() + $tokenData['expires_in'])
             : null;
 
         try {
