@@ -86,7 +86,7 @@ echo '<!-- v. ' . $_SERVER['APP_VERSION'] . " -->\n";
         }
     </script>
 
-    <script src="<?php tiny::staticURL('/js/alpine.combo.min.js'); ?>"></script>
+    <script defer src="<?php tiny::staticURL('/js/alpine.combo.min.js'); ?>"></script>
 
     <?php if (tiny::layout()->props('emptyLayout') === false): ?>
         <!-- <script src="<?php tiny::staticURL('/js/htmx.min.js'); ?>"></script> -->
@@ -124,7 +124,7 @@ echo '<!-- v. ' . $_SERVER['APP_VERSION'] . " -->\n";
                 </nav>
 
                 <div class="relative z-10 inline-flex items-center space-x-3 md:ml-5 lg:justify-end">
-                    <?php if (tiny::user()): ?>
+                    <?php if (isset(tiny::user()->id)): ?>
                         <a href="<?php echo tiny::homeURL('/account'); ?>" class="btn btn-outline pr-5 pl-2 h-11">
                             <img src="<?php echo tiny::user()->github_avatar; ?>" loading="lazy" class="object-cover size-7.5 rounded-full" />
                             <span class="flex flex-col items-start leading-none pt-0.5 text-neutral-700">

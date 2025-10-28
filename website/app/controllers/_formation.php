@@ -71,12 +71,48 @@ class Formation extends TinyController
             ORDER BY published_at DESC
         ", [$formation['id']]);
 
+        // Load download chart data (last 30 days, aggregated across all versions)
+        $downloadChart = tiny::db()->getQuery("
+            SELECT 
+                day,
+                SUM(download_count) as downloads
+            FROM downloads
+            WHERE formation_id = ?
+              AND day >= DATE('now', '-30 days')
+            GROUP BY day
+            ORDER BY day ASC
+        ", [$formation['id']]);
+
+        // Get downloads this week (last 7 days) for the header badge
+        $weekResult = tiny::db()->getOneQuery("
+            SELECT COALESCE(SUM(download_count), 0) as count
+            FROM downloads
+            WHERE formation_id = ?
+              AND day >= DATE('now', '-7 days')
+        ", [$formation['id']]);
+        $downloadsThisWeek = $weekResult ? $weekResult['count'] : 0;
+
+        // Get mini chart data for this week (7 days)
+        $weeklyChart = tiny::db()->getQuery("
+            SELECT 
+                day,
+                SUM(download_count) as downloads
+            FROM downloads
+            WHERE formation_id = ?
+              AND day >= DATE('now', '-7 days')
+            GROUP BY day
+            ORDER BY day ASC
+        ", [$formation['id']]);
+
         // Pass all formation data to the detail view for rendering.
         $response->render('formation/index', [
             'formation' => $formation,
             'latestVersion' => $latestVersion,
             'stats' => $stats,
             'versions' => $versions,
+            'downloadChart' => $downloadChart,
+            'downloadsThisWeek' => $downloadsThisWeek,
+            'weeklyChart' => $weeklyChart,
         ]);
     }
 }

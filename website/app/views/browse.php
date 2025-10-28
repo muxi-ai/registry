@@ -18,6 +18,11 @@ tiny::components()->require('FormationCard');
         <div class="flex items-center gap-4">
             <span class="text-sm font-semibold text-gray-700">Sort by:</span>
             
+            <a href="<?php tiny::homeURL('/browse?sort=trending'); ?>" 
+               class="px-4 py-2 text-sm rounded <?php echo tiny::data()->sort === 'trending' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'; ?>">
+                🔥 Trending
+            </a>
+            
             <a href="<?php tiny::homeURL('/browse?sort=recent'); ?>" 
                class="px-4 py-2 text-sm rounded <?php echo tiny::data()->sort === 'recent' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'; ?>">
                 Recently Published
@@ -26,11 +31,6 @@ tiny::components()->require('FormationCard');
             <a href="<?php tiny::homeURL('/browse?sort=downloads'); ?>" 
                class="px-4 py-2 text-sm rounded <?php echo tiny::data()->sort === 'downloads' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'; ?>">
                 Most Downloads
-            </a>
-            
-            <a href="<?php tiny::homeURL('/browse?sort=stars'); ?>" 
-               class="px-4 py-2 text-sm rounded <?php echo tiny::data()->sort === 'stars' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'; ?>">
-                Most Stars
             </a>
             
             <a href="<?php tiny::homeURL('/browse?sort=name'); ?>" 

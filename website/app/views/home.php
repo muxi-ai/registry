@@ -25,6 +25,44 @@ tiny::components()->require('FormationCard');
 <!-- Main Content -->
 <div class="max-w-7xl mx-auto">
 
+    <!-- Trending This Week -->
+    <?php if (!empty(tiny::data()->formations['trending'])): ?>
+    <section class="mb-16">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <span>📈</span> Trending This Week
+            </h2>
+            <a href="<?php tiny::homeURL('/browse?sort=trending'); ?>" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                View all →
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <?php foreach (tiny::data()->formations['trending'] as $formation): ?>
+                <a href="<?php tiny::homeURL('/@' . $formation['registry_username'] . '/' . $formation['name']); ?>" 
+                   class="block bg-white border border-gray-200 rounded-lg p-4 hover:border-blue-400 hover:shadow-lg transition">
+                    
+                    <h3 class="font-semibold text-gray-900 mb-2 truncate">
+                        @<?php echo htmlspecialchars($formation['registry_username']); ?>/<?php echo htmlspecialchars($formation['name']); ?>
+                    </h3>
+                    
+                    <p class="text-sm text-gray-600 mb-3 line-clamp-2">
+                        <?php echo htmlspecialchars($formation['description']); ?>
+                    </p>
+                    
+                    <div class="flex justify-between text-xs text-gray-500 pt-2 border-t">
+                        <span>⬇ <?php echo number_format($formation['total_downloads']); ?></span>
+                        <span>⭐ <?php echo number_format($formation['github_stars']); ?></span>
+                        <span class="text-green-600 font-semibold">
+                            +<?php echo number_format($formation['downloads_7d']); ?> this week
+                        </span>
+                    </div>
+                </a>
+            <?php endforeach; ?>
+        </div>
+    </section>
+    <?php endif; ?>
+
     <!-- Recently Published -->
     <section class="mb-16">
         <div class="flex items-center justify-between mb-6">

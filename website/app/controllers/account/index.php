@@ -23,29 +23,47 @@ class Account extends TinyController
 
         // Allow sorting formations by different metrics
         $sort = tiny::router()->query['sort'] ?? 'recent';
-        $validSorts = ['recent', 'downloads', 'stars', 'name'];
+        $validSorts = ['trending', 'recent', 'downloads', 'name'];
         
         if (!in_array($sort, $validSorts)) {
             $sort = 'recent';
         }
 
-        // Map the sort parameter to the appropriate SQL ORDER BY clause
-        $orderBy = match ($sort) {
-            'recent' => 'f.published_at DESC',
-            'downloads' => 'f.total_downloads DESC',
-            'stars' => 'f.github_stars DESC',
-            'name' => 'f.name ASC',
-            default => 'f.published_at DESC'
-        };
-
         // Fetch the user's formations to populate the dashboard listing with selected sorting
-        $formations = tiny::db()->getQuery("
-            SELECT f.*, u.registry_username, u.github_username
-            FROM formations f
-            JOIN users u ON f.user_id = u.id
-            WHERE f.user_id = ?
-            ORDER BY {$orderBy}
-        ", [$user->id]);
+        if ($sort === 'trending') {
+            // Trending: formations with most downloads in last 7 days
+            $formations = tiny::db()->getQuery("
+                SELECT 
+                    f.*, 
+                    u.registry_username, 
+                    u.github_username,
+                    COALESCE(SUM(d.download_count), 0) as downloads_7d
+                FROM formations f
+                JOIN users u ON f.user_id = u.id
+                LEFT JOIN downloads d 
+                    ON f.id = d.formation_id 
+                    AND d.day >= DATE('now', '-7 days')
+                WHERE f.user_id = ?
+                GROUP BY f.id
+                ORDER BY downloads_7d DESC, f.github_stars DESC
+            ", [$user->id]);
+        } else {
+            // Map the sort parameter to the appropriate SQL ORDER BY clause
+            $orderBy = match ($sort) {
+                'recent' => 'f.published_at DESC',
+                'downloads' => 'f.total_downloads DESC',
+                'name' => 'f.name ASC',
+                default => 'f.published_at DESC'
+            };
+
+            $formations = tiny::db()->getQuery("
+                SELECT f.*, u.registry_username, u.github_username
+                FROM formations f
+                JOIN users u ON f.user_id = u.id
+                WHERE f.user_id = ?
+                ORDER BY {$orderBy}
+            ", [$user->id]);
+        }
 
         // Aggregate personal stats so the dashboard can show quick-glance metrics.
         $stats = tiny::db()->getOneQuery("

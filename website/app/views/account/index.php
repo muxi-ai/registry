@@ -114,23 +114,23 @@ tiny::components()->require('FormationCard');
             <div class="bg-white border border-gray-200 rounded-lg p-4 mb-6">
                 <div class="flex items-center gap-4">
                     <span class="text-sm font-semibold text-gray-700">Sort by:</span>
-                    
-                    <a href="<?php tiny::homeURL('/account?sort=recent'); ?>" 
+
+                    <a href="<?php tiny::homeURL('/account?sort=trending'); ?>"
+                       class="px-4 py-2 text-sm rounded <?php echo tiny::data()->sort === 'trending' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'; ?>">
+                        🔥 Trending
+                    </a>
+
+                    <a href="<?php tiny::homeURL('/account?sort=recent'); ?>"
                        class="px-4 py-2 text-sm rounded <?php echo tiny::data()->sort === 'recent' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'; ?>">
                         Recently Published
                     </a>
-                    
-                    <a href="<?php tiny::homeURL('/account?sort=downloads'); ?>" 
+
+                    <a href="<?php tiny::homeURL('/account?sort=downloads'); ?>"
                        class="px-4 py-2 text-sm rounded <?php echo tiny::data()->sort === 'downloads' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'; ?>">
                         Most Downloads
                     </a>
-                    
-                    <a href="<?php tiny::homeURL('/account?sort=stars'); ?>" 
-                       class="px-4 py-2 text-sm rounded <?php echo tiny::data()->sort === 'stars' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'; ?>">
-                        Most Stars
-                    </a>
-                    
-                    <a href="<?php tiny::homeURL('/account?sort=name'); ?>" 
+
+                    <a href="<?php tiny::homeURL('/account?sort=name'); ?>"
                        class="px-4 py-2 text-sm rounded <?php echo tiny::data()->sort === 'name' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'; ?>">
                         Name (A-Z)
                     </a>
@@ -146,5 +146,7 @@ tiny::components()->require('FormationCard');
         <?php endif; ?>
     </div>
 </div>
+
+<a href="<?php tiny::homeURL('/auth/logout'); ?>" class="text-blue-600 hover:text-blue-700">Logout</a>
 
 <?php tiny::layout()->default('/'); ?>
