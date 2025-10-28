@@ -266,7 +266,8 @@ class ApiFormations extends TinyController
                 throw new Exception("GitHub OAuth token not found. Please reconnect your GitHub account.");
             }
             $this->github->setToken($githubToken);
-            error_log("🔑 Using OAuth token for user: {$user->registry_username}");
+            $tokenPreview = substr($githubToken, 0, 10) . '...' . substr($githubToken, -4);
+            error_log("🔑 Using OAuth token for user: {$user->registry_username}, token: {$tokenPreview}");
             
             // 7. If org specified, verify membership
             if ($orgName) {
