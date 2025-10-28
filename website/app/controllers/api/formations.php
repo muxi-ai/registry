@@ -214,6 +214,9 @@ class ApiFormations extends TinyController
             $this->github->setToken($githubToken);
 
             $repo = $this->createOrGetGitHubRepo($githubOwner, $repoName, $formationData);
+            
+            // 7b. Set GitHub topics (tags)
+            $this->setGitHubTopics($fullRepoName, $formationData);
 
             // 8. Push files to GitHub
             $this->pushFilesToGitHub($fullRepoName, $tempDir);
@@ -513,6 +516,9 @@ Requirements:
    - Usage/configuration guide (if applicable)
    - Requirements/dependencies
    - License information
+   - Links section at the bottom with:
+     * Formation on MUXI Registry: https://registry.muxi.org/@owner/{$formationData['id']}
+     * MUXI Documentation: https://muxi.org
 
 2. Suggest up to 3 relevant categories for this formation (e.g., "customer-support", "automation", "data-processing")
 
@@ -528,6 +534,7 @@ Important:
 - Be specific about what this formation does
 - Include code examples if relevant based on the structure
 - Keep categories lowercase with hyphens (e.g., "customer-support")
+- Include the registry and muxi.org links at the bottom
 PROMPT;
             
             // Call OpenAI
@@ -544,10 +551,9 @@ PROMPT;
             if ($result && !$result['error'] && isset($result['data'])) {
                 $data = $result['data'];
                 
-                // Store categories for later use (could be saved to database)
-                if (isset($data['categories'])) {
-                    // TODO: Store categories in database
-                    // For now, just log them
+                // Store categories in formationData for later use
+                if (isset($data['categories']) && is_array($data['categories'])) {
+                    $formationData['_generated_categories'] = $data['categories'];
                     error_log("Generated categories: " . implode(', ', $data['categories']));
                 }
                 
@@ -747,6 +753,12 @@ MD;
      */
     private function storeFormationInDatabase($userId, $formationData, $repo, $release)
     {
+        // Prepare categories as JSON string
+        $categories = null;
+        if (isset($formationData['_generated_categories']) && is_array($formationData['_generated_categories'])) {
+            $categories = json_encode($formationData['_generated_categories']);
+        }
+        
         $data = [
             'user_id' => $userId,
             'name' => $formationData['id'],
@@ -756,6 +768,7 @@ MD;
             'github_repo' => $repo['full_name'],
             'github_stars' => $repo['stargazers_count'] ?? 0,
             'license' => $formationData['license'] ?? $repo['license']['spdx_id'] ?? null,
+            'categories' => $categories,
             'published_at' => $release['published_at'] ?? date('Y-m-d H:i:s'),
             'last_synced_at' => date('Y-m-d H:i:s'),
             'created_at' => date('Y-m-d H:i:s')
@@ -815,6 +828,35 @@ MD;
         return $files;
     }
 
+    /**
+     * Set GitHub repository topics
+     * 
+     * @param string $repoName Full repository name (owner/repo)
+     * @param array $formationData Formation data including categories
+     */
+    private function setGitHubTopics($repoName, $formationData)
+    {
+        try {
+            // Build topics list: muxi, formation, + generated categories
+            $topics = ['muxi', 'formation'];
+            
+            if (isset($formationData['_generated_categories']) && is_array($formationData['_generated_categories'])) {
+                foreach ($formationData['_generated_categories'] as $category) {
+                    $topics[] = $category;
+                }
+            }
+            
+            // GitHub limits to 20 topics, ensure we don't exceed
+            $topics = array_slice(array_unique($topics), 0, 20);
+            
+            $this->github->setTopics($repoName, $topics);
+            
+        } catch (Exception $e) {
+            // Log error but don't fail publish if topics fail
+            error_log("Failed to set GitHub topics: " . $e->getMessage());
+        }
+    }
+    
     /**
      * Remove directory recursively
      */

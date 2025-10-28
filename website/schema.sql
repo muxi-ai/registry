@@ -65,6 +65,7 @@ CREATE TABLE formations (
   total_downloads INTEGER DEFAULT 0,
   size_bytes INTEGER DEFAULT 0,
   is_public BOOLEAN DEFAULT 1,             -- For future private formations
+  categories TEXT,                         -- JSON array of LLM-generated categories
   published_at DATETIME,
   last_synced_at DATETIME,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
