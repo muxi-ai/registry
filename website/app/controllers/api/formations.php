@@ -1,6 +1,6 @@
 <?php
 
-tiny::helpers(['github']);
+tiny::helpers(['github', 'openai']);
 
 /**
  * API Controller for formations endpoints
@@ -188,9 +188,8 @@ class ApiFormations extends TinyController
             // 4. Check/create README.md
             $readmePath = $tempDir . '/README.md';
             if (!file_exists($readmePath)) {
-                // TODO: Use LLM to generate comprehensive README from formation data
-                // For now, create basic README
-                $readme = $this->generateBasicReadme($formationData);
+                // Generate comprehensive README using LLM
+                $readme = $this->generateReadmeWithLLM($formationData, $tempDir);
                 file_put_contents($readmePath, $readme);
             }
 
@@ -475,8 +474,140 @@ class ApiFormations extends TinyController
     }
 
     /**
-     * Generate basic README from formation data
-     * TODO: Replace with LLM-generated comprehensive README
+     * Generate comprehensive README using LLM
+     * 
+     * @param array $formationData Parsed formation.yaml data
+     * @param string $tempDir Path to extracted formation directory
+     * @return string Generated README content
+     */
+    private function generateReadmeWithLLM($formationData, $tempDir)
+    {
+        try {
+            // Analyze formation structure
+            $structure = $this->analyzeFormationStructure($tempDir);
+            
+            // Build prompt with formation data
+            $formationInfo = json_encode([
+                'id' => $formationData['id'] ?? 'unknown',
+                'description' => $formationData['description'] ?? '',
+                'version' => $formationData['version'] ?? '1.0.0',
+                'runtime' => $formationData['runtime'] ?? 'Not specified',
+                'author' => $formationData['author'] ?? null,
+                'url' => $formationData['url'] ?? null,
+                'license' => $formationData['license'] ?? 'MIT',
+                'structure' => $structure
+            ], JSON_PRETTY_PRINT);
+            
+            $systemPrompt = "You are a technical documentation expert. Generate comprehensive, professional README files for MUXI formations (AI agent configurations).";
+            
+            $userPrompt = <<<PROMPT
+Generate a comprehensive README.md for this MUXI formation:
+
+{$formationInfo}
+
+Requirements:
+1. Create a professional, well-structured README with these sections:
+   - Title and description
+   - Features/capabilities
+   - Installation instructions (use: muxi pull @owner/{$formationData['id']})
+   - Usage/configuration guide (if applicable)
+   - Requirements/dependencies
+   - License information
+
+2. Suggest up to 3 relevant categories for this formation (e.g., "customer-support", "automation", "data-processing")
+
+3. Return ONLY valid JSON in this exact format:
+{
+  "readme": "# Full README content here...",
+  "categories": ["category1", "category2", "category3"]
+}
+
+Important:
+- Make the README engaging and informative
+- Use markdown formatting
+- Be specific about what this formation does
+- Include code examples if relevant based on the structure
+- Keep categories lowercase with hyphens (e.g., "customer-support")
+PROMPT;
+            
+            // Call OpenAI
+            $response = tiny::openai()->sendMessage(
+                $userPrompt,
+                $systemPrompt,
+                [],
+                2000,  // More tokens for comprehensive README
+                'gpt-4o-mini'
+            );
+            
+            $result = json_decode($response, true);
+            
+            if ($result && !$result['error'] && isset($result['data'])) {
+                $data = $result['data'];
+                
+                // Store categories for later use (could be saved to database)
+                if (isset($data['categories'])) {
+                    // TODO: Store categories in database
+                    // For now, just log them
+                    error_log("Generated categories: " . implode(', ', $data['categories']));
+                }
+                
+                return $data['readme'] ?? $this->generateBasicReadme($formationData);
+            }
+            
+            // Fallback to basic README if LLM fails
+            return $this->generateBasicReadme($formationData);
+            
+        } catch (Exception $e) {
+            // Log error and fallback to basic README
+            error_log("LLM README generation failed: " . $e->getMessage());
+            return $this->generateBasicReadme($formationData);
+        }
+    }
+    
+    /**
+     * Analyze formation directory structure
+     * 
+     * @param string $tempDir Path to formation directory
+     * @return array Structure information
+     */
+    private function analyzeFormationStructure($tempDir)
+    {
+        $structure = [
+            'files' => [],
+            'components' => [
+                'agents' => 0,
+                'mcps' => 0,
+                'sops' => 0,
+                'triggers' => 0,
+                'knowledge' => 0
+            ]
+        ];
+        
+        $files = $this->getFilesRecursive($tempDir);
+        
+        foreach ($files as $file) {
+            $relativePath = str_replace($tempDir . '/', '', $file);
+            $structure['files'][] = $relativePath;
+            
+            // Count component types based on file patterns
+            if (strpos($relativePath, 'agent') !== false && strpos($relativePath, '.yaml') !== false) {
+                $structure['components']['agents']++;
+            } elseif (strpos($relativePath, 'mcp') !== false || strpos($relativePath, 'server') !== false) {
+                $structure['components']['mcps']++;
+            } elseif (strpos($relativePath, 'sop') !== false || strpos($relativePath, 'procedure') !== false) {
+                $structure['components']['sops']++;
+            } elseif (strpos($relativePath, 'trigger') !== false) {
+                $structure['components']['triggers']++;
+            } elseif (strpos($relativePath, 'knowledge') !== false || strpos($relativePath, '.md') !== false) {
+                $structure['components']['knowledge']++;
+            }
+        }
+        
+        return $structure;
+    }
+    
+    /**
+     * Generate basic README from formation data (fallback)
      */
     private function generateBasicReadme($formationData)
     {
@@ -703,13 +834,13 @@ MD;
 
     /**
      * Parse simple YAML file (basic key-value pairs)
-     * 
+     *
      * Supports:
      * - Simple key: value pairs
      * - Quoted strings
      * - Multi-line values (with proper indentation)
      * - Comments (# lines)
-     * 
+     *
      * @param string $filePath Path to YAML file
      * @return array|false Parsed data or false on error
      */
@@ -718,18 +849,18 @@ MD;
         if (!file_exists($filePath)) {
             return false;
         }
-        
+
         $content = file_get_contents($filePath);
         if ($content === false) {
             return false;
         }
-        
+
         $lines = explode("\n", $content);
         $data = [];
         $currentKey = null;
         $multilineValue = '';
         $inMultiline = false;
-        
+
         foreach ($lines as $line) {
             // Skip empty lines
             $trimmed = trim($line);
@@ -739,36 +870,36 @@ MD;
                 }
                 continue;
             }
-            
+
             // Skip comments
             if (strpos($trimmed, '#') === 0) {
                 continue;
             }
-            
+
             // Check if this is a continuation of multiline value
             if ($inMultiline && (strpos($line, '  ') === 0 || strpos($line, "\t") === 0)) {
                 $multilineValue .= "\n" . trim($line);
                 continue;
             }
-            
+
             // End multiline if we were in one
             if ($inMultiline) {
                 $data[$currentKey] = $multilineValue;
                 $inMultiline = false;
                 $multilineValue = '';
             }
-            
+
             // Parse key-value pair
             if (strpos($trimmed, ':') !== false) {
                 list($key, $value) = explode(':', $trimmed, 2);
                 $key = trim($key);
                 $value = trim($value);
-                
+
                 // Remove quotes if present
                 if (preg_match('/^["\'](.+)["\']$/', $value, $matches)) {
                     $value = $matches[1];
                 }
-                
+
                 // Check if value is empty or multiline indicator (multiline start)
                 if (empty($value) || $value === '|' || $value === '>') {
                     $currentKey = $key;
@@ -779,12 +910,12 @@ MD;
                 }
             }
         }
-        
+
         // Handle last multiline value
         if ($inMultiline && $currentKey) {
             $data[$currentKey] = $multilineValue;
         }
-        
+
         return $data;
     }
 
