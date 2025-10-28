@@ -81,7 +81,11 @@ class ApiFormations extends TinyController
     /**
      * POST /api/formations/publish
      *
-     * Publish or update a formation (requires authentication)
+     * Publish a formation from uploaded ZIP file (requires authentication)
+     * 
+     * Accepts multipart/form-data with:
+     * - file: formation.zip (required)
+     * - org: organization name (optional, defaults to user)
      */
     public function post($request, $response)
     {
@@ -95,74 +99,157 @@ class ApiFormations extends TinyController
             ], 401);
         }
 
-        $data = $request->body(true);
-        $githubRepo = $data['github_repo'] ?? '';
-        $version = $data['version'] ?? null;
-
-        // Validate repo format: owner/muxi-name
-        if (!preg_match('/^[\w-]+\/muxi-[\w-]+$/', $githubRepo)) {
+        // Validate file upload
+        if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
             return $response->sendJSON([
                 'error' => true,
-                'message' => 'Invalid repository name format. Must be: owner/muxi-name',
-                'id' => 'API-08'
+                'message' => 'No formation.zip file uploaded or upload failed',
+                'id' => 'API-13'
             ], 400);
         }
 
-        list($repoOwner, $repoName) = explode('/', $githubRepo);
+        $uploadedFile = $_FILES['file'];
+        $orgName = $_POST['org'] ?? null;
 
-        // Check ownership
-        if ($repoOwner !== $user->github_username) {
-            // TODO: Check if it's an org the user has access to
-            if (!$this->canPublishToOrg($user, $repoOwner)) {
-                return $response->sendJSON([
-                    'error' => true,
-                    'message' => 'You don\'t have permission to publish this formation',
-                    'id' => 'API-07'
-                ], 403);
-            }
+        // Validate file is a ZIP
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mimeType = finfo_file($finfo, $uploadedFile['tmp_name']);
+        finfo_close($finfo);
+
+        if (!in_array($mimeType, ['application/zip', 'application/x-zip-compressed'])) {
+            return $response->sendJSON([
+                'error' => true,
+                'message' => 'Uploaded file must be a ZIP archive',
+                'id' => 'API-14'
+            ], 400);
         }
 
-        // Get GitHub token for authenticated requests
-        $githubToken = tiny::model('user')->getGitHubAccessTokenByUserId($user->id);
-
-        // Fetch from GitHub
-        $this->github->setToken($githubToken);
+        // Process and publish formation
         try {
-            $repo = $this->github->getRepo($githubRepo);
-            $readme = $this->github->getReadme($githubRepo);
-            $release = $version
-                ? $this->github->getRelease($githubRepo, $version)
-                : $this->github->getLatestRelease($githubRepo);
+            $result = $this->processAndPublishFormation($user, $uploadedFile, $orgName);
+            return $response->sendJSON($result);
         } catch (Exception $e) {
             return $response->sendJSON([
                 'error' => true,
-                'message' => 'Repository or release not found on GitHub',
-                'id' => 'API-09'
-            ], 404);
+                'message' => $e->getMessage(),
+                'id' => 'API-15'
+            ], 400);
         }
-
-        // Extract formation name (remove muxi- prefix)
-        $formationName = preg_replace('/^muxi-/', '', $repoName);
-
-        // Create or update formation
-        $formation = $this->createOrUpdateFormation(
-            $user->id,
-            $formationName,
-            $repo,
-            $readme,
-            $release
-        );
-
-        return $response->sendJSON([
-            'status' => 'ok',
-            'message' => 'Formation published successfully',
-            'formation' => [
-                'name' => $formationName,
-                'user' => $user->registry_username,
-                'version' => ltrim($release['tag_name'], 'v'),
-                'url' => tiny::getHomeURL("/@{$user->registry_username}/{$formationName}", true)
-            ]
-        ]);
+    }
+    
+    /**
+     * Process uploaded formation ZIP and publish to GitHub
+     *
+     * @param object $user Authenticated user
+     * @param array $uploadedFile $_FILES array entry
+     * @param string|null $orgName Optional organization name
+     * @return array Success response
+     * @throws Exception on any error
+     */
+    private function processAndPublishFormation($user, $uploadedFile, $orgName = null)
+    {
+        // Create temp directory
+        $tempDir = sys_get_temp_dir() . '/muxi_' . uniqid();
+        mkdir($tempDir, 0755, true);
+        
+        try {
+            // 1. Unzip uploaded file
+            $zip = new ZipArchive();
+            if ($zip->open($uploadedFile['tmp_name']) !== true) {
+                throw new Exception('Invalid ZIP file or unable to extract');
+            }
+            $zip->extractTo($tempDir);
+            $zip->close();
+            
+            // 2. Parse formation.yaml
+            $formationYamlPath = $tempDir . '/formation.yaml';
+            if (!file_exists($formationYamlPath)) {
+                throw new Exception('formation.yaml not found in ZIP archive');
+            }
+            
+            $formationData = yaml_parse_file($formationYamlPath);
+            if (!$formationData) {
+                throw new Exception('Invalid formation.yaml format');
+            }
+            
+            // 3. Validate required fields
+            $requiredFields = ['id', 'version', 'description'];
+            foreach ($requiredFields as $field) {
+                if (!isset($formationData[$field]) || empty($formationData[$field])) {
+                    throw new Exception("Missing or empty required field: $field");
+                }
+            }
+            
+            // Validate version format (semver)
+            if (!preg_match('/^\d+\.\d+\.\d+$/', $formationData['version'])) {
+                throw new Exception('Version must be in semver format (e.g., 1.0.0)');
+            }
+            
+            // 4. Check/create README.md
+            $readmePath = $tempDir . '/README.md';
+            if (!file_exists($readmePath)) {
+                // TODO: Use LLM to generate comprehensive README from formation data
+                // For now, create basic README
+                $readme = $this->generateBasicReadme($formationData);
+                file_put_contents($readmePath, $readme);
+            }
+            
+            // 5. Determine GitHub owner (user or org)
+            $githubOwner = $orgName ?? $user->github_username;
+            
+            // 6. If org specified, verify membership
+            if ($orgName) {
+                $githubToken = tiny::model('user')->getGitHubAccessTokenByUserId($user->id);
+                $this->github->setToken($githubToken);
+                
+                if (!$this->github->isOrgMember($orgName, $user->github_username)) {
+                    throw new Exception("You are not a member of organization: $orgName");
+                }
+            }
+            
+            // 7. Create/verify GitHub repository
+            $repoName = "muxi-{$formationData['id']}";
+            $fullRepoName = "$githubOwner/$repoName";
+            
+            $githubToken = tiny::model('user')->getGitHubAccessTokenByUserId($user->id);
+            $this->github->setToken($githubToken);
+            
+            $repo = $this->createOrGetGitHubRepo($githubOwner, $repoName, $formationData);
+            
+            // 8. Push files to GitHub
+            $this->pushFilesToGitHub($fullRepoName, $tempDir);
+            
+            // 9. Create GitHub release
+            $version = $formationData['version'];
+            $release = $this->createGitHubRelease($fullRepoName, $version, $formationData);
+            
+            // 10. Repack and upload as release asset
+            $zipPath = $this->repackFormation($tempDir, $formationData['id']);
+            $asset = $this->uploadReleaseAsset($fullRepoName, $release['id'], $zipPath, 'formation.zip');
+            
+            // 11. Store formation metadata in database
+            $formation = $this->storeFormationInDatabase($user->id, $formationData, $repo, $release);
+            
+            return [
+                'status' => 'ok',
+                'message' => 'Formation published successfully',
+                'formation' => [
+                    'name' => $formationData['id'],
+                    'user' => $user->registry_username,
+                    'version' => $version,
+                    'github_repo' => $fullRepoName,
+                    'registry_url' => tiny::getHomeURL("/@{$user->registry_username}/{$formationData['id']}", true),
+                    'download_url' => $asset['browser_download_url'] ?? null
+                ]
+            ];
+            
+        } finally {
+            // Cleanup temp directory
+            $this->removeDirectory($tempDir);
+            if (isset($zipPath) && file_exists($zipPath)) {
+                unlink($zipPath);
+            }
+        }
     }
 
     /**
@@ -365,6 +452,233 @@ class ApiFormations extends TinyController
                 'download_count' => 1
             ]);
         }
+    }
+    
+    /**
+     * Generate basic README from formation data
+     * TODO: Replace with LLM-generated comprehensive README
+     */
+    private function generateBasicReadme($formationData)
+    {
+        $id = $formationData['id'];
+        $description = $formationData['description'];
+        $version = $formationData['version'];
+        $author = $formationData['author'] ?? 'Unknown';
+        $license = $formationData['license'] ?? 'MIT';
+        
+        return <<<MD
+# {$id}
+
+{$description}
+
+## Installation
+
+```bash
+muxi pull @owner/{$id}
+```
+
+## Version
+
+Current version: {$version}
+
+## Author
+
+{$author}
+
+## License
+
+{$license}
+
+---
+
+*This README was auto-generated. Please update with detailed documentation.*
+
+MD;
+    }
+    
+    /**
+     * Create GitHub repository or get existing
+     */
+    private function createOrGetGitHubRepo($owner, $repoName, $formationData)
+    {
+        // Check if repo exists
+        try {
+            $repo = $this->github->getRepo("$owner/$repoName");
+            return $repo;
+        } catch (Exception $e) {
+            // Create new repo
+            return $this->github->createRepo($owner, $repoName, [
+                'description' => $formationData['description'],
+                'private' => false
+            ]);
+        }
+    }
+    
+    /**
+     * Push files to GitHub repository using Contents API
+     */
+    private function pushFilesToGitHub($repoName, $tempDir)
+    {
+        $files = $this->getFilesRecursive($tempDir);
+        
+        foreach ($files as $file) {
+            $relativePath = str_replace($tempDir . '/', '', $file);
+            $content = file_get_contents($file);
+            
+            // Check if file exists (for updates)
+            $sha = $this->github->getFileSha($repoName, $relativePath);
+            
+            // Create or update file
+            $this->github->createOrUpdateFile(
+                $repoName,
+                $relativePath,
+                $content,
+                $sha ? "Update $relativePath" : "Add $relativePath",
+                $sha
+            );
+        }
+    }
+    
+    /**
+     * Create GitHub release
+     */
+    private function createGitHubRelease($repoName, $version, $formationData)
+    {
+        $tagName = "v{$version}";
+        
+        // Check if release already exists
+        try {
+            return $this->github->getRelease($repoName, $tagName);
+        } catch (Exception $e) {
+            // Create new release
+            return $this->github->createRelease($repoName, [
+                'tag_name' => $tagName,
+                'name' => $tagName,
+                'body' => $formationData['description'] ?? "Release $tagName",
+                'draft' => false,
+                'prerelease' => false
+            ]);
+        }
+    }
+    
+    /**
+     * Upload release asset
+     */
+    private function uploadReleaseAsset($repoName, $releaseId, $zipPath, $fileName)
+    {
+        return $this->github->uploadReleaseAsset($repoName, $releaseId, $zipPath, $fileName);
+    }
+    
+    /**
+     * Repack formation directory into ZIP
+     */
+    private function repackFormation($dir, $formationId)
+    {
+        $zipPath = sys_get_temp_dir() . "/{$formationId}_" . time() . '.zip';
+        
+        $zip = new ZipArchive();
+        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+            throw new Exception('Unable to create ZIP archive');
+        }
+        
+        $files = $this->getFilesRecursive($dir);
+        foreach ($files as $file) {
+            $relativePath = str_replace($dir . '/', '', $file);
+            $zip->addFile($file, $relativePath);
+        }
+        
+        $zip->close();
+        return $zipPath;
+    }
+    
+    /**
+     * Store formation metadata in database
+     */
+    private function storeFormationInDatabase($userId, $formationData, $repo, $release)
+    {
+        $data = [
+            'user_id' => $userId,
+            'name' => $formationData['id'],
+            'description' => $formationData['description'],
+            'readme_md' => file_get_contents($repo['html_url'] . '/raw/main/README.md') ?? '',
+            'latest_version' => $formationData['version'],
+            'github_repo' => $repo['full_name'],
+            'github_stars' => $repo['stargazers_count'] ?? 0,
+            'license' => $formationData['license'] ?? $repo['license']['spdx_id'] ?? null,
+            'published_at' => $release['published_at'] ?? date('Y-m-d H:i:s'),
+            'last_synced_at' => date('Y-m-d H:i:s'),
+            'created_at' => date('Y-m-d H:i:s')
+        ];
+        
+        // Check if formation already exists
+        $existing = tiny::db()->getOne('formations', [
+            'user_id' => $userId,
+            'name' => $formationData['id']
+        ]);
+        
+        if ($existing) {
+            // Update existing
+            tiny::db()->update('formations', $data, ['id' => $existing['id']]);
+            $formationId = $existing['id'];
+        } else {
+            // Insert new
+            $formationId = tiny::db()->insert('formations', $data);
+        }
+        
+        // Store version info
+        $versionExists = tiny::db()->getOne('versions', [
+            'formation_id' => $formationId,
+            'version' => $formationData['version']
+        ]);
+        
+        if (!$versionExists) {
+            tiny::db()->insert('versions', [
+                'formation_id' => $formationId,
+                'version' => $formationData['version'],
+                'release_notes' => $release['body'] ?? '',
+                'download_url' => $release['assets'][0]['browser_download_url'] ?? null,
+                'published_at' => $release['published_at'] ?? date('Y-m-d H:i:s'),
+                'created_at' => date('Y-m-d H:i:s')
+            ]);
+        }
+        
+        return $formationId;
+    }
+    
+    /**
+     * Get all files recursively from directory
+     */
+    private function getFilesRecursive($dir)
+    {
+        $files = [];
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($dir, RecursiveDirectoryIterator::SKIP_DOTS)
+        );
+        
+        foreach ($iterator as $file) {
+            if ($file->isFile()) {
+                $files[] = $file->getPathname();
+            }
+        }
+        
+        return $files;
+    }
+    
+    /**
+     * Remove directory recursively
+     */
+    private function removeDirectory($dir)
+    {
+        if (!is_dir($dir)) {
+            return;
+        }
+        
+        $files = array_diff(scandir($dir), ['.', '..']);
+        foreach ($files as $file) {
+            $path = "$dir/$file";
+            is_dir($path) ? $this->removeDirectory($path) : unlink($path);
+        }
+        rmdir($dir);
     }
 
     /**
