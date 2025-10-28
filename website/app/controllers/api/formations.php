@@ -258,8 +258,8 @@ class ApiFormations extends TinyController
                 error_log("📦 Publishing to USER: {$user->registry_username} (github: {$user->github_username})");
             }
 
-            // ========== GITHUB OPERATIONS TEMPORARILY DISABLED FOR TESTING ==========
-            /*
+            // ========== GITHUB OPERATIONS ==========
+            
             // 6. If org specified, verify membership
             if ($orgName) {
                 $githubToken = tiny::model('user')->getGitHubAccessTokenByUserId($user->id);
@@ -292,10 +292,11 @@ class ApiFormations extends TinyController
             // 10. Repack and upload as release asset
             $zipPath = $this->repackFormation($tempDir, $formationData['id']);
             $asset = $this->uploadReleaseAsset($fullRepoName, $release['id'], $zipPath, 'formation.zip');
-            */
+            
             // ========== END GITHUB OPERATIONS ==========
 
-            // Mock GitHub data for testing without actual GitHub push
+            // Mock GitHub data disabled - using real GitHub operations
+            /*
             $repoName = "muxi-{$formationData['id']}";
             $fullRepoName = "$githubOwner/$repoName";
             $version = $formationData['version'];
@@ -321,6 +322,7 @@ class ApiFormations extends TinyController
             $asset = [
                 'browser_download_url' => "https://github.com/$fullRepoName/releases/download/v{$version}/formation.zip"
             ];
+            */
 
             // 11. Store formation metadata in database
             $formation = $this->storeFormationInDatabase($user->id, $formationData, $repo, $release);
@@ -872,7 +874,7 @@ MD;
             'latest_version' => $formationData['version'],
             'github_repo' => $repo['full_name'],
             'github_stars' => $repo['stargazers_count'] ?? 0,
-            'license' => $formationData['license'] ?? $repo['license']['spdx_id'] ?? null,
+            'license' => $formationData['license'] ?? (isset($repo['license']['spdx_id']) ? $repo['license']['spdx_id'] : null),
             'categories' => $categories,
             'published_at' => $release['published_at'] ?? date('Y-m-d H:i:s'),
             'last_synced_at' => date('Y-m-d H:i:s'),
