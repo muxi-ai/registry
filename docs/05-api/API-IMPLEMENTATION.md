@@ -24,32 +24,50 @@ GET  /api/stats/@me                  - User statistics
 
 ## 📦 Endpoint 1: Get Formation (Lazy Discovery)
 
-### `GET /api/formations/@:user/:name`
+### `GET /api/formations/@:user/:name[:version][?pull=true]`
 
 **The Core Magic**: Lazy/blind discovery of formations from GitHub
 
+**New in v2.5**: 
+- `:version` syntax for specific version info (e.g., `@muxi/customer-support:1.2.0`)
+- `?pull=true` query parameter to track downloads (default: info only, no tracking)
+
 #### Flow:
 ```
-1. Check database for cached metadata
+1. Parse URL path for optional :version
    ↓
-2. If found → return cached data (fast path)
+2. Check database for cached metadata
    ↓
-3. If not found → Try GitHub
+3. If found → return cached data (fast path)
    ↓
-4. Resolve registry username → GitHub username (handle mappings like @muxi → muxi-ai)
+4. If not found → Try GitHub
    ↓
-5. Fetch repo: github.com/{github_username}/muxi-{formation_name}
+5. Resolve registry username → GitHub username (handle mappings like @muxi → muxi-ai)
    ↓
-6. Fetch README, latest release, stats
+6. Fetch repo: github.com/{github_username}/muxi-{formation_name}
    ↓
-7. Cache in database
+7. Fetch README, latest release, stats
    ↓
-8. Return metadata
+8. Cache in database
+   ↓
+9. If ?pull=true → track download in downloads table
+   ↓
+10. Return metadata
 ```
 
-#### Request:
+#### Request Examples:
 ```bash
+# Info only (no tracking)
 GET /api/formations/@muxi/customer-support
+
+# Specific version info (no tracking)
+GET /api/formations/@muxi/customer-support:1.2.0
+
+# Actual pull (tracks download)
+GET /api/formations/@muxi/customer-support?pull=true
+
+# Specific version pull (tracks download)
+GET /api/formations/@muxi/customer-support:1.2.0?pull=true
 ```
 
 #### Response (200 OK):
