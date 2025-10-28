@@ -1,4 +1,5 @@
 <?php
+tiny::helpers(['markdown']);
 
 /**
  * Controller responsible for rendering formation pages.

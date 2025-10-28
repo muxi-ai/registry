@@ -39,13 +39,30 @@ class Profile extends TinyController
             $response->render('404');
         }
 
-        // Get user's formations
+        // Allow sorting formations by different metrics
+        $sort = tiny::router()->query['sort'] ?? 'recent';
+        $validSorts = ['recent', 'downloads', 'stars', 'name'];
+        
+        if (!in_array($sort, $validSorts)) {
+            $sort = 'recent';
+        }
+
+        // Map the sort parameter to the appropriate SQL ORDER BY clause
+        $orderBy = match ($sort) {
+            'recent' => 'f.published_at DESC',
+            'downloads' => 'f.total_downloads DESC',
+            'stars' => 'f.github_stars DESC',
+            'name' => 'f.name ASC',
+            default => 'f.published_at DESC'
+        };
+
+        // Get user's formations with selected sorting
         $formations = tiny::db()->getQuery("
             SELECT f.*, u.registry_username, u.github_username
             FROM formations f
             JOIN users u ON f.user_id = u.id
             WHERE u.registry_username = ?
-            ORDER BY f.published_at DESC
+            ORDER BY {$orderBy}
         ", [$this->username]);
 
         // Get user stats
@@ -61,6 +78,7 @@ class Profile extends TinyController
         tiny::data()->profile = $profile;
         tiny::data()->formations = $formations;
         tiny::data()->stats = $stats;
+        tiny::data()->sort = $sort;
 
         $response->render('profile/index');
     }

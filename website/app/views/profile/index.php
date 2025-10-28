@@ -87,7 +87,9 @@ tiny::components()->require('FormationCard');
 
     <!-- Formations -->
     <div class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">Formations</h2>
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-bold text-gray-900">Formations</h2>
+        </div>
 
         <?php if (empty(tiny::data()->formations)): ?>
             <div class="bg-white border border-gray-200 rounded-lg p-12 text-center">
@@ -95,6 +97,34 @@ tiny::components()->require('FormationCard');
                 <p class="text-gray-600">No formations published yet</p>
             </div>
         <?php else: ?>
+            <!-- Sort Controls -->
+            <div class="bg-white border border-gray-200 rounded-lg p-4 mb-6">
+                <div class="flex items-center gap-4">
+                    <span class="text-sm font-semibold text-gray-700">Sort by:</span>
+                    
+                    <a href="<?php tiny::homeURL('/@' . tiny::data()->profile['registry_username'] . '?sort=recent'); ?>" 
+                       class="px-4 py-2 text-sm rounded <?php echo tiny::data()->sort === 'recent' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'; ?>">
+                        Recently Published
+                    </a>
+                    
+                    <a href="<?php tiny::homeURL('/@' . tiny::data()->profile['registry_username'] . '?sort=downloads'); ?>" 
+                       class="px-4 py-2 text-sm rounded <?php echo tiny::data()->sort === 'downloads' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'; ?>">
+                        Most Downloads
+                    </a>
+                    
+                    <a href="<?php tiny::homeURL('/@' . tiny::data()->profile['registry_username'] . '?sort=stars'); ?>" 
+                       class="px-4 py-2 text-sm rounded <?php echo tiny::data()->sort === 'stars' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'; ?>">
+                        Most Stars
+                    </a>
+                    
+                    <a href="<?php tiny::homeURL('/@' . tiny::data()->profile['registry_username'] . '?sort=name'); ?>" 
+                       class="px-4 py-2 text-sm rounded <?php echo tiny::data()->sort === 'name' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'; ?>">
+                        Name (A-Z)
+                    </a>
+                </div>
+            </div>
+
+
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <?php foreach (tiny::data()->formations as $formation): ?>
                     <?php tiny::components()->FormationCard(formation: $formation, showStats: true); ?>

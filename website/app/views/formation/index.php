@@ -127,7 +127,7 @@ tiny::layout()->default(
             <?php if ($formation['readme_md']): ?>
                 <div class="bg-white border border-gray-200 rounded-lg p-8">
                     <div class="prose max-w-none">
-                        <?= nl2br(htmlspecialchars($formation['readme_md'])) ?>
+                        <?php echo tiny::markdown()->transform($formation['readme_md']); ?>
                     </div>
                 </div>
             <?php endif; ?>
