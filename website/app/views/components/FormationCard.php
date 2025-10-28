@@ -1,22 +1,28 @@
 <?php
-tiny::components()->register('FormationCard', function (...$props) {
-    $formation = $props['formation'] ?? null;
-    if (!$formation) return '';
-
-    $showStats = $props['showStats'] ?? true;
+tiny::components()->register('FormationCard', function (
+    array $formation,
+    bool $showStats = true
+) {
+    // Validate required formation data exists.
+    if (empty($formation)) {
+        return '';
+    }
     $homeURL = tiny::getHomeURL('/');
 
-    // Handle both object and array formats
-    $username = is_object($formation) ? $formation->registry_username : $formation['registry_username'];
-    $name = is_object($formation) ? $formation->name : $formation['name'];
-    $description = is_object($formation) ? $formation->description : $formation['description'];
-    $version = is_object($formation) ? $formation->latest_version : $formation['latest_version'];
-    $downloads = is_object($formation) ? $formation->total_downloads : $formation['total_downloads'];
-    $stars = is_object($formation) ? $formation->github_stars : $formation['github_stars'];
+    // Extract formation properties; formations are stored as associative arrays.
+    $username = $formation['registry_username'];
+    $name = $formation['name'];
+    $description = $formation['description'] ?? '';
+    $version = $formation['latest_version'];
+    $downloads = $formation['total_downloads'];
+    $stars = $formation['github_stars'];
 
-    // Truncate description
-    $shortDesc = strlen($description) > 100 ? substr($description, 0, 100) . '...' : $description;
+    // Truncate long descriptions so cards maintain a uniform height.
+    $shortDesc = strlen($description) > 100 
+        ? substr($description, 0, 100) . '...' 
+        : $description;
 
+    // Build stats section if requested; used on most pages but can be hidden.
     $statsHtml = '';
     if ($showStats) {
         $statsHtml = "
@@ -38,6 +44,7 @@ tiny::components()->register('FormationCard', function (...$props) {
         ";
     }
 
+    // Return the card HTML; this markup will be injected into the calling view.
     return <<<EOF
     <a href="{$homeURL}@{$username}/{$name}" class="block group">
         <div class="bg-white border border-gray-200 rounded-lg p-5 hover:border-blue-400 hover:shadow-md transition-all duration-200">

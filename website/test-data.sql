@@ -413,6 +413,12 @@ VALUES (
   '{"agents": ["bot-core", "knowledge"], "mcps": ["slack"]}'
 );
 
+-- ============================================
+-- REBUILD FTS5 INDEX
+-- ============================================
+-- After bulk inserts, the FTS5 index needs to be explicitly rebuilt for search to work.
+INSERT INTO formations_fts(formations_fts) VALUES('rebuild');
+
 COMMIT;
 
 -- ============================================

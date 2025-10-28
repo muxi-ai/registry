@@ -24,9 +24,18 @@ class AuthInstall extends TinyController
         $state = bin2hex(random_bytes(16));
         tiny::flash('github_state')->set($state);
 
+        // Generate the installation URL
+        $install_url = "https://github.com/apps/muxi-registry/installations/new?state={$state}";
+
+        // If the user is redirected to the install page, redirect to the installation URL
+        if (tiny::router()->slug == 'redirect') {
+            $response->redirect($install_url);
+            return;
+        }
+
         // Render install view with the GitHub URL containing the CSRF token state.
         $response->render('auth/install', [
-            'install_url' => "https://github.com/apps/muxi-registry/installations/new?state={$state}",
+            'install_url' => $install_url,
         ]);
     }
 }
