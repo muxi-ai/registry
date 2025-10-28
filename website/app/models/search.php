@@ -206,14 +206,58 @@ class Search extends TinyModel
     /**
      * Calculate trending score based on recent downloads and velocity
      *
+     * Algorithm:
+     * - Recent 3 days: weight 3x
+     * - Days 4-7: weight 1x
+     * - Add 10% of GitHub stars as tiebreaker
+     *
      * @param array $formation Formation data
      * @return float Trending score
      */
     private function calculateTrendingScore(array $formation): float
     {
-        // TODO: Implement proper trending algorithm using downloads table
-        // For now, use total downloads as proxy
-        return (float)($formation['total_downloads'] ?? 0);
+        // If downloads_7d is already provided (from getTrending query), use it
+        if (isset($formation['downloads_7d'])) {
+            return (float)$formation['downloads_7d'] + (($formation['github_stars'] ?? 0) * 0.1);
+        }
+        
+        // Otherwise, calculate from downloads table
+        $formationId = $formation['id'];
+        
+        // Get downloads for last 7 days with day-by-day breakdown
+        $result = tiny::db()->getQuery("
+            SELECT 
+                day,
+                SUM(download_count) as count
+            FROM downloads
+            WHERE formation_id = ?
+            AND day >= DATE('now', '-7 days')
+            GROUP BY day
+        ", [$formationId]);
+        
+        if (empty($result)) {
+            // No recent downloads, use stars as fallback
+            return ($formation['github_stars'] ?? 0) * 0.1;
+        }
+        
+        $score = 0;
+        $threeDaysAgo = date('Y-m-d', strtotime('-3 days'));
+        
+        foreach ($result as $row) {
+            $count = (int)$row['count'];
+            
+            // Recent 3 days get 3x weight, older days get 1x weight
+            if ($row['day'] >= $threeDaysAgo) {
+                $score += $count * 3; // Emphasize recent activity
+            } else {
+                $score += $count * 1;
+            }
+        }
+        
+        // Add 10% of stars as tiebreaker for formations with similar download patterns
+        $score += ($formation['github_stars'] ?? 0) * 0.1;
+        
+        return (float)$score;
     }
 
     /**

@@ -336,7 +336,7 @@ class ApiFormations extends TinyController
         $formation['registry_username'] = $user['registry_username'];
         $formation['github_username'] = $user['github_username'];
         $formation['github_avatar'] = $user['github_avatar'] ?? '';
-        $formation['downloads_this_week'] = 0; // TODO: Calculate from downloads table
+        $formation['downloads_this_week'] = $this->calculateDownloadsThisWeek($formation['id']);
 
         return $formation;
     }
@@ -452,6 +452,26 @@ class ApiFormations extends TinyController
                 'download_count' => 1
             ]);
         }
+    }
+    
+    /**
+     * Calculate downloads for the last 7 days
+     *
+     * @param int $formationId Formation ID
+     * @return int Total downloads in last 7 days
+     */
+    private function calculateDownloadsThisWeek($formationId)
+    {
+        $sevenDaysAgo = date('Y-m-d', strtotime('-7 days'));
+        
+        $result = tiny::db()->getQuery("
+            SELECT COALESCE(SUM(download_count), 0) as total
+            FROM downloads
+            WHERE formation_id = ?
+            AND day >= ?
+        ", [$formationId, $sevenDaysAgo]);
+        
+        return (int)($result[0]['total'] ?? 0);
     }
     
     /**
