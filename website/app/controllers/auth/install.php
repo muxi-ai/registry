@@ -17,7 +17,7 @@ class AuthInstall extends TinyController
         // Block installation attempts from guests and send them to the login page.
         if (!tiny::user()) {
             tiny::flash('error')->set('You must be logged in to install the MUXI Registry GitHub app');
-            tiny::redirect('/auth/login');
+            tiny::redirect('/auth/signin');
         }
 
         // Generate a CSRF token and stash it for the GitHub callback validation.

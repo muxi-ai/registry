@@ -73,7 +73,7 @@ class AuthCallback extends TinyController
             tiny::redirect('/auth/install');
         }
 
-        tiny::redirect('/auth/login');
+        tiny::redirect('/auth/signin');
     }
 
     /**

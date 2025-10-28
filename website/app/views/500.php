@@ -15,11 +15,11 @@
         <span>Back to homepage ›</span>
     </a>
 
-    <a href="<?php tiny::homeURL('/auth/login'); ?>" class="font-medium text-sm block w-fit mx-auto text-indigo-500 hover:text-indigo-500/80" role="button">
+    <a href="<?php tiny::homeURL('/auth/signin'); ?>" class="font-medium text-sm block w-fit mx-auto text-indigo-500 hover:text-indigo-500/80" role="button">
         <span>Please login to continue ›</span>
     </a>
 
-    <svg class="mt-12 size-12" viewBox="0 0 896.47 768" xmlns="http://www.w3.org/2000/svg"><path d="m886.68 768h-886.68l226.46-392.19.1-.1 216.88-375.51v76.62l-183.71 318.07h.1l-193.2 334.65h386.4v.1h367.22z"/><g fill-rule="evenodd"><path d="m819.35 617.86-296.39-82.01 373.51 215.58-77.12-133.56z" fill="#6e5fa6"/><path d="m507.07 511.47 298.49 82.71-59.44-103.09z" fill="#28bbde"/><path d="m495.18 493.29 240.35-20.58-51.25-88.61z" fill="#36a936"/><path d="m485.49 476.6 189.2-109.19-51.15-88.71-138.06 197.89h.01z" fill="#fac405"/><path d="m475.7 457.12 137.16-196.8-59.44-102.99z" fill="#f1883a"/><path d="m462.62 431.15 77.12-297.59-77.12-133.56z" fill="#e8403f"/></g></svg>
+    <br>&nbsp;<br>&nbsp;<br>&nbsp;
 
 </div>
 

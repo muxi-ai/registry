@@ -21,7 +21,17 @@
     {
         // Route social-style profile URLs to the profile controller when present.
         if (str_starts_with(tiny::router()->controller, '@')) {
-            tiny::controller('_profile', true);
+            // Check if this is a formation page (@user/formation) or profile (@user)
+            $section = tiny::router()->section;
+            
+            if ($section) {
+                // @user/formation - route to formation controller
+                tiny::controller('_formation', true);
+            } else {
+                // @user - route to profile controller
+                tiny::controller('_profile', true);
+            }
+            return;
         }
 
         if (isset(tiny::user()->email)) {

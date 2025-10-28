@@ -232,7 +232,7 @@ class AuthMiddleware
     {
         // Store current URI for redirect after login
         tiny::flash('login_redir')->set(tiny::router()->uri);
-        tiny::redirect('/auth/login');
+        tiny::redirect('/auth/signin');
     }
 
     /**

@@ -111,29 +111,29 @@ echo '<!-- v. ' . $_SERVER['APP_VERSION'] . " -->\n";
             <div class="container flex flex-col flex-wrap items-center justify-between py-5 px-8 mx-auto md:flex-row max-w-7xl">
                 <a href="<?php echo tiny::homeURL('/'); ?>" class="relative z-10 flex items-center w-auto text-2xl font-extrabold leading-none text-black select-none">MUXI Registry</a>
 
-                <nav class="top-0 left-0 z-0 flex items-center justify-center w-full h-full py-5 -ml-0 space-x-5 text-base md:-ml-5 md:py-0 md:absolute">
-                    <div class="relative w-lg">
-                        <input class="input w-full" type="search" placeholder="Search">
+                <nav class="top-0 left-0 z-0 flex items-center justify-center w-full h-full py-5 space-x-5 text-base md:-ml-5 md:py-0 md:absolute">
+                    <form action="<?php tiny::homeURL('/search'); ?>" method="GET" class="relative w-lg">
+                        <input class="input w-full" type="search" placeholder="Search formations..." name="q" value="<?php echo urldecode(tiny::router()->query['q'] ?? ''); ?>">
                         <button class="absolute right-0 top-0 h-full px-3">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" class="size-6">
                                 <path d="M15 15L21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
                                 <path d="M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
                             </svg>
                         </button>
-                    </div>
+                    </form>
                 </nav>
 
                 <div class="relative z-10 inline-flex items-center space-x-3 md:ml-5 lg:justify-end">
                     <?php if (tiny::user()): ?>
                         <a href="<?php echo tiny::homeURL('/account'); ?>" class="btn btn-outline pr-5 pl-2 h-11">
                             <img src="<?php echo tiny::user()->github_avatar; ?>" loading="lazy" class="object-cover size-7.5 rounded-full" />
-                            <span class="flex flex-col flex-shrink-0 items-start leading-none pt-0.5 text-neutral-700">
+                            <span class="flex flex-col items-start leading-none pt-0.5 text-neutral-700">
                                 <span><?php echo tiny::user()->first_name . ' ' . tiny::user()->last_name; ?></span>
                                 <span class="text-xs font-normal text-neutral-400">@<?php echo tiny::user()->registry_username; ?></span>
                             </span>
                         </a>
                     <?php else: ?>
-                        <a href="<?php echo tiny::homeURL('/auth/login'); ?>" class="btn btn-primary pr-4 pl-3 h-11">
+                        <a href="<?php echo tiny::homeURL('/auth/signin'); ?>" class="btn btn-primary pr-4 pl-3 h-11">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" class="size-7.5">
                                 <path d="M14.5094 20.9056C14.5198 20.402 14.5349 19.6585 14.5349 19C14.5349 18 13.8548 17.0818 13.8548 17.0818C16.1129 16.834 18.4919 15.5037 18.4919 11.5393C18.4919 10.383 18.0887 9.84616 17.4435 9.10284L17.4579 9.0525C17.5588 8.7032 17.8583 7.66631 17.3226 6.29474C16.4758 6.00567 14.5403 7.40972 14.5403 7.40972C13.7339 7.16195 12.8871 7.07936 12 7.07936C11.1532 7.07936 10.3065 7.16195 9.5 7.40972C9.5 7.40972 7.52419 6.04697 6.71774 6.29474C6.15323 7.74009 6.47581 8.81377 6.59677 9.10284C5.95161 9.84616 5.62903 10.383 5.62903 11.5393C5.62903 15.5037 7.92742 16.834 10.1855 17.0818C10.1855 17.0818 9.5 17.8624 9.5 18.9312V20.9082V22.4578C4.76861 21.3309 1.25 17.0764 1.25 12C1.25 6.06294 6.06294 1.25 12 1.25C17.9371 1.25 22.75 6.06294 22.75 12C22.75 17.073 19.2361 21.3252 14.5094 22.4555V20.9056Z" fill="#fff"></path>
                             </svg>
