@@ -246,7 +246,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return date.toLocaleDateString('en-US', { weekday: 'short' });
     });
     const weeklyDownloads = weeklyData.map(d => d.downloads);
-    
+
     new Chart(document.getElementById('weeklyChart'), {
         type: 'line',
         data: {
@@ -308,7 +308,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     });
     const downloads = downloadData.map(d => d.downloads);
-    
+
     new Chart(document.getElementById('downloadChart'), {
         type: 'bar',
         data: {
@@ -336,7 +336,7 @@ document.addEventListener('DOMContentLoaded', function() {
             scales: {
                 y: {
                     beginAtZero: true,
-                    ticks: { 
+                    ticks: {
                         font: { size: 11 },
                         callback: function(value) {
                             return Number.isInteger(value) ? value : '';
@@ -345,7 +345,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     grid: { color: '#f3f4f6' }
                 },
                 x: {
-                    ticks: { 
+                    ticks: {
                         font: { size: 10 },
                         maxRotation: 0,
                         autoSkip: true,
