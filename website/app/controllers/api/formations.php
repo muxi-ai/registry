@@ -971,6 +971,43 @@ MD;
     }
 
     /**
+     * Remove sensitive files and macOS artifacts from extracted formation
+     * 
+     * Security measure to prevent accidental exposure of:
+     * - .key (encryption key)
+     * - secrets.enc (encrypted secrets)
+     * - __MACOSX/ (macOS metadata)
+     */
+    private function removeSensitiveFiles($dir)
+    {
+        $sensitivePatterns = [
+            '.key',           // Encryption key file
+            'secrets.enc',    // Encrypted secrets file
+            '__MACOSX'        // macOS artifact directory
+        ];
+
+        $removed = [];
+        
+        foreach ($sensitivePatterns as $pattern) {
+            $path = $dir . '/' . $pattern;
+            
+            if (file_exists($path)) {
+                if (is_dir($path)) {
+                    $this->removeDirectory($path);
+                    $removed[] = $pattern . '/ (directory)';
+                } else {
+                    unlink($path);
+                    $removed[] = $pattern . ' (file)';
+                }
+            }
+        }
+        
+        if (!empty($removed)) {
+            error_log("🔒 Security cleanup: Removed " . implode(', ', $removed));
+        }
+    }
+
+    /**
      * Remove directory recursively
      */
     private function removeDirectory($dir)
