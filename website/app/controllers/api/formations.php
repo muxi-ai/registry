@@ -834,10 +834,27 @@ MD;
     }
 
     /**
-     * Upload release asset
+     * Upload release asset (handles existing assets gracefully)
      */
     private function uploadReleaseAsset($repoName, $releaseId, $zipPath, $fileName)
     {
+        // Check if asset already exists and delete it
+        try {
+            $release = $this->github->getReleaseById($repoName, $releaseId);
+            if (isset($release['assets']) && is_array($release['assets'])) {
+                foreach ($release['assets'] as $asset) {
+                    if ($asset['name'] === $fileName) {
+                        error_log("🗑️ Deleting existing asset: {$fileName} (id: {$asset['id']})");
+                        $this->github->deleteReleaseAsset($repoName, $asset['id']);
+                        break;
+                    }
+                }
+            }
+        } catch (Exception $e) {
+            error_log("⚠️ Could not check for existing assets: " . $e->getMessage());
+        }
+
+        // Upload the asset
         return $this->github->uploadReleaseAsset($repoName, $releaseId, $zipPath, $fileName);
     }
 
