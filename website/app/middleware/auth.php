@@ -31,7 +31,9 @@ class AuthMiddleware
     ];
 
     private const PUBLIC_API_ENDPOINTS = [
-        'GET /api/formations',
+        'GET /api/formations/*',          // Get single formation
+        'GET /api/search',                // Search formations
+        'POST /api/formations/*/download', // Track downloads (anonymous)
     ];
 
     private const ACCESS_MODE = 'disallowed';
@@ -54,13 +56,14 @@ class AuthMiddleware
         // Handle different authentication flows based on request type
         if ($this->isApiRequest()) {
             $this->handleApiAuthentication();
-        } else {
-            // Skip authentication for allowed paths when no user cookie exists
-            if (!$this->userCookie->exists && $this->isAllowedPath()) {
-                return;
-            }
-            $this->handleWebAuthentication();
+            return;
         }
+
+        // Skip authentication for allowed paths when no user cookie exists
+        if (!$this->userCookie->exists && $this->isAllowedPath()) {
+            return;
+        }
+        $this->handleWebAuthentication();
 
         // Load additional user data if user is authenticated
         if (tiny::user() && $this->userCookie->exists) {
@@ -101,30 +104,80 @@ class AuthMiddleware
      */
     private function handleApiAuthentication(): void
     {
-        // Extract bearer token from request headers
+        // Try to get bearer token (may be null for public endpoints)
         $token = $this->getBearerToken();
-        if (!$token) {
-            $this->sendApiError('Cannot authenticate user', 'API-01');
+        $user = null;
+
+        // Check if endpoint is public (needed for auth validation logic)
+        $isPublic = $this->isPublicApiEndpoint();
+
+        // If token is provided, validate it
+        if ($token) {
+            $user = tiny::model('user')->getUserByCliToken($token);
+
+            // If token is invalid:
+            // - For public endpoints: treat as anonymous (graceful degradation)
+            // - For private endpoints: return 401 (strict validation)
+            if (!$user && !$isPublic) {
+                $this->sendApiError('Invalid authentication token', 'API-01', 401);
+            }
+            // For public endpoints with invalid token, $user stays null (anonymous access)
         }
 
-        // Decrypt the token to get the project ID
-        $user = tiny::model('user')->getUserByCliToken($token);
-
-        if (!$user) {
-            $this->sendApiError('Cannot authenticate user', 'API-01');
+        // If endpoint is not public and no valid user, require authentication
+        if (!$isPublic && !$user) {
+            $this->sendApiError('Authentication required', 'API-01', 401);
         }
 
         // --- rate limiting ---
         tiny::helpers(['ratelimiter']);
-        $rateLimit = tiny::rateLimiter("api", 10, 1); // 10 requests per second
-        $rateLimit->add(1000, 600); // max 1000 requests per 10 minutes
-        if (!$rateLimit->check($user['id'])) {
+
+        if ($user) {
+            // Authenticated user: Higher rate limits
+            $rateLimit = tiny::rateLimiter("api_auth", 10, 1); // 10 requests per second
+            $rateLimit->add(1000, 600); // max 1000 requests per 10 minutes
+            $rateLimitIdentifier = $user['id'];
+        } else {
+            // Anonymous user (public endpoints only): Lower rate limits by IP
+            $rateLimit = tiny::rateLimiter("api_public", 5, 1); // 5 requests per second
+            $rateLimit->add(100, 600); // max 100 requests per 10 minutes
+            $rateLimitIdentifier = tiny::getClientRealIP();
+        }
+
+        if (!$rateLimit->check($rateLimitIdentifier)) {
             $this->sendApiError('Too Many Requests', 'API-03', 429);
         }
         // ---------------------
 
-        // Set user data for the authenticated API request
-        tiny::user($user);
+        // Set user data for authenticated API requests
+        if ($user) {
+            tiny::user($user);
+        }
+    }
+
+    /**
+     * Checks if the current API endpoint is public (doesn't require authentication)
+     *
+     * @return bool True if the endpoint is public
+     */
+    private function isPublicApiEndpoint(): bool
+    {
+        $method = $_SERVER['REQUEST_METHOD'];
+        // Use the full URI path, not just the controller
+        $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+        $endpoint = $method . ' ' . $path;
+
+        foreach (self::PUBLIC_API_ENDPOINTS as $pattern) {
+            // Convert wildcard pattern to regex
+            // Example: "GET /api/formations/*" becomes "GET /api/formations/.*"
+            $regex = '/^' . str_replace(['/', '*'], ['\/', '.*'], $pattern) . '$/';
+
+            if (preg_match($regex, $endpoint)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

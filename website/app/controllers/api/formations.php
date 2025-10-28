@@ -1,0 +1,365 @@
+<?php
+
+declare(strict_types=1);
+
+// Load GitHub API helper
+require_once __DIR__ . '/../../lib/GitHub.php';
+
+/**
+ * API Controller for formations endpoints
+ * 
+ * Handles:
+ * - GET /api/formations/@:user/:name - Get formation metadata (lazy discovery)
+ * - POST /api/formations/publish - Publish a formation (authenticated)
+ */
+class ApiFormations extends TinyController
+{
+    /**
+     * GET /api/formations/@:user/:name
+     * 
+     * Get formation metadata with lazy discovery from GitHub
+     */
+    public function get($request, $response)
+    {
+        // Parse route: /api/formations/@user/name or /api/formations/user/name
+        $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+        // Remove /api/formations/ prefix
+        $remaining = preg_replace('#^/api/formations/?#', '', $path);
+        $parts = array_filter(explode('/', $remaining));
+        
+        if (count($parts) < 2) {
+            return $response->sendJSON([
+                'error' => true,
+                'message' => 'Invalid formation path. Expected: /api/formations/@user/name',
+                'id' => 'API-10'
+            ], 400);
+        }
+        
+        // Remove @ prefix if present
+        $parts = array_values($parts); // Re-index array
+        $username = ltrim($parts[0], '@');
+        $name = $parts[1];
+        
+        try {
+            $formation = $this->findOrLazyFetch($username, $name);
+            
+            // Track the download (both total + daily)
+            $this->trackDownload($formation['formation_id'], $formation['version']);
+            
+            return $response->sendJSON($formation);
+        } catch (NotFoundException $e) {
+            return $response->sendJSON([
+                'error' => true,
+                'message' => $e->getMessage(),
+                'id' => 'API-04'
+            ], 404);
+        } catch (Exception $e) {
+            return $response->sendJSON([
+                'error' => true,
+                'message' => 'Internal server error',
+                'id' => 'API-11'
+            ], 500);
+        }
+    }
+    
+    /**
+     * POST /api/formations/publish
+     * 
+     * Publish or update a formation (requires authentication)
+     */
+    public function post($request, $response)
+    {
+        // Authentication checked by middleware
+        $user = tiny::user();
+        if (!$user) {
+            return $response->sendJSON([
+                'error' => true,
+                'message' => 'Authentication required',
+                'id' => 'API-01'
+            ], 401);
+        }
+        
+        $data = $request->body(true);
+        $githubRepo = $data['github_repo'] ?? '';
+        $version = $data['version'] ?? null;
+        
+        // Validate repo format: owner/muxi-name
+        if (!preg_match('/^[\w-]+\/muxi-[\w-]+$/', $githubRepo)) {
+            return $response->sendJSON([
+                'error' => true,
+                'message' => 'Invalid repository name format. Must be: owner/muxi-name',
+                'id' => 'API-08'
+            ], 400);
+        }
+        
+        list($repoOwner, $repoName) = explode('/', $githubRepo);
+        
+        // Check ownership
+        if ($repoOwner !== $user->github_username) {
+            // TODO: Check if it's an org the user has access to
+            if (!$this->canPublishToOrg($user, $repoOwner)) {
+                return $response->sendJSON([
+                    'error' => true,
+                    'message' => 'You don\'t have permission to publish this formation',
+                    'id' => 'API-07'
+                ], 403);
+            }
+        }
+        
+        // Get GitHub token for authenticated requests
+        $githubToken = tiny::model('user')->getGitHubAccessTokenByUserId($user->id);
+        
+        // Fetch from GitHub
+        $github = new GitHub($githubToken);
+        try {
+            $repo = $github->getRepo($githubRepo);
+            $readme = $github->getReadme($githubRepo);
+            $release = $version 
+                ? $github->getRelease($githubRepo, $version)
+                : $github->getLatestRelease($githubRepo);
+        } catch (Exception $e) {
+            return $response->sendJSON([
+                'error' => true,
+                'message' => 'Repository or release not found on GitHub',
+                'id' => 'API-09'
+            ], 404);
+        }
+        
+        // Extract formation name (remove muxi- prefix)
+        $formationName = preg_replace('/^muxi-/', '', $repoName);
+        
+        // Create or update formation
+        $formation = $this->createOrUpdateFormation(
+            $user->id,
+            $formationName,
+            $repo,
+            $readme,
+            $release
+        );
+        
+        return $response->sendJSON([
+            'status' => 'ok',
+            'message' => 'Formation published successfully',
+            'formation' => [
+                'name' => $formationName,
+                'user' => $user->registry_username,
+                'version' => ltrim($release['tag_name'], 'v'),
+                'url' => tiny::homeURL("/@{$user->registry_username}/{$formationName}")
+            ]
+        ]);
+    }
+    
+    /**
+     * Find formation in database or lazy fetch from GitHub
+     */
+    private function findOrLazyFetch($registryUsername, $name)
+    {
+        // 1. Try database first (fast path)
+        $formation = $this->findInDatabase($registryUsername, $name);
+        
+        if ($formation) {
+            return $this->formatFormationResponse($formation);
+        }
+        
+        // 2. Resolve registry username → GitHub username
+        $user = tiny::db()->getOne('users', ['registry_username' => $registryUsername]);
+        if (!$user) {
+            throw new NotFoundException("User not found. Username: $registryUsername");
+        }
+        
+        // 3. Try GitHub (lazy discovery)
+        $github = new GitHub();
+        $repoName = "{$user['github_username']}/muxi-{$name}";
+        
+        try {
+            $repo = $github->getRepo($repoName);
+            $readme = $github->getReadme($repoName);
+            $latestRelease = $github->getLatestRelease($repoName);
+        } catch (Exception $e) {
+            throw new NotFoundException("Formation not found");
+        }
+        
+        // 4. Cache in database
+        $this->cacheFormation($user['id'], $name, $repo, $readme, $latestRelease);
+        
+        // 5. Return freshly cached formation
+        $formation = $this->findInDatabase($registryUsername, $name);
+        return $this->formatFormationResponse($formation);
+    }
+    
+    /**
+     * Find formation in database
+     */
+    private function findInDatabase($registryUsername, $name)
+    {
+        // Use getOne with simpler conditions
+        $formation = tiny::db()->getOne('formations', ['name' => $name]);
+        
+        if (!$formation) {
+            return null;
+        }
+        
+        // Get user info
+        $user = tiny::db()->getOne('users', ['id' => $formation['user_id']]);
+        
+        if (!$user || $user['registry_username'] !== $registryUsername) {
+            return null;
+        }
+        
+        // Merge user info into formation
+        $formation['registry_username'] = $user['registry_username'];
+        $formation['github_username'] = $user['github_username'];
+        $formation['github_avatar'] = $user['github_avatar'] ?? '';
+        $formation['downloads_this_week'] = 0; // TODO: Calculate properly
+        
+        return $formation;
+    }
+    
+    /**
+     * Cache formation from GitHub into database
+     */
+    private function cacheFormation($userId, $name, $repo, $readme, $release)
+    {
+        $data = [
+            'user_id' => $userId,
+            'name' => $name,
+            'description' => $repo['description'] ?? '',
+            'readme_md' => $readme,
+            'latest_version' => ltrim($release['tag_name'], 'v'),
+            'github_repo' => $repo['full_name'],
+            'github_stars' => $repo['stargazers_count'] ?? 0,
+            'license' => $repo['license']['spdx_id'] ?? null,
+            'published_at' => $release['published_at'] ?? date('Y-m-d H:i:s'),
+            'last_synced_at' => date('Y-m-d H:i:s'),
+            'created_at' => date('Y-m-d H:i:s')
+        ];
+        
+        // Check if formation already exists
+        $existing = tiny::db()->getOne('formations', [
+            'user_id' => $userId,
+            'name' => $name
+        ]);
+        
+        if ($existing) {
+            tiny::db()->update('formations', $data, ['id' => $existing['id']]);
+        } else {
+            tiny::db()->insert('formations', $data);
+        }
+    }
+    
+    /**
+     * Create or update formation in database
+     */
+    private function createOrUpdateFormation($userId, $name, $repo, $readme, $release)
+    {
+        $this->cacheFormation($userId, $name, $repo, $readme, $release);
+        
+        // Get user's registry username for response
+        $user = tiny::db()->getOne('users', ['id' => $userId]);
+        
+        return [
+            'name' => $name,
+            'user' => $user['registry_username'],
+            'version' => ltrim($release['tag_name'], 'v'),
+            'github_repo' => $repo['full_name']
+        ];
+    }
+    
+    /**
+     * Format formation data for API response
+     */
+    private function formatFormationResponse($formation)
+    {
+        $downloadUrl = null;
+        if ($formation['latest_version']) {
+            $downloadUrl = "https://github.com/{$formation['github_repo']}/releases/download/v{$formation['latest_version']}/bundle.zip";
+        }
+        
+        return [
+            'formation_id' => $formation['id'], // Internal ID for download tracking
+            'name' => $formation['name'],
+            'user' => $formation['registry_username'],
+            'description' => $formation['description'],
+            'version' => $formation['latest_version'],
+            'github_repo' => $formation['github_repo'],
+            'github_url' => "https://github.com/{$formation['github_repo']}",
+            'install_command' => "muxi pull @{$formation['registry_username']}/{$formation['name']}",
+            'download_url' => $downloadUrl,
+            'stats' => [
+                'downloads' => (int)$formation['total_downloads'],
+                'downloads_this_week' => (int)($formation['downloads_this_week'] ?? 0),
+                'stars' => (int)$formation['github_stars']
+            ],
+            'readme_url' => "https://raw.githubusercontent.com/{$formation['github_repo']}/main/README.md",
+            'created_at' => $formation['created_at'],
+            'updated_at' => $formation['last_synced_at']
+        ];
+    }
+    
+    /**
+     * Track download (increment total + record daily stats)
+     */
+    private function trackDownload($formationId, $version)
+    {
+        // Increment total downloads (read-modify-write to avoid race conditions)
+        $current = tiny::db()->getOne('formations', ['id' => $formationId]);
+        $newCount = ($current['total_downloads'] ?? 0) + 1;
+        
+        tiny::db()->update('formations', [
+            'total_downloads' => $newCount
+        ], ['id' => $formationId]);
+        
+        // Record/increment daily download count
+        $today = date('Y-m-d');
+        
+        // Try to update existing record, or insert new one
+        $existing = tiny::db()->getOne('downloads', [
+            'formation_id' => $formationId,
+            'version' => $version,
+            'day' => $today
+        ]);
+        
+        if ($existing) {
+            // Increment existing daily count (read-modify-write)
+            $newDailyCount = ($existing['download_count'] ?? 0) + 1;
+            tiny::db()->update('downloads', [
+                'download_count' => $newDailyCount
+            ], ['id' => $existing['id']]);
+        } else {
+            // Create new daily record
+            tiny::db()->insert('downloads', [
+                'formation_id' => $formationId,
+                'version' => $version,
+                'day' => $today,
+                'download_count' => 1
+            ]);
+        }
+    }
+    
+    /**
+     * Check if user can publish to an organization
+     */
+    private function canPublishToOrg($user, $orgName)
+    {
+        // Check if organization exists in our database
+        $org = tiny::db()->getOne('users', [
+            'github_username' => $orgName,
+            'github_type' => 'organization'
+        ]);
+        
+        if (!$org) {
+            return false;
+        }
+        
+        // Use GitHub API to check membership
+        $githubToken = tiny::model('user')->getGitHubAccessTokenByUserId($user->id);
+        $github = new GitHub($githubToken);
+        
+        return $github->isOrgMember($orgName, $user->github_username);
+    }
+}
+
+/**
+ * Custom exception for not found errors
+ */
+class NotFoundException extends Exception {}
