@@ -336,6 +336,9 @@ class ApiFormations extends TinyController
             */
 
             // 11. Store formation metadata in database
+            error_log("🗄️ Storing in database. Repo: " . json_encode(['full_name' => $repo['full_name'] ?? 'MISSING']));
+            error_log("🗄️ Release data: " . json_encode($release));
+            error_log("🗄️ FormationData has _structure: " . (isset($formationData['_structure']) ? 'YES' : 'NO'));
             $formation = $this->storeFormationInDatabase($user->id, $formationData, $repo, $release);
 
             return [
@@ -893,18 +896,23 @@ MD;
         ];
 
         // Check if formation already exists
+        error_log("🔍 Checking for existing formation: user_id={$userId}, name={$formationData['id']}");
         $existing = tiny::db()->getOne('formations', [
             'user_id' => $userId,
             'name' => $formationData['id']
         ]);
+        error_log("🔍 Existing formation found: " . ($existing ? "YES (id={$existing['id']})" : "NO"));
 
         if ($existing) {
             // Update existing
             tiny::db()->update('formations', $data, ['id' => $existing['id']]);
             $formationId = $existing['id'];
+            error_log("✏️ Updated existing formation, formationId={$formationId}");
         } else {
             // Insert new
-            $formationId = tiny::db()->insert('formations', $data);
+            tiny::db()->insert('formations', $data);
+            $formationId = tiny::db()->lastInsertId();
+            error_log("✨ Inserted new formation, formationId={$formationId}");
         }
 
         // Store version info
@@ -912,9 +920,11 @@ MD;
             'formation_id' => $formationId,
             'version' => $formationData['version']
         ]);
+        error_log("🔍 Checking if version exists for formation_id={$formationId}, version={$formationData['version']}: " . ($versionExists ? 'YES (skipping insert)' : 'NO (will insert)'));
+        error_log("🔍 versionExists data: " . json_encode($versionExists));
 
         if (!$versionExists) {
-            $versionId = tiny::db()->insert('versions', [
+            tiny::db()->insert('versions', [
                 'formation_id' => $formationId,
                 'version' => $formationData['version'],
                 'release_notes' => $release['body'] ?? '',
@@ -922,10 +932,19 @@ MD;
                 'published_at' => $release['published_at'] ?? date('Y-m-d H:i:s'),
                 'created_at' => date('Y-m-d H:i:s')
             ]);
+            $versionId = tiny::db()->lastInsertId();
+            error_log("✅ Version inserted, versionId: $versionId");
 
             // Store formation stats (agents, mcps, sops, triggers, knowledge counts)
+            error_log("🔍 Checking for _structure: " . (isset($formationData['_structure']) ? 'YES' : 'NO'));
+            error_log("🔍 Checking for components: " . (isset($formationData['_structure']['components']) ? 'YES' : 'NO'));
+            if (isset($formationData['_structure'])) {
+                error_log("🔍 Structure contents: " . json_encode($formationData['_structure']));
+            }
+            
             if (isset($formationData['_structure']) && isset($formationData['_structure']['components'])) {
                 $components = $formationData['_structure']['components'];
+                error_log("📊 Inserting stats: agents={$components['agents']}, mcps={$components['mcps']}, sops={$components['sops']}, triggers={$components['triggers']}, knowledge={$components['knowledge']}");
                 tiny::db()->insert('formation_stats', [
                     'version_id' => $versionId,
                     'agents_count' => $components['agents'] ?? 0,
