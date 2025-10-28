@@ -16,18 +16,13 @@ class AuthCli extends TinyController
     {
         // Kick off the authorization flow if the install route is hit without an installation.
         if (tiny::router()->slug == 'authorize') {
-            // If the user has already installed the GitHub app, redirect to the token page.
-            if (isset(tiny::user()->github_installation_id)) {
-                $response->redirect('/auth/cli/token');
-                return;
-            }
             // Generate a CSRF token and stash it for the GitHub callback validation.
             tiny::flash('auth_mode')->set('cli');
             $response->render('/auth/cli-authorize');
         }
 
         // Once the GitHub installation is connected, surface a CLI token the CLI can copy.
-        if (tiny::router()->slug == 'token' || isset(tiny::user()->github_installation_id)) {
+        if (tiny::router()->slug == 'token') {
             // Issue a short-lived CLI token so the CLI can authenticate to the registry API.
             $token = tiny::model('user')->createCliToken(tiny::user()->id);
             $response->render('auth/cli-token', ['token' => $token]);

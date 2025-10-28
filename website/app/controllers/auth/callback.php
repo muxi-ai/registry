@@ -35,9 +35,6 @@ class AuthCallback extends TinyController
             tiny::redirect('/auth/error');
         }
 
-        // Optional GitHub App installation identifier for post-login routing.
-        $installationId = $request->query['installation_id'] ?? null;
-
         // Exchange the OAuth code for a short lived access token.
         $accessToken = $this->exchangeCodeForToken($code);
 
@@ -49,8 +46,7 @@ class AuthCallback extends TinyController
             tiny::redirect('/auth/error');
         }
 
-        // add installation id and oauth token to ghUser
-        $ghUser->github_installation_id = $installationId;
+        // add oauth token to ghUser
         $ghUser->github_oauth_token = $accessToken;
 
         try {
@@ -67,12 +63,6 @@ class AuthCallback extends TinyController
 
         // create session
         tiny::model('user')->setSession($user['id']);
-
-        // redirect to install page if installation id is not set
-        if (!$user['github_installation_id']) {
-            tiny::redirect('/auth/install');
-            return;
-        }
 
         // redirect to cli token page if auth mode is cli
         if (tiny::flash('auth_mode')->get() == 'cli') {

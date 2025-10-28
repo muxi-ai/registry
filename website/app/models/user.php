@@ -195,9 +195,6 @@ class User extends TinyModel
             'created_at' => date('Y-m-d H:i:s'),
             'last_seen_at' => date('Y-m-d H:i:s'),
         ];
-        if ($ghUser->github_installation_id) {
-            $payload['github_installation_id'] = $ghUser->github_installation_id;
-        }
 
         // tiny::dd($payload);
 

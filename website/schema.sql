@@ -14,7 +14,6 @@ CREATE TABLE users (
   github_avatar TEXT,
   github_email TEXT NOT NULL,
   github_type TEXT,
-  github_installation_id INTEGER,        -- ← For app identity
   github_oauth_token TEXT,               -- ← ENCRYPTED! For repo operations
   first_name TEXT,
   last_name TEXT,
