@@ -47,4 +47,5 @@ vendor/
 config/secrets.php
 config/github-app.php
 credentials.json
-.env.local 
+.env.local
+formation.zip

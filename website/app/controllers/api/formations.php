@@ -206,11 +206,25 @@ class ApiFormations extends TinyController
             $readmePath = $tempDir . '/README.md';
             if (!file_exists($readmePath)) {
                 // Generate comprehensive README using LLM
-                $readme = $this->generateReadmeWithLLM($formationData, $tempDir);
-                file_put_contents($readmePath, $readme);
+                $llmResult = $this->generateReadmeWithLLM($formationData, $tempDir, $user->registry_username);
+                if (is_array($llmResult)) {
+                    // LLM returned both README and categories
+                    file_put_contents($readmePath, $llmResult['readme']);
+                    if (isset($llmResult['categories'])) {
+                        $formationData['_generated_categories'] = $llmResult['categories'];
+                        error_log("Stored categories in formationData: " . json_encode($llmResult['categories']));
+                    }
+                } else {
+                    // Fallback template returned just string
+                    file_put_contents($readmePath, $llmResult);
+                }
             }
+            
+            // Store README content for database
+            $formationData['_readme_content'] = file_get_contents($readmePath);
 
-            // TEST MODE: Stop before GitHub operations if ?test=true
+            // TEST MODE: Disabled - now using commented GitHub operations instead
+            /*
             if (isset($_GET['test']) && $_GET['test'] === 'true') {
                 $structure = $this->analyzeFormationStructure($tempDir);
                 $readmeContent = file_get_contents($readmePath);
@@ -232,10 +246,20 @@ class ApiFormations extends TinyController
                     'files_in_formation' => $structure['files']
                 ];
             }
+            */
 
             // 5. Determine GitHub owner (user or org)
             $githubOwner = $orgName ?? $user->github_username;
+            
+            // Log owner decision
+            if ($orgName) {
+                error_log("📦 Publishing to ORGANIZATION: {$orgName} (user: {$user->registry_username})");
+            } else {
+                error_log("📦 Publishing to USER: {$user->registry_username} (github: {$user->github_username})");
+            }
 
+            // ========== GITHUB OPERATIONS TEMPORARILY DISABLED FOR TESTING ==========
+            /*
             // 6. If org specified, verify membership
             if ($orgName) {
                 $githubToken = tiny::model('user')->getGitHubAccessTokenByUserId($user->id);
@@ -268,6 +292,35 @@ class ApiFormations extends TinyController
             // 10. Repack and upload as release asset
             $zipPath = $this->repackFormation($tempDir, $formationData['id']);
             $asset = $this->uploadReleaseAsset($fullRepoName, $release['id'], $zipPath, 'formation.zip');
+            */
+            // ========== END GITHUB OPERATIONS ==========
+
+            // Mock GitHub data for testing without actual GitHub push
+            $repoName = "muxi-{$formationData['id']}";
+            $fullRepoName = "$githubOwner/$repoName";
+            $version = $formationData['version'];
+            
+            error_log("🎯 GitHub repo would be: {$fullRepoName}");
+            
+            $repo = [
+                'full_name' => $fullRepoName,
+                'html_url' => "https://github.com/$fullRepoName",
+                'stargazers_count' => 0,
+                'license' => ['spdx_id' => 'MIT']
+            ];
+            
+            $release = [
+                'tag_name' => "v{$version}",
+                'published_at' => date('Y-m-d H:i:s'),
+                'body' => $formationData['description'] ?? "Release v{$version}",
+                'assets' => [[
+                    'browser_download_url' => "https://github.com/$fullRepoName/releases/download/v{$version}/formation.zip"
+                ]]
+            ];
+            
+            $asset = [
+                'browser_download_url' => "https://github.com/$fullRepoName/releases/download/v{$version}/formation.zip"
+            ];
 
             // 11. Store formation metadata in database
             $formation = $this->storeFormationInDatabase($user->id, $formationData, $repo, $release);
@@ -521,9 +574,10 @@ class ApiFormations extends TinyController
      *
      * @param array $formationData Parsed formation.yaml data
      * @param string $tempDir Path to extracted formation directory
+     * @param string $registryUsername User's registry username
      * @return string Generated README content
      */
-    private function generateReadmeWithLLM($formationData, $tempDir)
+    private function generateReadmeWithLLM($formationData, $tempDir, $registryUsername)
     {
         try {
             // Analyze formation structure
@@ -541,40 +595,34 @@ class ApiFormations extends TinyController
                 'structure' => $structure
             ], JSON_PRETTY_PRINT);
 
-            $systemPrompt = "You are a technical documentation expert. Generate comprehensive, professional README files for MUXI formations (AI agent configurations).";
+            $systemPrompt = "You are a technical documentation expert. You MUST respond with valid JSON only. Generate comprehensive README files and categorize MUXI formations (AI agent configurations).";
 
             $userPrompt = <<<PROMPT
-Generate a comprehensive README.md for this MUXI formation:
+Generate documentation for this MUXI formation and return it as JSON.
 
+Formation data:
 {$formationInfo}
 
-Requirements:
-1. Create a professional, well-structured README with these sections:
-   - Title and description
-   - Features/capabilities
-   - Installation instructions (use: muxi pull @owner/{$formationData['id']})
-   - Usage/configuration guide (if applicable)
-   - Requirements/dependencies
-   - License information
-   - Links section at the bottom with:
-     * Formation on MUXI Registry: https://registry.muxi.org/@owner/{$formationData['id']}
-     * MUXI Documentation: https://muxi.org
-
-2. Suggest up to 3 relevant categories for this formation (e.g., "customer-support", "automation", "data-processing")
-
-3. Return ONLY valid JSON in this exact format:
+You MUST return a valid JSON object with this exact structure:
 {
-  "readme": "# Full README content here...",
-  "categories": ["category1", "category2", "category3"]
+  "readme": "markdown content here",
+  "categories": ["category1", "category2"]
 }
 
-Important:
-- Make the README engaging and informative
-- Use markdown formatting
-- Be specific about what this formation does
-- Include code examples if relevant based on the structure
-- Keep categories lowercase with hyphens (e.g., "customer-support")
-- Include the registry and muxi.org links at the bottom
+For the "readme" field, create a professional README with:
+- # {$formationData['id']} as title
+- Description and features
+- Installation: muxi pull @{$registryUsername}/{$formationData['id']}
+- Usage/configuration guide
+- Requirements (MUXI Runtime {$formationData['runtime']})
+- License: MIT
+- Links at bottom:
+  * Formation on MUXI Registry: https://registry.muxi.org/@{$registryUsername}/{$formationData['id']}
+  * MUXI Documentation: https://muxi.org
+
+For "categories", suggest 2-3 relevant categories (lowercase with hyphens, e.g., "automation", "data-processing", "customer-support", "code-generation", "workflow-automation")
+
+Remember: Your entire response must be valid JSON. Do not include any text outside the JSON object.
 PROMPT;
 
             // Call OpenAI
@@ -587,34 +635,37 @@ PROMPT;
                 'gpt-4o-mini'
             );
 
-            error_log("OpenAI response received: " . substr($response, 0, 200));
+            error_log("OpenAI raw response: " . substr($response, 0, 500));
             $result = json_decode($response, true);
 
             if ($result && !$result['error'] && isset($result['data'])) {
-                error_log("LLM generated README successfully with categories: " . json_encode($result['data']['categories'] ?? []));
-            } else {
-                error_log("LLM generation failed or returned error: " . json_encode($result));
-            }
-
-            if ($result && !$result['error'] && isset($result['data'])) {
                 $data = $result['data'];
-
-                // Store categories in formationData for later use
-                if (isset($data['categories']) && is_array($data['categories'])) {
-                    $formationData['_generated_categories'] = $data['categories'];
-                    error_log("Generated categories: " . implode(', ', $data['categories']));
+                error_log("LLM data received: " . json_encode($data));
+                
+                // Check if data has readme and categories
+                if (isset($data['readme']) && isset($data['categories'])) {
+                    error_log("✅ LLM SUCCESS! Categories: " . implode(', ', $data['categories']));
+                    
+                    // Return both README and categories as array
+                    return [
+                        'readme' => $data['readme'],
+                        'categories' => $data['categories']
+                    ];
                 }
-
-                return $data['readme'] ?? $this->generateBasicReadme($formationData);
+                
+                error_log("⚠️ LLM data missing readme or categories fields");
+            } else {
+                error_log("⚠️ LLM generation failed: " . json_encode($result));
             }
 
             // Fallback to basic README if LLM fails
-            return $this->generateBasicReadme($formationData);
+            error_log("Using fallback README template");
+            return $this->generateBasicReadme($formationData, $registryUsername);
 
         } catch (Exception $e) {
             // Log error and fallback to basic README
             error_log("LLM README generation failed: " . $e->getMessage());
-            return $this->generateBasicReadme($formationData);
+            return $this->generateBasicReadme($formationData, $registryUsername);
         }
     }
 
@@ -663,7 +714,7 @@ PROMPT;
     /**
      * Generate basic README from formation data (fallback)
      */
-    private function generateBasicReadme($formationData)
+    private function generateBasicReadme($formationData, $registryUsername = 'owner')
     {
         $id = $formationData['id'];
         $description = $formationData['description'];
@@ -679,7 +730,7 @@ PROMPT;
 ## Installation
 
 ```bash
-muxi pull @owner/{$id}
+muxi pull @{$registryUsername}/{$id}
 ```
 
 ## Version
@@ -807,11 +858,17 @@ MD;
             $categories = json_encode($formationData['_generated_categories']);
         }
 
+        // Get README content from generated file if available
+        $readmeContent = '';
+        if (isset($formationData['_readme_content'])) {
+            $readmeContent = $formationData['_readme_content'];
+        }
+
         $data = [
             'user_id' => $userId,
             'name' => $formationData['id'],
             'description' => $formationData['description'],
-            'readme_md' => file_get_contents($repo['html_url'] . '/raw/main/README.md') ?? '',
+            'readme_md' => $readmeContent,
             'latest_version' => $formationData['version'],
             'github_repo' => $repo['full_name'],
             'github_stars' => $repo['stargazers_count'] ?? 0,
