@@ -205,10 +205,15 @@ class ApiFormations extends TinyController
                 throw new Exception('Version must be in semver format (e.g., 1.0.0)');
             }
 
-            // 4. Check/create README.md
+            // 4. Analyze formation structure (for stats)
+            $structure = $this->analyzeFormationStructure($tempDir);
+            $formationData['_structure'] = $structure;
+            error_log("Formation structure analyzed: " . json_encode($structure['components']));
+
+            // 5. Check/create README.md
             $readmePath = $tempDir . '/README.md';
             if (!file_exists($readmePath)) {
-                // Generate comprehensive README using LLM
+                // Generate comprehensive README using LLM (structure already analyzed above)
                 $llmResult = $this->generateReadmeWithLLM($formationData, $tempDir, $user->registry_username);
                 if (is_array($llmResult)) {
                     // LLM returned both README and categories
@@ -588,8 +593,8 @@ class ApiFormations extends TinyController
     private function generateReadmeWithLLM($formationData, $tempDir, $registryUsername)
     {
         try {
-            // Analyze formation structure
-            $structure = $this->analyzeFormationStructure($tempDir);
+            // Use pre-analyzed structure if available, otherwise analyze now
+            $structure = $formationData['_structure'] ?? $this->analyzeFormationStructure($tempDir);
 
             // Build prompt with formation data
             $formationInfo = json_encode([
@@ -909,7 +914,7 @@ MD;
         ]);
 
         if (!$versionExists) {
-            tiny::db()->insert('versions', [
+            $versionId = tiny::db()->insert('versions', [
                 'formation_id' => $formationId,
                 'version' => $formationData['version'],
                 'release_notes' => $release['body'] ?? '',
@@ -917,6 +922,22 @@ MD;
                 'published_at' => $release['published_at'] ?? date('Y-m-d H:i:s'),
                 'created_at' => date('Y-m-d H:i:s')
             ]);
+
+            // Store formation stats (agents, mcps, sops, triggers, knowledge counts)
+            if (isset($formationData['_structure']) && isset($formationData['_structure']['components'])) {
+                $components = $formationData['_structure']['components'];
+                tiny::db()->insert('formation_stats', [
+                    'version_id' => $versionId,
+                    'agents_count' => $components['agents'] ?? 0,
+                    'mcps_count' => $components['mcps'] ?? 0,
+                    'sops_count' => $components['sops'] ?? 0,
+                    'triggers_count' => $components['triggers'] ?? 0,
+                    'knowledge_count' => $components['knowledge'] ?? 0,
+                    'stats_json' => json_encode($formationData['_structure']),
+                    'created_at' => date('Y-m-d H:i:s')
+                ]);
+                error_log("📊 Formation stats stored: agents={$components['agents']}, mcps={$components['mcps']}, sops={$components['sops']}, triggers={$components['triggers']}, knowledge={$components['knowledge']}");
+            }
         }
 
         return $formationId;
