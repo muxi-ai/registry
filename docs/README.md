@@ -35,6 +35,10 @@ Feature-specific implementation guides
 API and CLI documentation
 - **[CLI-API-SCOPE.md](./05-api/CLI-API-SCOPE.md)** - Complete CLI and API design specification
 - **[CLI-AUTH-TESTING.md](./05-api/CLI-AUTH-TESTING.md)** - Authentication testing guide and security decisions
+- **[API-IMPLEMENTATION.md](./05-api/API-IMPLEMENTATION.md)** - API implementation guide with request/response examples
+- **[PULL-TRACKING-REFACTOR.md](./05-api/PULL-TRACKING-REFACTOR.md)** - Pull tracking refactor documentation
+- **[PUBLISH-IMPLEMENTATION.md](./05-api/PUBLISH-IMPLEMENTATION.md)** - File upload and publish flow implementation
+- **[IMPLEMENTATION-PLAN.md](./05-api/IMPLEMENTATION-PLAN.md)** - Detailed implementation plan for Phase 2.5
 
 ---
 
@@ -86,17 +90,44 @@ Next visit: Instant (served from cache)
 - GitHub OAuth + App installation
 - Download tracking and visualization
 
-### 🚧 Phase 2: CLI & API (IN PROGRESS)
-- CLI authentication flow (DONE)
-- Public API endpoints (IN PROGRESS)
-- Authenticated API endpoints (TODO)
-- CLI tool development (TODO)
+### ✅ Phase 2: API & CLI Integration (COMPLETE)
+- CLI authentication flow ✅
+- Public API endpoints ✅
+  - GET /api/formations/@user/name[:version][?pull=true]
+  - GET /api/search
+- Authenticated API endpoints ✅
+  - POST /api/formations/publish (file upload)
+- Pull tracking refactor ✅
+  - Separate info vs pull requests
+  - Version-specific syntax (:version)
+  - Download tracking with ?pull=true
+- GitHub helper refactor ✅
+  - Tiny helper with tiny::http()
+  - Token management
+- File upload processing ✅
+  - ZIP extraction and validation
+  - formation.yaml parsing
+  - README auto-generation
+- GitHub operations ✅
+  - Repository creation
+  - File pushing (Contents API)
+  - Release creation
+  - Asset uploads
+- Database storage ✅
+  - Formation metadata
+  - Version tracking
 
-### 📋 Phase 3: Advanced Features (PLANNED)
+### 📋 Phase 3: CLI Development & Enhancements (NEXT)
+- CLI tool development (muxi pull, muxi push, muxi search)
+- End-to-end testing with real formations
+- LLM-generated comprehensive READMEs
+- Async processing with progress tracking
+- Smart file diff (only update changed files)
+- Formation structure validation
 - Categories/tags with LLM auto-categorization
-- Organization publishing with permissions
-- Version management
+- Organization publishing with enhanced permissions
 - Token management UI
+- Private formations support
 
 ---
 
@@ -118,4 +149,4 @@ This is an internal project. For development guidelines:
 ---
 
 **Last Updated**: 2025-10-28  
-**Current Phase**: Phase 2 - API Development
+**Current Phase**: Phase 2 Complete - Ready for CLI Development

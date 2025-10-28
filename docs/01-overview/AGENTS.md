@@ -40,6 +40,76 @@ Next visit: Instant (served from cache)
 
 ---
 
+## ✅ Phase 2 Complete (2025-10-28)
+
+**Major Milestone**: Registry API is now functionally complete and ready for CLI development!
+
+### Completed Features
+
+**1. Pull Tracking Refactor**:
+- ✅ Separated info requests from actual pulls with `?pull=true`
+- ✅ Added `:version` syntax for version-specific requests
+- ✅ Simplified tracking to daily `downloads` table only
+- ✅ Version validation in database
+
+**2. GitHub Helper Refactoring**:
+- ✅ Converted from standalone class to Tiny helper (`tiny::github()`)
+- ✅ Uses `tiny::http()` instead of direct curl
+- ✅ Token management: `setToken()` / `clearToken()`
+- ✅ All GitHub API operations centralized
+
+**3. File Upload & Publish Flow**:
+- ✅ POST /api/formations/publish with multipart/form-data
+- ✅ ZIP extraction and validation
+- ✅ formation.yaml parsing with field validation
+- ✅ Auto-generate README if missing (basic template, TODO: LLM)
+- ✅ Create/verify GitHub repositories
+- ✅ Push files via GitHub Contents API
+- ✅ Create releases with tags
+- ✅ Upload ZIP as release asset
+- ✅ Store metadata in formations + versions tables
+- ✅ Automatic cleanup of temp files
+
+### Key API Endpoints
+
+```bash
+# Info only (no tracking)
+GET /api/formations/@user/name
+
+# Specific version info
+GET /api/formations/@user/name:1.2.0
+
+# Actual pull (tracks download)
+GET /api/formations/@user/name?pull=true
+
+# Version-specific pull
+GET /api/formations/@user/name:1.2.0?pull=true
+
+# Publish formation (authenticated)
+POST /api/formations/publish
+Authorization: Bearer mxr_xxx
+Content-Type: multipart/form-data
+Body: file=@formation.zip, org=optional-org-name
+```
+
+### Stats
+- **710 lines** in API controller
+- **349 lines** in GitHub helper
+- **3 commits** with comprehensive documentation
+- **4 new docs**: API-IMPLEMENTATION.md, PULL-TRACKING-REFACTOR.md, PUBLISH-IMPLEMENTATION.md, IMPLEMENTATION-PLAN.md
+
+### Architecture Shift
+
+**Registry is now the gatekeeper**:
+- CLI only needs `mxr_` token (simple authentication)
+- Registry stores users' GitHub OAuth tokens securely
+- Registry handles all GitHub operations (repo creation, releases, uploads)
+- CLI becomes simpler: zip and upload
+
+**Next Steps**: CLI development (`muxi pull`, `muxi push`, `muxi search`)!
+
+---
+
 ## 🏗️ Architecture
 
 ### GitHub-Backed Model
