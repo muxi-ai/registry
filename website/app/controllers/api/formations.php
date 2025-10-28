@@ -260,36 +260,38 @@ class ApiFormations extends TinyController
 
             // ========== GITHUB OPERATIONS ==========
             
-            // 6. If org specified, verify membership
+            // 6. Get GitHub App installation token
+            $appId = @$_SERVER['APP_GITHUB_APP_ID'] ?? throw new Exception("GitHub App ID not configured");
+            $privateKeyPath = @$_SERVER['APP_GITHUB_PRIVATE_KEY_PATH'] ?? throw new Exception("GitHub App private key path not configured");
+            $installationId = $user->github_installation_id ?? throw new Exception("GitHub App not installed for user");
+            
+            $githubToken = $this->github->getInstallationToken($installationId, $appId, $privateKeyPath);
+            $this->github->setToken($githubToken);
+            
+            // 7. If org specified, verify membership
             if ($orgName) {
-                $githubToken = tiny::model('user')->getGitHubAccessTokenByUserId($user->id);
-                $this->github->setToken($githubToken);
-
                 if (!$this->github->isOrgMember($orgName, $user->github_username)) {
                     throw new Exception("You are not a member of organization: $orgName");
                 }
             }
 
-            // 7. Create/verify GitHub repository
+            // 8. Create/verify GitHub repository
             $repoName = "muxi-{$formationData['id']}";
             $fullRepoName = "$githubOwner/$repoName";
 
-            $githubToken = tiny::model('user')->getGitHubAccessTokenByUserId($user->id);
-            $this->github->setToken($githubToken);
-
             $repo = $this->createOrGetGitHubRepo($githubOwner, $repoName, $formationData);
 
-            // 7b. Set GitHub topics (tags)
+            // 9. Set GitHub topics (tags)
             $this->setGitHubTopics($fullRepoName, $formationData);
 
-            // 8. Push files to GitHub
+            // 10. Push files to GitHub
             $this->pushFilesToGitHub($fullRepoName, $tempDir);
 
-            // 9. Create GitHub release
+            // 11. Create GitHub release
             $version = $formationData['version'];
             $release = $this->createGitHubRelease($fullRepoName, $version, $formationData);
 
-            // 10. Repack and upload as release asset
+            // 12. Repack and upload as release asset
             $zipPath = $this->repackFormation($tempDir, $formationData['id']);
             $asset = $this->uploadReleaseAsset($fullRepoName, $release['id'], $zipPath, 'formation.zip');
             
