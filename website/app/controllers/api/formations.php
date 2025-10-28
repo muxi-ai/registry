@@ -129,9 +129,16 @@ class ApiFormations extends TinyController
             $result = $this->processAndPublishFormation($user, $uploadedFile, $orgName);
             return $response->sendJSON($result);
         } catch (Exception $e) {
+            // Log detailed error for debugging
+            error_log("Formation publish error: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            
             return $response->sendJSON([
                 'error' => true,
                 'message' => $e->getMessage(),
+                'trace' => (isset($_GET['debug']) ? $e->getTraceAsString() : null),
+                'file' => (isset($_GET['debug']) ? $e->getFile() : null),
+                'line' => (isset($_GET['debug']) ? $e->getLine() : null),
                 'id' => 'API-15'
             ], 400);
         }
@@ -172,6 +179,16 @@ class ApiFormations extends TinyController
                 throw new Exception('Invalid formation.yaml format');
             }
 
+            // Debug output if ?debug=true
+            if (isset($_GET['debug'])) {
+                error_log("Parsed formation data: " . json_encode($formationData, JSON_PRETTY_PRINT));
+            }
+
+            // Use schema as version fallback if version not present
+            if (!isset($formationData['version']) && isset($formationData['schema'])) {
+                $formationData['version'] = $formationData['schema'];
+            }
+
             // 3. Validate required fields
             $requiredFields = ['id', 'version', 'description'];
             foreach ($requiredFields as $field) {
@@ -191,6 +208,29 @@ class ApiFormations extends TinyController
                 // Generate comprehensive README using LLM
                 $readme = $this->generateReadmeWithLLM($formationData, $tempDir);
                 file_put_contents($readmePath, $readme);
+            }
+
+            // TEST MODE: Stop before GitHub operations if ?test=true
+            if (isset($_GET['test']) && $_GET['test'] === 'true') {
+                $structure = $this->analyzeFormationStructure($tempDir);
+                $readmeContent = file_get_contents($readmePath);
+                $readmePreview = substr($readmeContent, 0, 500);
+                
+                return [
+                    'status' => 'test_ok',
+                    'message' => 'Formation processed successfully (test mode - no GitHub push)',
+                    'formation_data' => [
+                        'id' => $formationData['id'],
+                        'version' => $formationData['version'],
+                        'description' => $formationData['description'],
+                        'categories' => $formationData['_generated_categories'] ?? null,
+                    ],
+                    'structure' => $structure,
+                    'readme_preview' => $readmePreview . '...',
+                    'readme_length' => strlen($readmeContent),
+                    'temp_dir' => $tempDir,
+                    'files_in_formation' => $structure['files']
+                ];
             }
 
             // 5. Determine GitHub owner (user or org)
@@ -214,7 +254,7 @@ class ApiFormations extends TinyController
             $this->github->setToken($githubToken);
 
             $repo = $this->createOrGetGitHubRepo($githubOwner, $repoName, $formationData);
-            
+
             // 7b. Set GitHub topics (tags)
             $this->setGitHubTopics($fullRepoName, $formationData);
 
@@ -478,7 +518,7 @@ class ApiFormations extends TinyController
 
     /**
      * Generate comprehensive README using LLM
-     * 
+     *
      * @param array $formationData Parsed formation.yaml data
      * @param string $tempDir Path to extracted formation directory
      * @return string Generated README content
@@ -488,7 +528,7 @@ class ApiFormations extends TinyController
         try {
             // Analyze formation structure
             $structure = $this->analyzeFormationStructure($tempDir);
-            
+
             // Build prompt with formation data
             $formationInfo = json_encode([
                 'id' => $formationData['id'] ?? 'unknown',
@@ -500,9 +540,9 @@ class ApiFormations extends TinyController
                 'license' => $formationData['license'] ?? 'MIT',
                 'structure' => $structure
             ], JSON_PRETTY_PRINT);
-            
+
             $systemPrompt = "You are a technical documentation expert. Generate comprehensive, professional README files for MUXI formations (AI agent configurations).";
-            
+
             $userPrompt = <<<PROMPT
 Generate a comprehensive README.md for this MUXI formation:
 
@@ -536,8 +576,9 @@ Important:
 - Keep categories lowercase with hyphens (e.g., "customer-support")
 - Include the registry and muxi.org links at the bottom
 PROMPT;
-            
+
             // Call OpenAI
+            error_log("Calling OpenAI for README generation...");
             $response = tiny::openai()->sendMessage(
                 $userPrompt,
                 $systemPrompt,
@@ -545,34 +586,41 @@ PROMPT;
                 2000,  // More tokens for comprehensive README
                 'gpt-4o-mini'
             );
-            
+
+            error_log("OpenAI response received: " . substr($response, 0, 200));
             $result = json_decode($response, true);
-            
+
+            if ($result && !$result['error'] && isset($result['data'])) {
+                error_log("LLM generated README successfully with categories: " . json_encode($result['data']['categories'] ?? []));
+            } else {
+                error_log("LLM generation failed or returned error: " . json_encode($result));
+            }
+
             if ($result && !$result['error'] && isset($result['data'])) {
                 $data = $result['data'];
-                
+
                 // Store categories in formationData for later use
                 if (isset($data['categories']) && is_array($data['categories'])) {
                     $formationData['_generated_categories'] = $data['categories'];
                     error_log("Generated categories: " . implode(', ', $data['categories']));
                 }
-                
+
                 return $data['readme'] ?? $this->generateBasicReadme($formationData);
             }
-            
+
             // Fallback to basic README if LLM fails
             return $this->generateBasicReadme($formationData);
-            
+
         } catch (Exception $e) {
             // Log error and fallback to basic README
             error_log("LLM README generation failed: " . $e->getMessage());
             return $this->generateBasicReadme($formationData);
         }
     }
-    
+
     /**
      * Analyze formation directory structure
-     * 
+     *
      * @param string $tempDir Path to formation directory
      * @return array Structure information
      */
@@ -588,13 +636,13 @@ PROMPT;
                 'knowledge' => 0
             ]
         ];
-        
+
         $files = $this->getFilesRecursive($tempDir);
-        
+
         foreach ($files as $file) {
             $relativePath = str_replace($tempDir . '/', '', $file);
             $structure['files'][] = $relativePath;
-            
+
             // Count component types based on file patterns
             if (strpos($relativePath, 'agent') !== false && strpos($relativePath, '.yaml') !== false) {
                 $structure['components']['agents']++;
@@ -608,10 +656,10 @@ PROMPT;
                 $structure['components']['knowledge']++;
             }
         }
-        
+
         return $structure;
     }
-    
+
     /**
      * Generate basic README from formation data (fallback)
      */
@@ -758,7 +806,7 @@ MD;
         if (isset($formationData['_generated_categories']) && is_array($formationData['_generated_categories'])) {
             $categories = json_encode($formationData['_generated_categories']);
         }
-        
+
         $data = [
             'user_id' => $userId,
             'name' => $formationData['id'],
@@ -830,7 +878,7 @@ MD;
 
     /**
      * Set GitHub repository topics
-     * 
+     *
      * @param string $repoName Full repository name (owner/repo)
      * @param array $formationData Formation data including categories
      */
@@ -839,24 +887,24 @@ MD;
         try {
             // Build topics list: muxi, formation, + generated categories
             $topics = ['muxi', 'formation'];
-            
+
             if (isset($formationData['_generated_categories']) && is_array($formationData['_generated_categories'])) {
                 foreach ($formationData['_generated_categories'] as $category) {
                     $topics[] = $category;
                 }
             }
-            
+
             // GitHub limits to 20 topics, ensure we don't exceed
             $topics = array_slice(array_unique($topics), 0, 20);
-            
+
             $this->github->setTopics($repoName, $topics);
-            
+
         } catch (Exception $e) {
             // Log error but don't fail publish if topics fail
             error_log("Failed to set GitHub topics: " . $e->getMessage());
         }
     }
-    
+
     /**
      * Remove directory recursively
      */

@@ -136,7 +136,7 @@ class AuthMiddleware
             // Authenticated user: Higher rate limits
             $rateLimit = tiny::rateLimiter("api_auth", 10, 1); // 10 requests per second
             $rateLimit->add(1000, 600); // max 1000 requests per 10 minutes
-            $rateLimitIdentifier = $user['id'];
+            $rateLimitIdentifier = 'lmt_'. (string)$user['id'];
         } else {
             // Anonymous user (public endpoints only): Lower rate limits by IP
             $rateLimit = tiny::rateLimiter("api_public", 5, 1); // 5 requests per second

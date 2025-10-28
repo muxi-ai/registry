@@ -252,8 +252,8 @@ class User extends TinyModel
             SELECT u.*, c.id as token_id, c.name as token_name
             FROM users u
             LEFT JOIN cli_tokens c ON u.id = c.user_id
-            WHERE c.token_hash = ? AND c.expires_at > NOW()
-        ', [$token_hash]);
+            WHERE c.token_hash = ? AND c.expires_at > ?
+        ', [$token_hash, date('Y-m-d H:i:s')]);
 
         if (!$user) {
             return null;
