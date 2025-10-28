@@ -15,13 +15,15 @@ require_once __DIR__ . '/../../lib/GitHub.php';
 class ApiFormations extends TinyController
 {
     /**
-     * GET /api/formations/@:user/:name
+     * GET /api/formations/@:user/:name[:version][?pull=true]
      * 
      * Get formation metadata with lazy discovery from GitHub
+     * Optional :version to get specific version (default: latest)
+     * Optional ?pull=true to track as download
      */
     public function get($request, $response)
     {
-        // Parse route: /api/formations/@user/name or /api/formations/user/name
+        // Parse route: /api/formations/@user/name[:version]
         $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
         // Remove /api/formations/ prefix
         $remaining = preg_replace('#^/api/formations/?#', '', $path);
@@ -30,7 +32,7 @@ class ApiFormations extends TinyController
         if (count($parts) < 2) {
             return $response->sendJSON([
                 'error' => true,
-                'message' => 'Invalid formation path. Expected: /api/formations/@user/name',
+                'message' => 'Invalid formation path. Expected: /api/formations/@user/name[:version]',
                 'id' => 'API-10'
             ], 400);
         }
@@ -38,13 +40,20 @@ class ApiFormations extends TinyController
         // Remove @ prefix if present
         $parts = array_values($parts); // Re-index array
         $username = ltrim($parts[0], '@');
-        $name = $parts[1];
+        $nameWithVersion = $parts[1];
+        
+        // Parse optional :version
+        $versionParts = explode(':', $nameWithVersion, 2);
+        $name = $versionParts[0];
+        $requestedVersion = $versionParts[1] ?? null; // null = latest
         
         try {
-            $formation = $this->findOrLazyFetch($username, $name);
+            $formation = $this->findOrLazyFetch($username, $name, $requestedVersion);
             
-            // Track the download (both total + daily)
-            $this->trackDownload($formation['formation_id'], $formation['version']);
+            // Only track download if ?pull=true
+            if (isset($_GET['pull']) && $_GET['pull'] === 'true') {
+                $this->trackDownload($formation['formation_id'], $formation['version']);
+            }
             
             return $response->sendJSON($formation);
         } catch (NotFoundException $e) {
@@ -151,11 +160,15 @@ class ApiFormations extends TinyController
     
     /**
      * Find formation in database or lazy fetch from GitHub
+     * 
+     * @param string $registryUsername Registry username
+     * @param string $name Formation name
+     * @param string|null $version Specific version or null for latest
      */
-    private function findOrLazyFetch($registryUsername, $name)
+    private function findOrLazyFetch($registryUsername, $name, $version = null)
     {
         // 1. Try database first (fast path)
-        $formation = $this->findInDatabase($registryUsername, $name);
+        $formation = $this->findInDatabase($registryUsername, $name, $version);
         
         if ($formation) {
             return $this->formatFormationResponse($formation);
@@ -189,8 +202,12 @@ class ApiFormations extends TinyController
     
     /**
      * Find formation in database
+     * 
+     * @param string $registryUsername Registry username
+     * @param string $name Formation name
+     * @param string|null $version Specific version or null for latest
      */
-    private function findInDatabase($registryUsername, $name)
+    private function findInDatabase($registryUsername, $name, $version = null)
     {
         // Use getOne with simpler conditions
         $formation = tiny::db()->getOne('formations', ['name' => $name]);
@@ -206,11 +223,26 @@ class ApiFormations extends TinyController
             return null;
         }
         
+        // If specific version requested, verify it exists
+        if ($version !== null) {
+            $versionRecord = tiny::db()->getOne('versions', [
+                'formation_id' => $formation['id'],
+                'version' => $version
+            ]);
+            
+            if (!$versionRecord) {
+                return null; // Requested version doesn't exist
+            }
+            
+            // Use specific version instead of latest
+            $formation['latest_version'] = $version;
+        }
+        
         // Merge user info into formation
         $formation['registry_username'] = $user['registry_username'];
         $formation['github_username'] = $user['github_username'];
         $formation['github_avatar'] = $user['github_avatar'] ?? '';
-        $formation['downloads_this_week'] = 0; // TODO: Calculate properly
+        $formation['downloads_this_week'] = 0; // TODO: Calculate from downloads table
         
         return $formation;
     }
@@ -297,19 +329,11 @@ class ApiFormations extends TinyController
     }
     
     /**
-     * Track download (increment total + record daily stats)
+     * Track download (increment daily stats only)
+     * Note: total_downloads is calculated from sum of downloads table
      */
     private function trackDownload($formationId, $version)
     {
-        // Increment total downloads (read-modify-write to avoid race conditions)
-        $current = tiny::db()->getOne('formations', ['id' => $formationId]);
-        $newCount = ($current['total_downloads'] ?? 0) + 1;
-        
-        tiny::db()->update('formations', [
-            'total_downloads' => $newCount
-        ], ['id' => $formationId]);
-        
-        // Record/increment daily download count
         $today = date('Y-m-d');
         
         // Try to update existing record, or insert new one
@@ -320,10 +344,10 @@ class ApiFormations extends TinyController
         ]);
         
         if ($existing) {
-            // Increment existing daily count (read-modify-write)
-            $newDailyCount = ($existing['download_count'] ?? 0) + 1;
+            // Increment existing daily count
+            $newCount = ($existing['download_count'] ?? 0) + 1;
             tiny::db()->update('downloads', [
-                'download_count' => $newDailyCount
+                'download_count' => $newCount
             ], ['id' => $existing['id']]);
         } else {
             // Create new daily record
