@@ -260,13 +260,13 @@ class ApiFormations extends TinyController
 
             // ========== GITHUB OPERATIONS ==========
             
-            // 6. Get GitHub App installation token
-            $appId = @$_SERVER['APP_GITHUB_APP_ID'] ?? throw new Exception("GitHub App ID not configured");
-            $privateKeyPath = @$_SERVER['APP_GITHUB_PRIVATE_KEY_PATH'] ?? throw new Exception("GitHub App private key path not configured");
-            $installationId = $user->github_installation_id ?? throw new Exception("GitHub App not installed for user");
-            
-            $githubToken = $this->github->getInstallationToken($installationId, $appId, $privateKeyPath);
+            // 6. Get user's GitHub OAuth token (already decrypted by model)
+            $githubToken = tiny::model('user')->getGitHubAccessTokenByUserId($user->id);
+            if (!$githubToken) {
+                throw new Exception("GitHub OAuth token not found. Please reconnect your GitHub account.");
+            }
             $this->github->setToken($githubToken);
+            error_log("🔑 Using OAuth token for user: {$user->registry_username}");
             
             // 7. If org specified, verify membership
             if ($orgName) {
