@@ -277,11 +277,20 @@ class ApiFormations extends TinyController
             $tokenPreview = substr($githubToken, 0, 10) . '...' . substr($githubToken, -4);
             error_log("🔑 Using OAuth token for user: {$user->registry_username}, token: {$tokenPreview}");
             
-            // 7. If org specified, verify membership
+            // 7. If org specified, verify membership and get org user
+            $ownerUserId = $user->id; // Default to authenticated user
             if ($orgName) {
                 if (!$this->github->isOrgMember($orgName, $user->github_username)) {
                     throw new Exception("You are not a member of organization: $orgName");
                 }
+                
+                // Get the org's user record from database
+                $orgUser = tiny::db()->getOne('users', ['github_username' => $orgName]);
+                if (!$orgUser) {
+                    throw new Exception("Organization not found in registry: $orgName");
+                }
+                $ownerUserId = $orgUser['id'];
+                error_log("🏢 Using org user ID: {$ownerUserId} for formation ownership");
             }
 
             // 8. Create/verify GitHub repository
@@ -339,7 +348,8 @@ class ApiFormations extends TinyController
             error_log("🗄️ Storing in database. Repo: " . json_encode(['full_name' => $repo['full_name'] ?? 'MISSING']));
             error_log("🗄️ Release data: " . json_encode($release));
             error_log("🗄️ FormationData has _structure: " . (isset($formationData['_structure']) ? 'YES' : 'NO'));
-            $formation = $this->storeFormationInDatabase($user->id, $formationData, $repo, $release);
+            error_log("🗄️ Owner user ID: {$ownerUserId}, Published by user ID: {$user->id}");
+            $formation = $this->storeFormationInDatabase($ownerUserId, $formationData, $repo, $release, $user->id);
 
             return [
                 'status' => 'ok',
@@ -719,7 +729,8 @@ PROMPT;
                 $structure['components']['sops']++;
             } elseif (strpos($relativePath, 'trigger') !== false) {
                 $structure['components']['triggers']++;
-            } elseif (strpos($relativePath, 'knowledge') !== false || strpos($relativePath, '.md') !== false) {
+            } elseif (strpos($relativePath, 'knowledge/') !== false && strpos($relativePath, '.md') !== false) {
+                // Only count .md files that are in a knowledge/ directory
                 $structure['components']['knowledge']++;
             }
         }
@@ -883,7 +894,7 @@ MD;
     /**
      * Store formation metadata in database
      */
-    private function storeFormationInDatabase($userId, $formationData, $repo, $release)
+    private function storeFormationInDatabase($userId, $formationData, $repo, $release, $publishedByUserId = null)
     {
         // Prepare categories as JSON string
         $categories = null;
@@ -899,6 +910,7 @@ MD;
 
         $data = [
             'user_id' => $userId,
+            'published_by_user_id' => $publishedByUserId,
             'name' => $formationData['id'],
             'description' => $formationData['description'],
             'readme_md' => $readmeContent,
