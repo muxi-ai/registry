@@ -697,7 +697,7 @@ php website/app/test/github-api-test.php
 
 ---
 
-## Roadmap
+## Development Status
 
 ### ✅ Phase 1: Core Infrastructure (Complete)
 - [x] GitHub-backed storage architecture
@@ -707,32 +707,45 @@ php website/app/test/github-api-test.php
 - [x] Tiny framework integration
 - [x] Special routing (@username URLs)
 
-### 🚧 Phase 2: Alpha MVP (In Progress)
+### ✅ Phase 2: Registry API & Publishing (Complete)
 - [x] GitHub App OAuth authentication
-- [x] User dashboard (basic)
-- [ ] Formation page with README rendering
-- [ ] User profile pages
-- [ ] Search functionality (text search)
-- [ ] Browse page (trending, recent, popular)
-- [ ] CLI integration (`muxi pull`, `muxi push`)
+- [x] User dashboard
+- [x] Formation pages with README rendering
+- [x] User profile pages
+- [x] Search functionality (text search)
+- [x] Browse page (trending, recent, popular)
+- [x] Full API for formation publishing
+- [x] File upload and processing (ZIP extraction, validation)
+- [x] GitHub operations (repo creation, releases, asset uploads)
+- [x] Organization publishing support
+- [x] Formation stats collection (agents, MCPs, SOPs, triggers, knowledge)
+- [x] Lazy discovery with graceful fallbacks
+- [x] Rate limiting and authentication
+- [x] Pull tracking with version-specific syntax
 
-### 📋 Phase 3: Beta Features (Planned)
-- [ ] Organizations support (publishing to orgs)
+### 🎉 Registry Status: Production Ready
+
+**All core registry features are complete and functional!**
+
+The MUXI Registry backend provides a complete API for:
+- ✅ Formation publishing (with GitHub integration)
+- ✅ Formation discovery (lazy loading from GitHub)
+- ✅ Organization support
+- ✅ Stats collection and tracking
+- ✅ Version management
+- ✅ Download tracking
+
+**CLI Development**: The CLI tool (`muxi` command) is being developed in a separate repository.
+
+### 🔮 Future Enhancements (Optional)
 - [ ] Private formations
-- [ ] Markdown rendering with syntax highlighting
-- [ ] Enhanced search (tags, categories)
-- [ ] Formation statistics dashboard
-- [ ] Version history and changelog
-- [ ] Copy-to-clipboard for install commands
-
-### 🔮 Phase 4: Production (Future)
+- [ ] LLM-generated comprehensive READMEs
+- [ ] Async processing with progress tracking
+- [ ] Enhanced search (semantic/vector search)
+- [ ] Formation dependencies and resolution
 - [ ] Hybrid storage (S3 + GitHub)
 - [ ] Teams and fine-grained permissions
-- [ ] Semantic/vector search
-- [ ] Self-hosted registry option
 - [ ] Enterprise features (SSO, audit logs)
-- [ ] CI/CD integrations
-- [ ] Formation dependencies and resolution
 
 ---
 
