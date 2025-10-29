@@ -49,3 +49,4 @@ config/github-app.php
 credentials.json
 .env.local
 formation.zip
+formation-update.zip
