@@ -239,7 +239,7 @@ class ApiFormations extends TinyController
                 $formationData['version'] = $formationData['schema'];
             }
 
-            // 3. Validate required fields
+            // 3. Validate required fields and sanitize input
             $requiredFields = ['id', 'version', 'description'];
             foreach ($requiredFields as $field) {
                 if (!isset($formationData[$field]) || empty($formationData[$field])) {
@@ -247,9 +247,23 @@ class ApiFormations extends TinyController
                 }
             }
 
+            // Validate formation ID format
+            if (!preg_match('/^[a-z0-9-]{3,50}$/', $formationData['id'])) {
+                throw new Exception('Formation ID must be 3-50 characters, lowercase letters, numbers, and hyphens only');
+            }
+
             // Validate version format (semver)
             if (!preg_match('/^\d+\.\d+\.\d+$/', $formationData['version'])) {
                 throw new Exception('Version must be in semver format (e.g., 1.0.0)');
+            }
+
+            // Sanitize and validate description
+            $formationData['description'] = strip_tags($formationData['description']);
+            if (strlen($formationData['description']) > 500) {
+                throw new Exception('Description must be under 500 characters');
+            }
+            if (strlen($formationData['description']) < 10) {
+                throw new Exception('Description must be at least 10 characters');
             }
 
             // 4. Analyze formation structure (for stats)
