@@ -14,6 +14,11 @@ class ApiFormations extends TinyController
     /** @var GitHub GitHub API client instance */
     private GitHub $github;
 
+    // Security constants
+    private const MAX_FORMATION_SIZE = 50 * 1024 * 1024; // 50MB
+    private const MAX_EXTRACTED_SIZE = 100 * 1024 * 1024; // 100MB (allow 2x for compression)
+    private const DIR_PERMISSIONS = 0755;
+
     /**
      * Initialize GitHub API client
      */
@@ -111,6 +116,16 @@ class ApiFormations extends TinyController
         $uploadedFile = $_FILES['file'];
         $orgName = $_GET['org'] ?? $_POST['org'] ?? null; // Support both query param and POST data
 
+        // Validate file size
+        if ($uploadedFile['size'] > self::MAX_FORMATION_SIZE) {
+            return $response->sendJSON([
+                'error' => true,
+                'message' => 'Formation ZIP must be under 50MB',
+                'size_mb' => round($uploadedFile['size'] / 1024 / 1024, 2),
+                'id' => 'API-16'
+            ], 400);
+        }
+
         // Validate file is a ZIP
         $finfo = finfo_open(FILEINFO_MIME_TYPE);
         $mimeType = finfo_file($finfo, $uploadedFile['tmp_name']);
@@ -157,16 +172,48 @@ class ApiFormations extends TinyController
     {
         // Create temp directory
         $tempDir = sys_get_temp_dir() . '/muxi_' . uniqid();
-        mkdir($tempDir, 0755, true);
+        mkdir($tempDir, self::DIR_PERMISSIONS, true);
 
         try {
-            // 1. Unzip uploaded file
+            // 1. Unzip uploaded file with security validation
             $zip = new ZipArchive();
             if ($zip->open($uploadedFile['tmp_name']) !== true) {
                 throw new Exception('Invalid ZIP file or unable to extract');
             }
+
+            // Security: Validate ZIP contents before extraction (Zip Slip protection)
+            $extractedSize = 0;
+            for ($i = 0; $i < $zip->numFiles; $i++) {
+                $entry = $zip->getNameIndex($i);
+                $stat = $zip->statIndex($i);
+                
+                // Block path traversal attempts
+                if (strpos($entry, '..') !== false || strpos($entry, '/..') !== false) {
+                    $zip->close();
+                    error_log("SECURITY: Path traversal attempt detected in ZIP: {$entry}");
+                    throw new Exception('Invalid ZIP: Path traversal detected');
+                }
+                
+                // Block absolute paths
+                if ($entry[0] === '/' || (strlen($entry) > 1 && $entry[1] === ':')) {
+                    $zip->close();
+                    error_log("SECURITY: Absolute path detected in ZIP: {$entry}");
+                    throw new Exception('Invalid ZIP: Absolute paths not allowed');
+                }
+                
+                // Check total extracted size
+                $extractedSize += $stat['size'];
+                if ($extractedSize > self::MAX_EXTRACTED_SIZE) {
+                    $zip->close();
+                    throw new Exception('Extracted formation size exceeds 100MB limit');
+                }
+            }
+
+            // Extract after validation
             $zip->extractTo($tempDir);
             $zip->close();
+            
+            error_log("✅ ZIP validated and extracted safely: {$zip->numFiles} files, " . round($extractedSize / 1024 / 1024, 2) . "MB");
 
             // 1b. Security cleanup: Remove sensitive files and macOS artifacts
             $this->removeSensitiveFiles($tempDir);
@@ -365,10 +412,30 @@ class ApiFormations extends TinyController
             ];
 
         } finally {
-            // Cleanup temp directory
-            $this->removeDirectory($tempDir);
+            // Cleanup temp directory with robust error handling
+            if (isset($tempDir) && is_dir($tempDir)) {
+                try {
+                    $this->removeDirectory($tempDir);
+                    error_log("🧹 Temp directory cleaned up: {$tempDir}");
+                } catch (Exception $e) {
+                    error_log("⚠️ CRITICAL: Failed to remove temp directory: {$tempDir} - " . $e->getMessage());
+                    
+                    // Try forceful cleanup as last resort
+                    if (function_exists('exec') && DIRECTORY_SEPARATOR === '/') {
+                        exec('rm -rf ' . escapeshellarg($tempDir) . ' 2>&1', $output, $returnCode);
+                        if ($returnCode !== 0) {
+                            error_log("🚨 ALERT: Temp directory cleanup failed completely: {$tempDir}");
+                            error_log("Output: " . implode("\n", $output));
+                        } else {
+                            error_log("✅ Temp directory force-cleaned: {$tempDir}");
+                        }
+                    }
+                }
+            }
+            
+            // Cleanup ZIP file
             if (isset($zipPath) && file_exists($zipPath)) {
-                unlink($zipPath);
+                @unlink($zipPath);  // @ suppresses warnings if file already deleted
             }
         }
     }
