@@ -144,16 +144,17 @@ class ApiFormations extends TinyController
             $result = $this->processAndPublishFormation($user, $uploadedFile, $orgName);
             return $response->sendJSON($result);
         } catch (Exception $e) {
-            // Log detailed error for debugging
-            error_log("Formation publish error: " . $e->getMessage());
-            error_log("Stack trace: " . $e->getTraceAsString());
+            // Log detailed error with context
+            tiny::log('Formation publish error', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
             
             return $response->sendJSON([
                 'error' => true,
                 'message' => $e->getMessage(),
-                'trace' => (isset($_GET['debug']) ? $e->getTraceAsString() : null),
-                'file' => (isset($_GET['debug']) ? $e->getFile() : null),
-                'line' => (isset($_GET['debug']) ? $e->getLine() : null),
                 'id' => 'API-15'
             ], 400);
         }
@@ -229,10 +230,12 @@ class ApiFormations extends TinyController
                 throw new Exception('Invalid formation.yaml format');
             }
 
-            // Debug output if ?debug=true
-            if (isset($_GET['debug'])) {
-                error_log("Parsed formation data: " . json_encode($formationData, JSON_PRETTY_PRINT));
-            }
+            // Log parsed formation data for debugging
+            tiny::log('Formation data parsed', [
+                'formation_id' => $formationData['id'] ?? 'unknown',
+                'version' => $formationData['version'] ?? 'unknown',
+                'has_description' => isset($formationData['description'])
+            ]);
 
             // Use schema as version fallback if version not present
             if (!isset($formationData['version']) && isset($formationData['schema'])) {
