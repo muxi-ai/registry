@@ -19,7 +19,7 @@ Stop building AI agents from scratch. Install complete, production-ready formati
 
 ```bash
 muxi pull @muxi/customer-support    # Complete customer support system
-muxi pull @dev/code-reviewer         # Automated code review agent  
+muxi pull @dev/code-reviewer         # Automated code review agent
 muxi pull @company/sales-assistant   # Sales automation formation
 ```
 
@@ -27,7 +27,7 @@ Each formation includes everything you need:
 - ✅ Pre-configured AI agents
 - ✅ Integrated tools (MCPs)
 - ✅ Standard operating procedures
-- ✅ Automation triggers  
+- ✅ Automation triggers
 - ✅ Knowledge bases
 
 **No setup. No configuration. Just pull and deploy.**
@@ -168,7 +168,7 @@ See [docs/ARCHITECTURE.md#development-setup](docs/ARCHITECTURE.md#development-se
 
 ## Support
 
-- 💬 [GitHub Discussions](https://github.com/muxi-ai/community/discussions)
+- 💬 [GitHub Discussions](https://muxi.org/community)
 - 🐛 [Report Issues](https://github.com/muxi-ai/registry/issues)
 - 📖 [Read the Docs](docs/ARCHITECTURE.md)
 
