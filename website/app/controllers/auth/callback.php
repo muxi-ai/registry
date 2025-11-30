@@ -67,6 +67,17 @@ class AuthCallback extends TinyController
 
         // redirect to cli token page if auth mode is cli
         if (tiny::flash('auth_mode')->get() == 'cli') {
+            // Check if callback URL was provided
+            $callback = tiny::flash('cli_callback')->get(true);
+            if ($callback) {
+                // Generate CLI token and redirect to callback URL
+                $token = tiny::model('user')->createCliToken($user['id']);
+                $separator = str_contains($callback, '?') ? '&' : '?';
+                tiny::redirect($callback . $separator . 'token=' . urlencode($token));
+                return;
+            }
+
+            // No callback - redirect to token page (which generates its own token)
             tiny::redirect('/auth/cli/token');
             return;
         }
