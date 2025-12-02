@@ -79,7 +79,7 @@ class User extends TinyModel
     public function decryptUserHash(string $hash): ?int
     {
         // Decrypt the hash
-        $decrypted = tiny::cypher()->decrypt($hash, @$_SERVER['CRYPTO_SECRET']);
+        $decrypted = tiny::cypher()->decrypt($hash, @$_SERVER['TINY_CRYPTO_SECRET']);
         return $decrypted ? (int)$decrypted : null;
     }
 
@@ -91,7 +91,7 @@ class User extends TinyModel
      */
     public function encryptUserHash(string $data): string
     {
-        return tiny::cypher()->encrypt($data, @$_SERVER['CRYPTO_SECRET']);
+        return tiny::cypher()->encrypt($data, @$_SERVER['TINY_CRYPTO_SECRET']);
     }
 
     /**
@@ -185,7 +185,7 @@ class User extends TinyModel
             'github_avatar' => str_replace('?v=4', '', trim($ghUser->avatar_url)),
             'github_email' => trim(strtolower($ghUser->email)),
             'github_type' => strtolower(trim($ghUser->type)),
-            'github_oauth_token' => tiny::cypher()->encrypt($ghUser->github_oauth_token, @$_SERVER['CRYPTO_SECRET']),
+            'github_oauth_token' => tiny::cypher()->encrypt($ghUser->github_oauth_token, @$_SERVER['TINY_CRYPTO_SECRET']),
             'first_name' => ucwords(trim($ghUser->first_name)),
             'last_name' => ucwords(trim($ghUser->last_name)),
             'company' => $ghUser->company,
@@ -197,7 +197,7 @@ class User extends TinyModel
         ];
 
         if ($ghUser->github_refresh_token) {
-            $payload['github_refresh_token'] = tiny::cypher()->encrypt($ghUser->github_refresh_token, @$_SERVER['CRYPTO_SECRET']);
+            $payload['github_refresh_token'] = tiny::cypher()->encrypt($ghUser->github_refresh_token, @$_SERVER['TINY_CRYPTO_SECRET']);
         }
         if ($ghUser->github_token_expires_at) {
             $payload['github_token_expires_at'] = $ghUser->github_token_expires_at;
@@ -231,7 +231,7 @@ class User extends TinyModel
     public function createCliToken(int $userId, string $name = 'CLI Token'): string
     {
         $token = 'mxr_' . tiny::nanoId(60);
-        $token_hash = tiny::cypher()->encrypt($token, @$_SERVER['CRYPTO_SECRET']);
+        $token_hash = tiny::cypher()->encrypt($token, @$_SERVER['TINY_CRYPTO_SECRET']);
         tiny::db()->insert('cli_tokens', [
             'user_id' => $userId,
             'token_hash' => $token_hash,
@@ -251,7 +251,7 @@ class User extends TinyModel
      */
     public function getUserByCliToken(string $token): ?array
     {
-        $token_hash = tiny::cypher()->encrypt($token, @$_SERVER['CRYPTO_SECRET']);
+        $token_hash = tiny::cypher()->encrypt($token, @$_SERVER['TINY_CRYPTO_SECRET']);
         $user = tiny::db()->getOneQuery('
             SELECT u.*, c.id as token_id, c.name as token_name
             FROM users u
@@ -291,6 +291,6 @@ class User extends TinyModel
     public function getGitHubAccessTokenByUserId(int $userId): ?string
     {
         $result = tiny::db()->getOne('users', ['id' => $userId], 'github_oauth_token');
-        return $result ? tiny::cypher()->decrypt($result['github_oauth_token'], @$_SERVER['CRYPTO_SECRET']) : null;
+        return $result ? tiny::cypher()->decrypt($result['github_oauth_token'], @$_SERVER['TINY_CRYPTO_SECRET']) : null;
     }
 }

@@ -149,17 +149,17 @@ class AuthMiddleware
         }
 
         // Additional rate limiting for expensive operations (file uploads)
-        if ($_SERVER['REQUEST_METHOD'] === 'POST' && 
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' &&
             strpos($_SERVER['REQUEST_URI'], '/api/formations/publish') !== false) {
-            
+
             // Stricter limits for uploads: 1 per minute, max 10 per hour
             $uploadRateLimit = tiny::rateLimiter("api_upload", 1, 60); // 1 per minute
             $uploadRateLimit->add(10, 3600); // Max 10 per hour
-            
+
             if (!$uploadRateLimit->check($rateLimitIdentifier)) {
                 $this->sendApiError(
-                    'Upload rate limit exceeded. You can publish 1 formation per minute, maximum 10 per hour.', 
-                    'API-17', 
+                    'Upload rate limit exceeded. You can publish 1 formation per minute, maximum 10 per hour.',
+                    'API-17',
                     429
                 );
             }
@@ -278,7 +278,7 @@ class AuthMiddleware
      */
     private function decryptToken(string $token): false|string
     {
-        return tiny::cypher()->decrypt($token, @$_SERVER['CRYPTO_SECRET']);
+        return tiny::cypher()->decrypt($token, @$_SERVER['TINY_CRYPTO_SECRET']);
     }
 
     /**
