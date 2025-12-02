@@ -61,7 +61,7 @@ class ApiSearch extends TinyController
     private function searchFormations($query, $sort, $limit)
     {
         // Use the search model for all search logic
-        $formations = tiny::model('search')->searchFormations($query, $sort, $limit);
+        $formations = tiny::model('finder')->searchFormations($query, $sort, $limit);
 
         // Format results for API response
         return array_map(function($row) {

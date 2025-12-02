@@ -11,7 +11,7 @@ declare(strict_types=1);
  * 3. LIKE pattern fallback (fuzzy search)
  * 4. Levenshtein distance (typo correction)
  */
-class Search extends TinyModel
+class Finder extends TinyModel
 {
     /**
      * Search formations using multi-strategy approach
@@ -220,13 +220,13 @@ class Search extends TinyModel
         if (isset($formation['downloads_7d'])) {
             return (float)$formation['downloads_7d'] + (($formation['github_stars'] ?? 0) * 0.1);
         }
-        
+
         // Otherwise, calculate from downloads table
         $formationId = $formation['id'];
-        
+
         // Get downloads for last 7 days with day-by-day breakdown
         $result = tiny::db()->getQuery("
-            SELECT 
+            SELECT
                 day,
                 SUM(download_count) as count
             FROM downloads
@@ -234,18 +234,18 @@ class Search extends TinyModel
             AND day >= DATE('now', '-7 days')
             GROUP BY day
         ", [$formationId]);
-        
+
         if (empty($result)) {
             // No recent downloads, use stars as fallback
             return ($formation['github_stars'] ?? 0) * 0.1;
         }
-        
+
         $score = 0;
         $threeDaysAgo = date('Y-m-d', strtotime('-3 days'));
-        
+
         foreach ($result as $row) {
             $count = (int)$row['count'];
-            
+
             // Recent 3 days get 3x weight, older days get 1x weight
             if ($row['day'] >= $threeDaysAgo) {
                 $score += $count * 3; // Emphasize recent activity
@@ -253,10 +253,10 @@ class Search extends TinyModel
                 $score += $count * 1;
             }
         }
-        
+
         // Add 10% of stars as tiebreaker for formations with similar download patterns
         $score += ($formation['github_stars'] ?? 0) * 0.1;
-        
+
         return (float)$score;
     }
 

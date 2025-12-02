@@ -73,7 +73,7 @@ class AuthCallback extends TinyController
                 // Generate CLI token and redirect to callback URL
                 $token = tiny::model('user')->createCliToken($user['id']);
                 $separator = str_contains($callback, '?') ? '&' : '?';
-                tiny::redirect($callback . $separator . 'token=' . urlencode($token));
+                tiny::redirect($callback . $separator . 'token=' . urlencode($token) . '&username=' . urlencode($user['registry_username']));
                 return;
             }
 

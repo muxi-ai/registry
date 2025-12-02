@@ -24,11 +24,11 @@ class Search extends TinyController
         // Only execute search if the user provided a non-empty query.
         if (!empty($query)) {
             // Use the search model for the primary search
-            $formations = tiny::model('search')->searchFormations($query, 'trending', 100);
+            $formations = tiny::model('finder')->searchFormations($query, 'trending', 100);
 
             // If no results, try typo correction (Strategy 4)
             if (empty($formations) && strlen($query) >= 4) {
-                $result = tiny::model('search')->searchWithTypoCorrection($query);
+                $result = tiny::model('finder')->searchWithTypoCorrection($query);
                 $formations = $result['formations'];
                 $correctedQuery = $result['correction'];
             }
