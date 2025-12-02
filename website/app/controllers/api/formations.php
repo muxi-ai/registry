@@ -28,11 +28,11 @@ class ApiFormations extends TinyController
     }
 
     /**
-     * GET /api/formations/@:user/:name[:version][?pull=true]
+     * GET /api/formations - List authenticated user's formations
+     * GET /api/formations/@:user/:name[:version][?pull=true] - Get specific formation
      *
-     * Get formation metadata with lazy discovery from GitHub
-     * Optional :version to get specific version (default: latest)
-     * Optional ?pull=true to track as download
+     * For listing: requires authentication, returns user's formations
+     * For specific: lazy discovery from GitHub, optional version, optional download tracking
      */
     public function get($request, $response)
     {
@@ -41,12 +41,9 @@ class ApiFormations extends TinyController
         $remaining = preg_replace('#^/api/formations/?#', '', tiny::router()->uri);
         $parts = array_filter(explode('/', $remaining));
 
+        // If no path parts, list user's formations
         if (count($parts) < 2) {
-            return $response->sendJSON([
-                'error' => true,
-                'message' => 'Invalid formation path. Expected: /api/formations/@user/name[:version]',
-                'id' => 'API-10'
-            ], 400);
+            return $this->listUserFormations($request, $response);
         }
 
         // Remove @ prefix if present
@@ -81,6 +78,208 @@ class ApiFormations extends TinyController
                 'id' => 'API-11'
             ], 500);
         }
+    }
+
+    /**
+     * DELETE /api/formations/@:user/:name
+     *
+     * Delete a formation (requires authentication, owner only)
+     *
+     * Query params:
+     * - delete_github=true: Also delete the GitHub repository
+     */
+    public function delete($request, $response)
+    {
+        error_log("🚀 DELETE method called! URI: " . tiny::router()->uri);
+        
+        // Authentication required
+        $user = tiny::user();
+        if (!$user) {
+            return $response->sendJSON([
+                'error' => true,
+                'message' => 'Authentication required',
+                'id' => 'API-01'
+            ], 401);
+        }
+
+        // Parse route: /api/formations/@user/name
+        $remaining = preg_replace('#^/api/formations/?#', '', tiny::router()->uri);
+        $parts = array_filter(explode('/', $remaining));
+
+        if (count($parts) < 2) {
+            return $response->sendJSON([
+                'error' => true,
+                'message' => 'Invalid formation path. Expected: /api/formations/@user/name',
+                'id' => 'API-10'
+            ], 400);
+        }
+
+        $parts = array_values($parts);
+        $username = ltrim($parts[0], '@');
+        $name = $parts[1];
+
+        // Get formation from database (exclude already deleted)
+        $formation = tiny::db()->getOneQuery("
+            SELECT f.*, u.registry_username, u.github_username, u.id as owner_user_id
+            FROM formations f
+            JOIN users u ON f.user_id = u.id
+            WHERE u.registry_username = ? AND f.name = ? AND f.deleted_at IS NULL
+            LIMIT 1
+        ", [$username, $name]);
+
+        if (!$formation) {
+            return $response->sendJSON([
+                'error' => true,
+                'message' => 'Formation not found',
+                'id' => 'API-04'
+            ], 404);
+        }
+
+        // Check ownership: must be owner OR the one who published it
+        $isOwner = ($formation['owner_user_id'] == $user->id);
+        $isPublisher = ($formation['published_by_user_id'] == $user->id);
+
+        if (!$isOwner && !$isPublisher) {
+            return $response->sendJSON([
+                'error' => true,
+                'message' => 'You do not have permission to delete this formation',
+                'id' => 'API-02'
+            ], 403);
+        }
+
+        $deleteGithub = isset($_GET['delete_github']) && $_GET['delete_github'] === 'true';
+        $formationId = $formation['id'];
+        $githubRepo = $formation['github_repo'];
+        
+        error_log("🔍 Delete request: deleteGithub=" . ($deleteGithub ? 'true' : 'false') . ", _GET=" . json_encode($_GET) . ", REQUEST_URI=" . $_SERVER['REQUEST_URI']);
+
+        try {
+            // Soft delete: set deleted_at timestamp and rename to free up the name
+            // This allows republishing a formation with the same name
+            $deletedAt = date('Y-m-d H:i:s');
+            $deletedName = $name . '_deleted_' . time();
+            
+            tiny::db()->update('formations', [
+                'name' => $deletedName,
+                'deleted_at' => $deletedAt
+            ], ['id' => $formationId]);
+
+            error_log("🗑️ Soft-deleted formation: @{$username}/{$name} -> {$deletedName} (ID: {$formationId})");
+
+            // Optionally delete GitHub repository
+            $githubDeleted = false;
+            $githubError = null;
+            if ($deleteGithub && $githubRepo) {
+                error_log("🔍 Attempting to delete GitHub repo: {$githubRepo}");
+                try {
+                    $githubToken = tiny::model('user')->getGitHubAccessTokenByUserId($user->id);
+                    error_log("🔍 GitHub token for user {$user->id}: " . ($githubToken ? 'found (' . strlen($githubToken) . ' chars)' : 'NOT FOUND'));
+                    if (!$githubToken) {
+                        $githubError = 'No GitHub token found. Please reconnect your GitHub account.';
+                        error_log("⚠️ Cannot delete GitHub repo {$githubRepo}: no token");
+                    } else {
+                        $this->github->setToken($githubToken);
+                        error_log("🔍 Calling deleteRepo for: {$githubRepo}");
+                        $this->github->deleteRepo($githubRepo);
+                        $githubDeleted = true;
+                        error_log("🗑️ Deleted GitHub repository: {$githubRepo}");
+                    }
+                } catch (Exception $e) {
+                    $githubError = $e->getMessage();
+                    error_log("⚠️ Failed to delete GitHub repo {$githubRepo}: " . $e->getMessage());
+                    // Don't fail the whole operation if GitHub deletion fails
+                }
+            } else {
+                error_log("🔍 GitHub delete skipped: deleteGithub={$deleteGithub}, githubRepo={$githubRepo}");
+            }
+
+            $responseData = [
+                'status' => 'ok',
+                'message' => 'Formation deleted successfully',
+                'formation' => [
+                    'name' => $name,
+                    'user' => $username
+                ],
+                'github_deleted' => $githubDeleted,
+                'github_delete_requested' => $deleteGithub,
+                'github_repo' => $githubRepo
+            ];
+
+            if ($githubError) {
+                $responseData['github_error'] = $githubError;
+            }
+
+            return $response->sendJSON($responseData);
+
+        } catch (Exception $e) {
+            error_log("❌ Error deleting formation: " . $e->getMessage());
+            return $response->sendJSON([
+                'error' => true,
+                'message' => 'Failed to delete formation: ' . $e->getMessage(),
+                'id' => 'API-15'
+            ], 500);
+        }
+    }
+
+    /**
+     * List authenticated user's formations
+     *
+     * GET /api/formations
+     *
+     * Returns array of formations owned by or published by the authenticated user
+     */
+    private function listUserFormations($request, $response)
+    {
+        $user = tiny::user();
+        if (!$user) {
+            return $response->sendJSON([
+                'error' => true,
+                'message' => 'Authentication required',
+                'id' => 'API-01'
+            ], 401);
+        }
+
+        // Get formations owned by or published by the user (exclude soft-deleted)
+        $formations = tiny::db()->getQuery("
+            SELECT 
+                f.id,
+                f.name,
+                f.description,
+                f.latest_version,
+                f.github_repo,
+                f.github_stars,
+                f.total_downloads,
+                f.published_at,
+                f.created_at,
+                u.registry_username
+            FROM formations f
+            JOIN users u ON f.user_id = u.id
+            WHERE (f.user_id = ? OR f.published_by_user_id = ?) 
+              AND f.deleted_at IS NULL
+            ORDER BY f.published_at DESC
+        ", [$user->id, $user->id]);
+
+        // Format response
+        $result = array_map(function($f) {
+            return [
+                'name' => $f['name'],
+                'user' => $f['registry_username'],
+                'description' => $f['description'],
+                'version' => $f['latest_version'],
+                'github_repo' => $f['github_repo'],
+                'stats' => [
+                    'downloads' => (int)$f['total_downloads'],
+                    'stars' => (int)$f['github_stars']
+                ],
+                'published_at' => $f['published_at'],
+                'created_at' => $f['created_at']
+            ];
+        }, $formations);
+
+        return $response->sendJSON([
+            'formations' => $result,
+            'count' => count($result)
+        ]);
     }
 
     /**
@@ -151,7 +350,7 @@ class ApiFormations extends TinyController
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return $response->sendJSON([
                 'error' => true,
                 'message' => $e->getMessage(),
@@ -187,21 +386,21 @@ class ApiFormations extends TinyController
             for ($i = 0; $i < $zip->numFiles; $i++) {
                 $entry = $zip->getNameIndex($i);
                 $stat = $zip->statIndex($i);
-                
+
                 // Block path traversal attempts
                 if (strpos($entry, '..') !== false || strpos($entry, '/..') !== false) {
                     $zip->close();
                     error_log("SECURITY: Path traversal attempt detected in ZIP: {$entry}");
                     throw new Exception('Invalid ZIP: Path traversal detected');
                 }
-                
+
                 // Block absolute paths
                 if ($entry[0] === '/' || (strlen($entry) > 1 && $entry[1] === ':')) {
                     $zip->close();
                     error_log("SECURITY: Absolute path detected in ZIP: {$entry}");
                     throw new Exception('Invalid ZIP: Absolute paths not allowed');
                 }
-                
+
                 // Check total extracted size
                 $extractedSize += $stat['size'];
                 if ($extractedSize > self::MAX_EXTRACTED_SIZE) {
@@ -213,7 +412,7 @@ class ApiFormations extends TinyController
             // Extract after validation
             $zip->extractTo($tempDir);
             $zip->close();
-            
+
             error_log("✅ ZIP validated and extracted safely: {$zip->numFiles} files, " . round($extractedSize / 1024 / 1024, 2) . "MB");
 
             // 1b. Security cleanup: Remove sensitive files and macOS artifacts
@@ -291,7 +490,7 @@ class ApiFormations extends TinyController
                     file_put_contents($readmePath, $llmResult);
                 }
             }
-            
+
             // Store README content for database
             $formationData['_readme_content'] = file_get_contents($readmePath);
 
@@ -301,7 +500,7 @@ class ApiFormations extends TinyController
                 $structure = $this->analyzeFormationStructure($tempDir);
                 $readmeContent = file_get_contents($readmePath);
                 $readmePreview = substr($readmeContent, 0, 500);
-                
+
                 return [
                     'status' => 'test_ok',
                     'message' => 'Formation processed successfully (test mode - no GitHub push)',
@@ -322,7 +521,7 @@ class ApiFormations extends TinyController
 
             // 5. Determine GitHub owner (user or org)
             $githubOwner = $orgName ?? $user->github_username;
-            
+
             // Log owner decision
             if ($orgName) {
                 error_log("📦 Publishing to ORGANIZATION: {$orgName} (user: {$user->registry_username})");
@@ -331,7 +530,7 @@ class ApiFormations extends TinyController
             }
 
             // ========== GITHUB OPERATIONS ==========
-            
+
             // 6. Get user's GitHub OAuth token (already decrypted by model)
             $githubToken = tiny::model('user')->getGitHubAccessTokenByUserId($user->id);
             if (!$githubToken) {
@@ -340,14 +539,14 @@ class ApiFormations extends TinyController
             $this->github->setToken($githubToken);
             $tokenPreview = substr($githubToken, 0, 10) . '...' . substr($githubToken, -4);
             error_log("🔑 Using OAuth token for user: {$user->registry_username}, token: {$tokenPreview}");
-            
+
             // 7. If org specified, verify membership and get org user
             $ownerUserId = $user->id; // Default to authenticated user
             if ($orgName) {
                 if (!$this->github->isOrgMember($orgName, $user->github_username)) {
                     throw new Exception("You are not a member of organization: $orgName");
                 }
-                
+
                 // Get the org's user record from database
                 $orgUser = tiny::db()->getOne('users', ['github_username' => $orgName]);
                 if (!$orgUser) {
@@ -376,7 +575,7 @@ class ApiFormations extends TinyController
             // 12. Repack and upload as release asset
             $zipPath = $this->repackFormation($tempDir, $formationData['id']);
             $asset = $this->uploadReleaseAsset($fullRepoName, $release['id'], $zipPath, 'formation.zip');
-            
+
             // ========== END GITHUB OPERATIONS ==========
 
             // Mock GitHub data disabled - using real GitHub operations
@@ -384,16 +583,16 @@ class ApiFormations extends TinyController
             $repoName = "muxi-{$formationData['id']}";
             $fullRepoName = "$githubOwner/$repoName";
             $version = $formationData['version'];
-            
+
             error_log("🎯 GitHub repo would be: {$fullRepoName}");
-            
+
             $repo = [
                 'full_name' => $fullRepoName,
                 'html_url' => "https://github.com/$fullRepoName",
                 'stargazers_count' => 0,
                 'license' => ['spdx_id' => 'MIT']
             ];
-            
+
             $release = [
                 'tag_name' => "v{$version}",
                 'published_at' => date('Y-m-d H:i:s'),
@@ -402,7 +601,7 @@ class ApiFormations extends TinyController
                     'browser_download_url' => "https://github.com/$fullRepoName/releases/download/v{$version}/formation.zip"
                 ]]
             ];
-            
+
             $asset = [
                 'browser_download_url' => "https://github.com/$fullRepoName/releases/download/v{$version}/formation.zip"
             ];
@@ -436,7 +635,7 @@ class ApiFormations extends TinyController
                     error_log("🧹 Temp directory cleaned up: {$tempDir}");
                 } catch (Exception $e) {
                     error_log("⚠️ CRITICAL: Failed to remove temp directory: {$tempDir} - " . $e->getMessage());
-                    
+
                     // Try forceful cleanup as last resort
                     if (function_exists('exec') && DIRECTORY_SEPARATOR === '/') {
                         exec('rm -rf ' . escapeshellarg($tempDir) . ' 2>&1', $output, $returnCode);
@@ -449,7 +648,7 @@ class ApiFormations extends TinyController
                     }
                 }
             }
-            
+
             // Cleanup ZIP file
             if (isset($zipPath) && file_exists($zipPath)) {
                 @unlink($zipPath);  // @ suppresses warnings if file already deleted
@@ -496,6 +695,9 @@ class ApiFormations extends TinyController
 
         // 5. Return freshly cached formation
         $formation = $this->findInDatabase($registryUsername, $name);
+        if (!$formation) {
+            throw new NotFoundException("Formation not found");
+        }
         return $this->formatFormationResponse($formation);
     }
 
@@ -512,6 +714,11 @@ class ApiFormations extends TinyController
         $formation = tiny::db()->getOne('formations', ['name' => $name]);
 
         if (!$formation) {
+            return null;
+        }
+
+        // Exclude soft-deleted formations
+        if (!empty($formation['deleted_at'])) {
             return null;
         }
 
@@ -603,7 +810,7 @@ class ApiFormations extends TinyController
     {
         $downloadUrl = null;
         if ($formation['latest_version']) {
-            $downloadUrl = "https://github.com/{$formation['github_repo']}/releases/download/v{$formation['latest_version']}/bundle.zip";
+            $downloadUrl = "https://github.com/{$formation['github_repo']}/releases/download/v{$formation['latest_version']}/formation.zip";
         }
 
         return [
@@ -751,18 +958,18 @@ PROMPT;
             if ($result && !$result['error'] && isset($result['data'])) {
                 $data = $result['data'];
                 error_log("LLM data received: " . json_encode($data));
-                
+
                 // Check if data has readme and categories
                 if (isset($data['readme']) && isset($data['categories'])) {
                     error_log("✅ LLM SUCCESS! Categories: " . implode(', ', $data['categories']));
-                    
+
                     // Return both README and categories as array
                     return [
                         'readme' => $data['readme'],
                         'categories' => $data['categories']
                     ];
                 }
-                
+
                 error_log("⚠️ LLM data missing readme or categories fields");
             } else {
                 error_log("⚠️ LLM generation failed: " . json_encode($result));
@@ -1054,7 +1261,7 @@ MD;
             if (isset($formationData['_structure'])) {
                 error_log("🔍 Structure contents: " . json_encode($formationData['_structure']));
             }
-            
+
             if (isset($formationData['_structure']) && isset($formationData['_structure']['components'])) {
                 $components = $formationData['_structure']['components'];
                 error_log("📊 Inserting stats: agents={$components['agents']}, mcps={$components['mcps']}, sops={$components['sops']}, triggers={$components['triggers']}, knowledge={$components['knowledge']}");
@@ -1125,7 +1332,7 @@ MD;
 
     /**
      * Remove sensitive files and macOS artifacts from extracted formation
-     * 
+     *
      * Security measure to prevent accidental exposure of:
      * - .key (encryption key)
      * - secrets.enc (encrypted secrets)
@@ -1140,10 +1347,10 @@ MD;
         ];
 
         $removed = [];
-        
+
         foreach ($sensitivePatterns as $pattern) {
             $path = $dir . '/' . $pattern;
-            
+
             if (file_exists($path)) {
                 if (is_dir($path)) {
                     $this->removeDirectory($path);
@@ -1154,7 +1361,7 @@ MD;
                 }
             }
         }
-        
+
         if (!empty($removed)) {
             error_log("🔒 Security cleanup: Removed " . implode(', ', $removed));
         }

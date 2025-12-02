@@ -98,7 +98,7 @@ class AuthMiddleware
     }
 
     /**
-     * Handles authentication for API requests using bearer tokens
+     * Handles authentication for API requests using bearer tokens or cookies
      *
      * @return void
      */
@@ -114,6 +114,11 @@ class AuthMiddleware
         // If token is provided, validate it
         if ($token) {
             $user = tiny::model('user')->getUserByCliToken($token);
+            
+            // Normalize to object for consistency
+            if ($user && is_array($user)) {
+                $user = (object)$user;
+            }
 
             // If token is invalid:
             // - For public endpoints: treat as anonymous (graceful degradation)
@@ -122,6 +127,20 @@ class AuthMiddleware
                 $this->sendApiError('Invalid authentication token', 'API-01', 401);
             }
             // For public endpoints with invalid token, $user stays null (anonymous access)
+        }
+
+        // Fallback to cookie-based authentication for web requests
+        if (!$user && $this->userCookie->exists) {
+            $cookieData = (array)$this->userCookie->data;
+            if (isset($cookieData['hash'])) {
+                $userData = tiny::model('user')->getSession($cookieData['hash']);
+                if ($userData) {
+                    $dbUser = tiny::model('user')->getUserById((int)$userData);
+                    if ($dbUser) {
+                        $user = json_decode(str_replace(['"f"', '"t"'], ['false', 'true'], json_encode($dbUser)));
+                    }
+                }
+            }
         }
 
         // If endpoint is not public and no valid user, require authentication
@@ -136,7 +155,7 @@ class AuthMiddleware
             // Authenticated user: Higher rate limits
             $rateLimit = tiny::rateLimiter("api_auth", 10, 1); // 10 requests per second
             $rateLimit->add(1000, 600); // max 1000 requests per 10 minutes
-            $rateLimitIdentifier = 'lmt_'. (string)$user['id'];
+            $rateLimitIdentifier = 'lmt_'. (string)$user->id;
         } else {
             // Anonymous user (public endpoints only): Lower rate limits by IP
             $rateLimit = tiny::rateLimiter("api_public", 5, 1); // 5 requests per second

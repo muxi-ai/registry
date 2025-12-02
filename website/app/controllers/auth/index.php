@@ -20,7 +20,7 @@ class Auth extends TinyController
 
         // Build the GitHub authorization URL with scopes and callback information.
         $redirect_uri = urlencode(tiny::getHomeURL('/auth/callback', true));
-        $url = "https://github.com/login/oauth/authorize?client_id={$_SERVER['APP_GITHUB_APP_CLIENT_ID']}&redirect_uri={$redirect_uri}&scope=public_repo,user:email&state={$state}";
+        $url = "https://github.com/login/oauth/authorize?client_id={$_SERVER['APP_GITHUB_APP_CLIENT_ID']}&redirect_uri={$redirect_uri}&scope=public_repo,delete_repo,user:email&state={$state}";
 
         tiny::redirect($url);
     }

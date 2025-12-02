@@ -47,7 +47,7 @@ class Profile extends TinyController
             $sort = 'recent';
         }
 
-        // Get user's formations with selected sorting
+        // Get user's formations with selected sorting (exclude soft-deleted)
         if ($sort === 'trending') {
             // Trending: formations with most downloads in last 7 days
             $formations = tiny::db()->getQuery("
@@ -61,7 +61,7 @@ class Profile extends TinyController
                 LEFT JOIN downloads d 
                     ON f.id = d.formation_id 
                     AND d.day >= DATE('now', '-7 days')
-                WHERE u.registry_username = ?
+                WHERE u.registry_username = ? AND f.deleted_at IS NULL
                 GROUP BY f.id
                 ORDER BY downloads_7d DESC, f.github_stars DESC
             ", [$this->username]);
@@ -78,19 +78,19 @@ class Profile extends TinyController
                 SELECT f.*, u.registry_username, u.github_username
                 FROM formations f
                 JOIN users u ON f.user_id = u.id
-                WHERE u.registry_username = ?
+                WHERE u.registry_username = ? AND f.deleted_at IS NULL
                 ORDER BY {$orderBy}
             ", [$this->username]);
         }
 
-        // Get user stats
+        // Get user stats (exclude soft-deleted)
         $stats = tiny::db()->getOneQuery("
             SELECT
                 COUNT(*) as formations_count,
                 COALESCE(SUM(total_downloads), 0) as total_downloads,
                 COALESCE(SUM(github_stars), 0) as total_stars
             FROM formations
-            WHERE user_id = ?
+            WHERE user_id = ? AND deleted_at IS NULL
         ", [$profile['id']]);
 
         tiny::data()->profile = $profile;

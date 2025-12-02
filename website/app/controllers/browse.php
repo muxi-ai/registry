@@ -22,7 +22,7 @@ class Browse extends TinyController
             $sort = 'recent';
         }
 
-        // Fetch formations based on selected sort method
+        // Fetch formations based on selected sort method (exclude soft-deleted)
         if ($sort === 'trending') {
             // Trending: formations with most downloads in last 7 days
             $formations = tiny::db()->getQuery("
@@ -37,6 +37,7 @@ class Browse extends TinyController
                 LEFT JOIN downloads d 
                     ON f.id = d.formation_id 
                     AND d.day >= DATE('now', '-7 days')
+                WHERE f.deleted_at IS NULL
                 GROUP BY f.id
                 ORDER BY downloads_7d DESC, f.github_stars DESC
             ");
@@ -54,13 +55,14 @@ class Browse extends TinyController
                 SELECT f.*, u.registry_username, u.github_username, u.github_type
                 FROM formations f
                 JOIN users u ON f.user_id = u.id
+                WHERE f.deleted_at IS NULL
                 ORDER BY {$orderBy}
             ");
         }
 
-        // Count total formations for display metrics.
+        // Count total formations for display metrics (exclude soft-deleted).
         $totalCount = tiny::db()->getOneQuery("
-            SELECT COUNT(*) as count FROM formations
+            SELECT COUNT(*) as count FROM formations WHERE deleted_at IS NULL
         ")['count'];
 
         // Pass formation data and active sort state so the view can render controls.

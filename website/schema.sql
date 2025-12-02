@@ -69,6 +69,7 @@ CREATE TABLE formations (
   categories TEXT,                         -- JSON array of LLM-generated categories
   published_at DATETIME,
   last_synced_at DATETIME,
+  deleted_at DATETIME DEFAULT NULL,        -- Soft delete timestamp (NULL = not deleted)
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(user_id, name),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE

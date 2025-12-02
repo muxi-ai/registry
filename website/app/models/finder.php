@@ -69,7 +69,7 @@ class Finder extends TinyModel
             WHERE f.id IN (
                 SELECT rowid FROM formations_fts
                 WHERE formations_fts MATCH ?
-            )
+            ) AND f.deleted_at IS NULL
             ORDER BY f.total_downloads DESC
         ", [$query]);
     }
@@ -90,7 +90,7 @@ class Finder extends TinyModel
             WHERE f.id IN (
                 SELECT rowid FROM formations_fts
                 WHERE formations_fts MATCH ?
-            )
+            ) AND f.deleted_at IS NULL
             ORDER BY f.total_downloads DESC
         ", [$prefixQuery]);
     }
@@ -113,9 +113,11 @@ class Finder extends TinyModel
                    END as relevance
             FROM formations f
             JOIN users u ON f.user_id = u.id
-            WHERE f.name LIKE ?
-               OR f.description LIKE ?
-               OR f.readme_md LIKE ?
+            WHERE f.deleted_at IS NULL AND (
+                f.name LIKE ?
+                OR f.description LIKE ?
+                OR f.readme_md LIKE ?
+            )
             ORDER BY relevance DESC, f.total_downloads DESC
         ", [$query, $likeQuery, $likeQuery, $likeQuery, $likeQuery]);
     }
@@ -130,11 +132,12 @@ class Finder extends TinyModel
      */
     public function searchWithTypoCorrection(string $query, int $threshold = 3): array
     {
-        // Get all formations for comparison
+        // Get all formations for comparison (exclude soft-deleted)
         $allFormations = tiny::db()->getQuery("
             SELECT f.*, u.registry_username, u.github_username, u.github_type
             FROM formations f
             JOIN users u ON f.user_id = u.id
+            WHERE f.deleted_at IS NULL
         ");
 
         $matches = [];
@@ -280,7 +283,7 @@ class Finder extends TinyModel
             LEFT JOIN downloads d
                 ON f.id = d.formation_id
                 AND d.day >= DATE('now', '-7 days')
-            WHERE f.is_public = 1
+            WHERE f.is_public = 1 AND f.deleted_at IS NULL
             GROUP BY f.id
             ORDER BY downloads_7d DESC, f.github_stars DESC
             LIMIT ?
@@ -303,7 +306,7 @@ class Finder extends TinyModel
                 u.github_type
             FROM formations f
             JOIN users u ON f.user_id = u.id
-            WHERE f.is_public = 1
+            WHERE f.is_public = 1 AND f.deleted_at IS NULL
             ORDER BY f.total_downloads DESC, f.github_stars DESC
             LIMIT ?
         ", [$limit]);
@@ -325,7 +328,7 @@ class Finder extends TinyModel
                 u.github_type
             FROM formations f
             JOIN users u ON f.user_id = u.id
-            WHERE f.is_public = 1
+            WHERE f.is_public = 1 AND f.deleted_at IS NULL
             ORDER BY f.published_at DESC
             LIMIT ?
         ", [$limit]);

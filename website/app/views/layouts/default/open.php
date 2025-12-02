@@ -87,6 +87,7 @@ echo '<!-- v. ' . $_SERVER['APP_VERSION'] . " -->\n";
     </script>
 
     <script defer src="<?php tiny::staticURL('/js/alpine.combo.min.js'); ?>"></script>
+    <style>[x-cloak] { display: none !important; }</style>
 
     <?php if (tiny::layout()->props('emptyLayout') === false): ?>
         <!-- <script src="<?php tiny::staticURL('/js/htmx.min.js'); ?>"></script> -->

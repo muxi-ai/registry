@@ -16,9 +16,9 @@ class Home extends TinyController
         // Aggregate totals for the hero metrics displayed at the top of the homepage.
         $stats = tiny::db()->getOneQuery("
             SELECT
-                (SELECT COUNT(*) FROM formations) as total_formations,
+                (SELECT COUNT(*) FROM formations WHERE deleted_at IS NULL) as total_formations,
                 (SELECT COUNT(*) FROM users) as total_users,
-                (SELECT SUM(total_downloads) FROM formations) as total_downloads
+                (SELECT SUM(total_downloads) FROM formations WHERE deleted_at IS NULL) as total_downloads
         ");
 
         // Fetch trending formations (last 7 days) - the hottest content right now
@@ -38,6 +38,7 @@ class Home extends TinyController
             LEFT JOIN downloads d 
                 ON f.id = d.formation_id 
                 AND d.day >= DATE('now', '-7 days')
+            WHERE f.deleted_at IS NULL
             GROUP BY f.id
             HAVING downloads_7d > 0
             ORDER BY downloads_7d DESC, f.github_stars DESC
@@ -52,6 +53,7 @@ class Home extends TinyController
                 u.github_avatar
             FROM formations f
             JOIN users u ON f.user_id = u.id
+            WHERE f.deleted_at IS NULL
             ORDER BY f.published_at DESC, f.created_at DESC
             LIMIT 4
         ");
@@ -64,7 +66,7 @@ class Home extends TinyController
                 u.github_avatar
             FROM formations f
             JOIN users u ON f.user_id = u.id
-            WHERE f.total_downloads > 0
+            WHERE f.total_downloads > 0 AND f.deleted_at IS NULL
             ORDER BY f.total_downloads DESC, f.github_stars DESC
             LIMIT 4
         ");
@@ -76,6 +78,7 @@ class Home extends TinyController
                 SUM(f.total_downloads) as total_user_downloads
             FROM users u
             JOIN formations f ON f.user_id = u.id
+            WHERE f.deleted_at IS NULL
             GROUP BY u.id
             ORDER BY total_user_downloads DESC
             LIMIT 8

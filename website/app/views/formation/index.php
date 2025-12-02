@@ -6,6 +6,7 @@ $versions = tiny::data()->versions;
 $downloadChart = tiny::data()->downloadChart;
 $downloadsThisWeek = tiny::data()->downloadsThisWeek;
 $weeklyChart = tiny::data()->weeklyChart;
+$canDelete = tiny::data()->canDelete ?? false;
 $homeURL = tiny::getHomeURL('/');
 
 tiny::layout()->default(
@@ -229,6 +230,126 @@ tiny::layout()->default(
                                 View all <?= count($versions) ?> versions →
                             </a>
                         <?php endif; ?>
+                    </div>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($canDelete): ?>
+                <!-- Danger Zone -->
+                <div class="bg-white border border-red-200 rounded-lg p-6" x-data="{ showDeleteModal: false, deleteGithub: false, confirmName: '', deleting: false }">
+                    <h3 class="font-semibold text-red-700 mb-4">⚠️ Danger Zone</h3>
+                    <p class="text-sm text-gray-600 mb-4">
+                        Permanently delete this formation from the registry.
+                    </p>
+                    <button
+                        @click="showDeleteModal = true"
+                        class="w-full px-4 py-2 bg-red-600 text-sm font-medium rounded hover:bg-red-700 transition"
+                        style="color: #fff;"
+                    >
+                        Delete Formation
+                    </button>
+
+                    <!-- Delete Modal -->
+                    <div
+                        x-show="showDeleteModal"
+                        x-cloak
+                        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+                        @click.self="showDeleteModal = false"
+                    >
+                        <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6" @click.stop>
+                            <h3 class="text-xl font-bold text-gray-900 mb-4">Delete Formation</h3>
+                            
+                            <div class="bg-red-50 border border-red-200 rounded p-4 mb-4">
+                                <p class="text-sm text-red-800">
+                                    <strong>Warning:</strong> This action cannot be undone. This will permanently delete the formation
+                                    <strong>@<?= htmlspecialchars($formation['registry_username']) ?>/<?= htmlspecialchars($formation['name']) ?></strong>
+                                    from the registry.
+                                </p>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="flex items-start gap-3 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        x-model="deleteGithub"
+                                        class="mt-1 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                                    />
+                                    <span class="text-sm text-gray-700">
+                                        Also delete the GitHub repository
+                                        <span class="text-gray-500 block text-xs">
+                                            (<?= htmlspecialchars($formation['github_repo']) ?>)
+                                        </span>
+                                    </span>
+                                </label>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Type <strong><?= htmlspecialchars($formation['name']) ?></strong> to confirm:
+                                </label>
+                                <input
+                                    type="text"
+                                    x-model="confirmName"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                                    placeholder="<?= htmlspecialchars($formation['name']) ?>"
+                                />
+                            </div>
+
+                            <div class="flex gap-3">
+                                <button
+                                    @click="showDeleteModal = false"
+                                    class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition"
+                                    :disabled="deleting"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    @click="
+                                        if (confirmName !== '<?= htmlspecialchars($formation['name']) ?>') {
+                                            alert('Please type the formation name to confirm');
+                                            return;
+                                        }
+                                        deleting = true;
+                                        fetch('/api/formations/@<?= htmlspecialchars($formation['registry_username']) ?>/<?= htmlspecialchars($formation['name']) ?>' + (deleteGithub ? '?delete_github=true' : ''), {
+                                            method: 'DELETE',
+                                            credentials: 'same-origin'
+                                        })
+                                        .then(async r => {
+                                            const text = await r.text();
+                                            try {
+                                                return JSON.parse(text);
+                                            } catch (e) {
+                                                console.error('Response:', text);
+                                                throw new Error('Server error: ' + text.substring(0, 200));
+                                            }
+                                        })
+                                        .then(data => {
+                                            console.log('Delete response:', data);
+                                            if (data.error) {
+                                                alert('Error: ' + data.message);
+                                                deleting = false;
+                                            } else {
+                                                if (data.github_delete_requested && !data.github_deleted) {
+                                                    alert('Formation deleted but GitHub repo deletion failed: ' + (data.github_error || 'Unknown error'));
+                                                }
+                                                window.location.href = '/account';
+                                            }
+                                        })
+                                        .catch(err => {
+                                            console.error('Delete error:', err);
+                                            alert('Error: ' + err.message);
+                                            deleting = false;
+                                        });
+                                    "
+                                    :disabled="confirmName !== '<?= htmlspecialchars($formation['name']) ?>' || deleting"
+                                    class="flex-1 px-4 py-2 bg-red-600 rounded hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                    style="color: #fff;"
+                                >
+                                    <span x-show="!deleting">Delete Formation</span>
+                                    <span x-show="deleting">Deleting...</span>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             <?php endif; ?>

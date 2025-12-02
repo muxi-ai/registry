@@ -36,7 +36,7 @@ class Formation extends TinyController
             SELECT f.*, u.registry_username, u.github_username, u.github_type, u.github_avatar
             FROM formations f
             JOIN users u ON f.user_id = u.id
-            WHERE u.registry_username = ? AND f.name = ?
+            WHERE u.registry_username = ? AND f.name = ? AND f.deleted_at IS NULL
             LIMIT 1
         ", [$this->username, $this->formationName]);
 
@@ -113,6 +113,14 @@ class Formation extends TinyController
             ORDER BY day ASC
         ", [$formation['id']]);
 
+        // Check if current user is owner/publisher (for delete permissions)
+        $canDelete = false;
+        if (tiny::user()) {
+            $userId = tiny::user()->id;
+            $canDelete = ($formation['user_id'] == $userId) || 
+                         ($formation['published_by_user_id'] == $userId);
+        }
+
         // Pass all formation data to the detail view for rendering.
         $response->render('formation/index', [
             'formation' => $formation,
@@ -122,6 +130,7 @@ class Formation extends TinyController
             'downloadChart' => $downloadChart,
             'downloadsThisWeek' => $downloadsThisWeek,
             'weeklyChart' => $weeklyChart,
+            'canDelete' => $canDelete,
         ]);
     }
 
