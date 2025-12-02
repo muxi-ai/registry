@@ -1,6 +1,3 @@
 [submodule "website/tiny"]
 	path = website/tiny
-	url = https://github.com/ranaroussi/tiny.git
-[submodule "website/--force"]
-	path = website/--force
-	url = https://github.com/ranaroussi/tiny.git
+	url = git@github.com:ranaroussi/tiny.git
