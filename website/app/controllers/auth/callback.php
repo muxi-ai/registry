@@ -99,8 +99,8 @@ class AuthCallback extends TinyController
         // Perform a POST request to GitHub's token endpoint with our app credentials.
         $response = tiny::http()->post($url, [
             'data' => [
-                'client_id' => $_SERVER['APP_GITHUB_APP_CLIENT_ID'],
-                'client_secret' => $_SERVER['APP_GITHUB_APP_CLIENT_SECRET'],
+                'client_id' => $_SERVER['TINY_GITHUB_APP_CLIENT_ID'],
+                'client_secret' => $_SERVER['TINY_GITHUB_APP_CLIENT_SECRET'],
                 'code' => $code,
             ],
             'headers' => [
