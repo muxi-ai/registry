@@ -44,14 +44,14 @@ class Formation extends TinyController
         if (!$formation) {
             error_log("🔍 Lazy discovery: Formation not in DB, checking GitHub for @{$this->username}/{$this->formationName}");
             $formation = $this->lazyDiscoverFormation();
-            
+
             if (!$formation) {
                 error_log("❌ Formation not found in DB or GitHub: @{$this->username}/{$this->formationName}");
                 http_response_code(404);
                 $response->render('404');
                 return;
             }
-            
+
             error_log("✅ Lazy discovery successful, formation cached in DB");
         }
 
@@ -81,8 +81,8 @@ class Formation extends TinyController
         ", [$formation['id']]);
 
         // Load download chart data (last 30 days, aggregated across all versions)
-        $downloadChart = tiny::db()->getQuery("
-            SELECT 
+        $downloadChartRaw = tiny::db()->getQuery("
+            SELECT
                 day,
                 SUM(download_count) as downloads
             FROM downloads
@@ -91,6 +91,7 @@ class Formation extends TinyController
             GROUP BY day
             ORDER BY day ASC
         ", [$formation['id']]);
+        $downloadChart = $this->fillMissingDays($downloadChartRaw, 30);
 
         // Get downloads this week (last 7 days) for the header badge
         $weekResult = tiny::db()->getOneQuery("
@@ -102,8 +103,8 @@ class Formation extends TinyController
         $downloadsThisWeek = $weekResult ? $weekResult['count'] : 0;
 
         // Get mini chart data for this week (7 days)
-        $weeklyChart = tiny::db()->getQuery("
-            SELECT 
+        $weeklyChartRaw = tiny::db()->getQuery("
+            SELECT
                 day,
                 SUM(download_count) as downloads
             FROM downloads
@@ -112,12 +113,13 @@ class Formation extends TinyController
             GROUP BY day
             ORDER BY day ASC
         ", [$formation['id']]);
+        $weeklyChart = $this->fillMissingDays($weeklyChartRaw, 7);
 
         // Check if current user is owner/publisher (for delete permissions)
         $canDelete = false;
-        if (tiny::user()) {
+        if (@tiny::user()->id) {
             $userId = tiny::user()->id;
-            $canDelete = ($formation['user_id'] == $userId) || 
+            $canDelete = ($formation['user_id'] == $userId) ||
                          ($formation['published_by_user_id'] == $userId);
         }
 
@@ -136,7 +138,7 @@ class Formation extends TinyController
 
     /**
      * Lazy discover formation from GitHub if not in database
-     * 
+     *
      * @return array|null Formation data or null if not found
      */
     private function lazyDiscoverFormation()
@@ -208,7 +210,7 @@ class Formation extends TinyController
         // 7. Determine download URL (release or main branch)
         $downloadUrl = null;
         $versionId = null;
-        
+
         if ($latestRelease) {
             // Has releases - use latest release
             tiny::db()->insert('versions', [
@@ -221,7 +223,7 @@ class Formation extends TinyController
             ]);
             $versionId = tiny::db()->lastInsertId();
             error_log("💾 Cached version {$latestVersion} with ID: {$versionId}");
-            
+
             // Try release asset, fallback to zipball
             $downloadUrl = $latestRelease['assets'][0]['browser_download_url'] ?? $latestRelease['zipball_url'] ?? null;
         } else {
@@ -229,13 +231,13 @@ class Formation extends TinyController
             $downloadUrl = "https://github.com/{$repoName}/archive/refs/heads/main.zip";
             error_log("⚠️ No releases found, using main branch: {$downloadUrl}");
         }
-        
+
         // 8. Download and analyze structure for stats
         if ($downloadUrl) {
             $result = $this->analyzeFormationFromRelease($downloadUrl, true); // true = return version too
             $stats = $result['stats'] ?? null;
             $yamlVersion = $result['version'] ?? null;
-            
+
             // If no release, create version from yaml
             if (!$latestRelease && $yamlVersion) {
                 tiny::db()->insert('versions', [
@@ -248,13 +250,13 @@ class Formation extends TinyController
                 ]);
                 $versionId = tiny::db()->lastInsertId();
                 error_log("💾 Cached version {$yamlVersion} from yaml with ID: {$versionId}");
-                
+
                 // Update formation's latest_version
                 tiny::db()->update('formations', [
                     'latest_version' => $yamlVersion
                 ], ['id' => $formationId]);
             }
-            
+
             // Store stats if we have both stats and version
             if ($stats && $versionId) {
                 tiny::db()->insert('formation_stats', [
@@ -283,7 +285,7 @@ class Formation extends TinyController
 
     /**
      * Download release ZIP and analyze formation structure for stats
-     * 
+     *
      * @param string $downloadUrl URL to download the ZIP from
      * @param bool $returnVersion Whether to also return version from formation.yaml
      * @return array|null Component stats (and version if requested) or null if failed
@@ -292,7 +294,7 @@ class Formation extends TinyController
     {
         $tempZip = sys_get_temp_dir() . '/lazy_' . uniqid() . '.zip';
         $tempDir = sys_get_temp_dir() . '/lazy_' . uniqid();
-        
+
         try {
             // Download the ZIP
             error_log("⬇️ Downloading release from: {$downloadUrl}");
@@ -301,9 +303,9 @@ class Formation extends TinyController
                 error_log("❌ Failed to download release ZIP");
                 return null;
             }
-            
+
             file_put_contents($tempZip, $zipContent);
-            
+
             // Extract ZIP
             $zip = new ZipArchive();
             if ($zip->open($tempZip) !== true) {
@@ -311,33 +313,33 @@ class Formation extends TinyController
                 @unlink($tempZip);
                 return null;
             }
-            
+
             $zip->extractTo($tempDir);
             $zip->close();
             @unlink($tempZip);
-            
+
             // Analyze structure
             $stats = $this->analyzeFormationStructure($tempDir);
-            
+
             // Parse formation.yaml for version if requested
             $version = null;
             if ($returnVersion) {
                 $version = $this->parseFormationYamlVersion($tempDir);
                 error_log("📄 Parsed version from yaml: " . ($version ?? '(not found, will use 1.0.0)'));
             }
-            
+
             // Cleanup
             $this->deleteDirectory($tempDir);
-            
+
             if ($returnVersion) {
                 return [
                     'stats' => $stats,
                     'version' => $version ?? '1.0.0' // Default to 1.0.0
                 ];
             }
-            
+
             return $stats;
-            
+
         } catch (Exception $e) {
             error_log("❌ Error analyzing formation: " . $e->getMessage());
             @unlink($tempZip);
@@ -350,7 +352,7 @@ class Formation extends TinyController
 
     /**
      * Analyze formation directory structure for component counts
-     * 
+     *
      * @param string $dir Directory path
      * @return array Component counts
      */
@@ -410,7 +412,7 @@ class Formation extends TinyController
 
     /**
      * Parse formation.yaml to get version
-     * 
+     *
      * @param string $dir Directory containing the formation
      * @return string|null Version string or null if not found
      */
@@ -419,30 +421,30 @@ class Formation extends TinyController
         // Find formation.yaml (could be in subdirectory for GitHub archive)
         $files = $this->getFilesRecursive($dir);
         $yamlPath = null;
-        
+
         foreach ($files as $file) {
             if (basename($file) === 'formation.yaml') {
                 $yamlPath = $file;
                 break;
             }
         }
-        
+
         if (!$yamlPath || !file_exists($yamlPath)) {
             error_log("⚠️ formation.yaml not found in downloaded archive");
             return null;
         }
-        
+
         try {
             $yamlContent = file_get_contents($yamlPath);
-            
+
             // Simple regex parsing for version (avoiding yaml parser dependency)
             if (preg_match('/^\s*version:\s*["\']?([0-9]+\.[0-9]+\.[0-9]+)["\']?\s*$/m', $yamlContent, $matches)) {
                 return $matches[1];
             }
-            
+
             error_log("⚠️ version field not found in formation.yaml");
             return null;
-            
+
         } catch (Exception $e) {
             error_log("❌ Error parsing formation.yaml: " . $e->getMessage());
             return null;
@@ -464,5 +466,33 @@ class Formation extends TinyController
             is_dir($path) ? $this->deleteDirectory($path) : unlink($path);
         }
         rmdir($dir);
+    }
+
+    /**
+     * Fill missing days with zero downloads for chart data
+     *
+     * @param array $data Raw chart data from database
+     * @param int $days Number of days to fill (7 or 30)
+     * @return array Complete chart data with all days
+     */
+    private function fillMissingDays($data, $days)
+    {
+        // Index existing data by day
+        $indexed = [];
+        foreach ($data as $row) {
+            $indexed[$row['day']] = (int)$row['downloads'];
+        }
+
+        // Generate all days and fill with zeros where missing
+        $result = [];
+        for ($i = $days - 1; $i >= 0; $i--) {
+            $day = date('Y-m-d', strtotime("-{$i} days"));
+            $result[] = [
+                'day' => $day,
+                'downloads' => $indexed[$day] ?? 0
+            ];
+        }
+
+        return $result;
     }
 }

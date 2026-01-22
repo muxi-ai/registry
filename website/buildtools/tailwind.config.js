@@ -1,8 +1,8 @@
 /** @type {import('tailwindcss').Config} */
-const defaultTheme = require('tailwindcss/defaultTheme')
+// const defaultTheme = require('tailwindcss/defaultTheme')
 
 module.exports = {
-  darkMode: 'class',
+  // darkMode: 'class',
   theme: {
     extend: {
       animation: {
@@ -10,7 +10,7 @@ module.exports = {
         'bounce-short': 'bounce .8s ease-in-out 4.4'
       },
       fontFamily: {
-        sans: ['InterVariable', ...defaultTheme.fontFamily.sans],
+        // sans: ['San Francisco', ...defaultTheme.fontFamily.sans],
       },
       aspectRatio: {
         '2/1': '2 / 1',

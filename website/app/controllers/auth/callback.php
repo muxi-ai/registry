@@ -1,4 +1,5 @@
 <?php
+tiny::helpers(['geos']);
 
 /**
  * Manage the GitHub OAuth callback flow and persist authenticated users.
@@ -61,6 +62,9 @@ class AuthCallback extends TinyController
         } catch (\Exception $e) {
             tiny::redirect($e);
         }
+
+        // Send telemetry for registry signup (fire and forget)
+        $this->sendTelemetry($ghUser);
 
         // create session
         tiny::model('user')->setSession($user['id']);
@@ -163,5 +167,38 @@ class AuthCallback extends TinyController
         }
 
         return $user;
+    }
+
+    /**
+     * Send registry signup data to telemetry endpoint.
+     * Non-blocking - failures are logged but don't affect the auth flow.
+     *
+     * @param \stdClass $ghUser GitHub user data
+     * @return void
+     */
+    private function sendTelemetry(\stdClass $ghUser): void
+    {
+        try {
+            $payload = [
+                'email' => $ghUser->email ?? null,
+                'username' => $ghUser->login ?? null,
+                'name' => $ghUser->name ?? null,
+                'source' => 'registry',
+                'country' => tiny::geos()->getUserCountry(),
+            ];
+
+            // Include install_hash from uic cookie if available (shared across .muxi.org)
+            if (!empty($_COOKIE['uic'])) {
+                $payload['machine_id'] = $_COOKIE['uic'];
+            }
+
+            // Fire and forget - 2 second timeout
+            tiny::http()->post('https://capture.muxi.org/v1/optin/', [
+                'json' => $payload,
+                'timeout' => 2,
+            ]);
+        } catch (\Throwable $e) {
+            error_log("Registry telemetry error: " . $e->getMessage());
+        }
     }
 }

@@ -22,7 +22,8 @@
     "sentry/sentry": "^4.9",
     "twilio/sdk": "^5.0",
     "symfony/http-client": "^7.2",
-    "nyholm/psr7": "^1.8"
+    "nyholm/psr7": "^1.8",
+    "geoip2/geoip2": "^3.3"
   },
   "config": {
     "allow-plugins": {

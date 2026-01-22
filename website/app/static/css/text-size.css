@@ -1,133 +1,87 @@
-.text-size-8xl,
-.text-size-8xl p {
-  @apply text-8xl tracking-normal;
+:root {
+  /* --text-xs: 0.75rem;
+  --text-xs--line-height: calc(1 / 0.75rem);
+  --text-sm: 0.875rem;
+  --text-sm--line-height: calc(1.25 / 0.875rem);
+  --text-md: 0.9rem;
+  --text-md--line-height: calc(1.5 / 0.9rem);
+  --text-base: 1rem;
+  --text-base--line-height: calc(1.5 / 1rem);
+  --text-lg: 1.125rem;
+  --text-lg--line-height: calc(1.75 / 1.125rem);
+  --text-xl: 1.25rem;
+  --text-xl--line-height: calc(1.75 / 1.25rem);
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: calc(2 / 1.5rem);
+  --text-3xl: 1.875rem;
+  --text-3xl--line-height: calc(2.25 / 1.875rem);
+  --text-4xl: 2.25rem;
+  --text-4xl--line-height: calc(2.5 / 2.25rem);
+  --text-5xl: 3rem;
+  --text-5xl--line-height: 1;
+  --text-6xl: 3.75rem;
+  --text-6xl--line-height: 1;
+  --text-7xl: 4.5rem;
+  --text-7xl--line-height: 1;
+  --text-8xl: 6rem;
+  --text-8xl--line-height: 1;
+  --text-9xl: 8rem;
+  --text-9xl--line-height: 1; */
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1.5;
+  --text-sm: 0.84rem;
+  --text-sm--line-height: 1.8;
+  --text-md: 0.875rem;
+  --text-md--line-height: 1.8;
+  --text-base: 0.925rem;
+  --text-base--line-height: 1.8;
+  --text-lg: 1.075rem;
+  --text-lg--line-height: 1.5;
+  --text-xl: 1.2rem;
+  --text-xl--line-height: 1.5;
+  --text-2xl: 1.425rem;
+  --text-2xl--line-height: 1.5;
+  --text-3xl: 1.625rem;
+  --text-3xl--line-height: 1.25;
+  --text-4xl: 2.075rem;
+  --text-4xl--line-height: 1.25;
+  --text-5xl: 2.85rem;
+  --text-5xl--line-height: 1.25;
+  --text-6xl: 3.5rem;
+  --text-6xl--line-height: 1.15;
+  --text-7xl: 4.275rem;
+  --text-7xl--line-height: 1;
+  --text-8xl: 5.75rem;
+  --text-8xl--line-height: 1;
+  --text-9xl: 7.75rem;
+  --text-9xl--line-height: 1;
 }
-.text-size-7xl,
-.text-size-7xl p {
-  @apply text-7xl tracking-normal;
+@media (min-width: 640px) and (max-width: 1919px) {
+  :root:not(.screen-3xl) {
+    zoom: 1.1;
+  }
 }
-.text-size-6xl,
-.text-size-6xl p {
-  @apply text-6xl tracking-normal;
-}
-.text-size-5xl,
-.text-size-5xl p {
-  @apply text-5xl tracking-normal;
-}
-.text-size-4xl,
-.text-size-4xl p {
-  @apply text-4xl tracking-normal;
-}
-.text-size-3xl,
-.text-size-3xl p {
-  @apply text-3xl tracking-normal;
-}
-.text-size-2xl,
-.text-size-2xl p {
-  @apply text-2xl tracking-normal;
-}
-.text-size-xl,
-.text-size-xl p {
-  @apply text-xl tracking-normal;
-}
-.text-size-lg,
-.text-size-lg p {
-  @apply text-lg;
-}
-.text-size-base,
-.text-size-base p {
-  @apply text-base;
-}
-.text-size-md,
-.text-size-md p {
-  @apply text-sm;
-}
-.text-size-smmd,
-.text-size-smmd p {
-  @apply text-smmd;
-}
-.text-size-sm,
-.text-size-sm p {
-  @apply text-sm;
-}
-.text-size-xssm,
-.text-size-xssm p {
-  @apply text-xssm;
-}
-.text-size-xs,
-.text-size-xs p {
-  @apply text-xs;
-}
-.text-size-xxs,
-.text-size-xxs p {
-  @apply text-xxs;
+@media (max-width: 1919px) {
+  :root:not(.screen-3xl) {
+      --text-xs: 0.75rem;
+      --text-sm: 0.875rem;
+      --text-md: 0.9rem;
+      --text-base: 1rem;
+      --text-lg: 1.125rem;
+      --text-xl: 1.25rem;
+      --text-2xl: 1.5rem;
+      --text-3xl: 1.875rem;
+      --text-4xl: 2.25rem;
+      --text-5xl: 3rem;
+      --text-6xl: 3.75rem;
+      --text-7xl: 4.5rem;
+      --text-8xl: 6rem;
+      --text-9xl: 8rem;
+  }
 }
 
-.screen-3xl .text-size-8xl,
-.screen-3xl .text-size-8xl p {
-  @apply text-8xl;
-}
-.screen-3xl .text-size-7xl,
-.screen-3xl .text-size-7xl p {
-  @apply text-7xl;
-}
-.screen-3xl .text-size-6xl,
-.screen-3xl .text-size-6xl p {
-  @apply text-6xl;
-}
-.screen-3xl .text-size-5xl,
-.screen-3xl .text-size-5xl p {
-  @apply text-5xl;
-}
-.screen-3xl .text-size-4xl,
-.screen-3xl .text-size-4xl p {
-  @apply text-4xl;
-}
-.screen-3xl .lg\:text-size-4xl,
-.screen-3xl .lg\:text-size-4xl p {
-  @apply lg:!text-4xl;
-}
-.screen-3xl .text-size-3xl,
-.screen-3xl .text-size-3xl p {
-  @apply text-3xl;
-}
-.screen-3xl .text-size-2xl,
-.screen-3xl .text-size-2xl p {
-  @apply text-2xl;
-}
-.screen-3xl .text-size-xl,
-.screen-3xl .text-size-xl p {
-  @apply text-xl;
-}
-.screen-3xl .text-size-lg,
-.screen-3xl .text-size-lg p {
-  @apply text-lg;
-}
-.screen-3xl .text-size-base,
-.screen-3xl .text-size-base p {
-  @apply text-base;
-}
-.screen-3xl .text-size-md,
-.screen-3xl .text-size-md p {
-  @apply text-sm;
-}
-.screen-3xl .text-size-smmd,
-.screen-3xl .text-size-smmd p {
-  @apply text-smmd;
-}
-.screen-3xl .text-size-sm,
-.screen-3xl .text-size-sm p {
-  @apply text-sm;
-}
-.screen-3xl .text-size-xssm,
-.screen-3xl .text-size-xssm p {
-  @apply text-xssm;
-}
-.screen-3xl .text-size-xs,
-.screen-3xl .text-size-xs p {
-  @apply text-xs;
-}
-.screen-3xl .text-size-xxs,
-.screen-3xl .text-size-xxs p {
-  @apply text-xxs;
+.text-md, .sm\:text-md, .md\:text-md, .lg\:text-md, .xl\:text-md, .\2xl\:text-md, .\3xl\:text-md {
+  font-size: var(--text-md);
+  line-height: var(--text-md--line-height);
+  letter-spacing: -0.25%
 }

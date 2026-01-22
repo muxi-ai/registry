@@ -1,0 +1,258 @@
+# MUXI - The Agent Server
+
+> Open-source infrastructure for running AI agents in production. Not a framework. Not a wrapper. A Server.
+
+## What is MUXI?
+
+MUXI (Multiplexed eXtensible Intelligence, pronounced /muk-siː/) is production infrastructure purpose-built for AI agents. Unlike frameworks that you import as libraries, MUXI is a complete server that runs, orchestrates, and manages multi-agent systems at scale.
+
+**Core Philosophy:** Agents are native primitives – declared in portable `.afs` files, orchestrated at the infrastructure layer, scaled like containers. No frameworks to fight. No queues to wrangle. Just infrastructure that understands what agents do.
+
+## Key Differentiators
+
+- **Infrastructure, not a framework**: Deploy with `muxi deploy` – agents go live instantly
+- **Formation-based deployment**: Complete AI systems defined in the Agent Formation Standard
+- **LLM-agnostic**: Use any provider (OpenAI, Anthropic, Google, AWS, Azure, local models)
+- **Multi-tenant by design**: Built-in user isolation with per-user credentials and RBAC
+- **Self-hosted**: Complete data sovereignty, runs anywhere (on-prem, cloud, air-gapped)
+- **Open source**: Elastic License 2.0 (ELv2) and Apache 2.0 – free for commercial use
+
+## Core Concepts
+
+### Formations
+
+A formation is a complete AI system packaged as a single deployable unit. MUXI is the reference implementation of the [Agent Formation Standard](https://agentformation.org) – an open spec for declarative AI agents.
+
+Like a Dockerfile for containers, but for multi-agent intelligence. Formations include:
+
+- Agent definitions and configurations
+- Domain knowledge (files, URLs, documents)
+- MCP (Model Context Protocol) tool connections
+- Standard Operating Procedures (SOPs)
+- Triggers (schedules, webhooks)
+- Settings and environment variables
+
+All defined in `.afs` files (or `.yaml` – both work). Version-controlled, portable, and deployable with one command.
+
+### The MUXI Stack
+
+Four architectural layers:
+
+1. **SDKs** - Python, JavaScript, Go, Swift, Java clients for programmatic interaction
+2. **APIs** - REST endpoints for deployments, chat, streaming, observability
+3. **Runtime** - Core orchestration: agents, memory, tools, task execution
+4. **Server** - Self-hosted infrastructure for production deployments
+
+### Agent-Native Infrastructure
+
+Agents aren't bolted on – they're native primitives. State persistence, task orchestration, and resource management happen at the infrastructure layer. Agents are declared, deployed, and scaled like containers.
+
+## Key Features
+
+### Deployment & Operations
+
+- **One-command deployment**: `muxi deploy` and you're live
+- **GitOps workflow**: Version-controlled formations, CI/CD integration, instant rollbacks
+- **Hot updates**: Zero downtime deployments with automatic restarts
+- **Single binary**: No runtime dependencies, runs anywhere
+
+### Intelligence & Execution
+
+- **Overlord orchestration engine**: 9,800-line core that powers multi-agent coordination, task routing, and workflow execution
+- **Intelligent task decomposition**: Complex requests automatically broken into executable subtasks
+- **Adaptive workflow creation**: Non-deterministic workflows generated based on context
+- **Agent collaboration**: Multi-agent coordination via A2A protocol
+- **Multimodal support**: Images, PDFs, audio, video processing out-of-the-box
+
+### Memory & Context
+
+- **Three-tier memory**: Buffer (immediate), persistent (long-term), vector (semantic)
+- **User synopsis caching**: LLM-synthesized profiles reduce costs by 80%+
+- **Intelligent context management**: Automatic FIFO cleanup with relevance scoring
+- **Domain knowledge system**: Pre-load agents with files, docs, policies via RAG
+
+### Integration & Tools
+
+- **MCP Protocol native**: Access 1,000+ tools (GitHub, Slack, Postgres, Stripe, etc.)
+- **Multi-user MCP access**: Per-user OAuth tokens and API keys with encryption
+- **Agent Skills**: Native support for the open SKILL.md specification
+- **LLM provider agnostic**: 21 providers, 300+ models via OneLLM
+- **Automatic failover**: Provider switching when services fail
+
+### MCP Without the Bloat
+
+Traditional MCP implementations dump entire tool schemas into every conversation – often 10-30k tokens before your agent does anything useful. MUXI takes a different approach:
+
+- **Load once**: Tool definitions fetched at startup and stored in a lightweight Python registry
+- **Query on demand**: Subagents access only the tools they need at runtime
+- **Minimal overhead**: Total context cost under 1k tokens, regardless of how many MCP servers you connect
+
+Connect 10+ MCP servers simultaneously without context degradation. Access the full MCP ecosystem – dozens of servers, thousands of tools – without burning your context window.
+
+### Production Features
+
+- **Multi-tenancy**: Complete session isolation with per-user credentials
+- **Real-time streaming**: WebSocket and SSE support for live updates
+- **Built-in observability**: 349 event types, stream to 10+ systems
+- **Enterprise resilience**: Circuit breakers, exponential backoff, graceful degradation
+- **92% cache hit rate**: Semantic caching reduces LLM costs dramatically
+
+### Triggers & Automation
+
+- **Natural language scheduling**: "Check email every hour" or "remind me tomorrow at 2pm"
+- **Webhook triggers**: External systems activate agents via HTTP endpoints
+- **Event-driven architecture**: Unified orchestration for schedules, webhooks, user interactions
+- **Dynamic async execution**: Smart sync/async switching with complexity detection
+
+### Developer Experience
+
+- **Standard Operating Procedures**: Define organizational knowledge agents reason over
+- **Artifact generation**: Create documents, spreadsheets, presentations, code files
+- **Type-safe SDKs**: Full IDE autocomplete and type checking
+- **88.9% test coverage**: Production-ready from day one
+
+## Quick Start
+
+```bash
+# Install (Linux/macOS)
+curl -fsSL https://muxi.org/install | sudo bash
+
+# Install (Windows)
+powershell -c "irm https://muxi.org/install | iex"
+
+# Deploy your first formation
+muxi pull @muxi/bookkeeping
+muxi secrets set OPENAI_API_KEY ••••••••••
+muxi deploy --profile production
+```
+
+## Documentation
+
+Our documentation is available in markdown format for easier parsing:
+
+- Add `.md` to any doc URL: `https://muxi.org/docs/[page].md`
+- Full markdown sitemap: https://muxi.org/llms-sitemap.txt
+- Most HTML pages include `<link rel="alternate" type="text/markdown">` tags for easier parsing by AI assistants.
+
+
+## Architecture
+
+MUXI implements the Agent Formation Standard (being donated to the Agentic AI Foundation under the Linux Foundation), where complete AI systems are packaged as `.afs` files.
+
+**Go + Python split**: The Server is written in Go (single binary, excellent concurrency, low memory). The Runtime is Python (ML ecosystem, async-first). Go handles the hot path (orchestration, routing, auth). Python handles AI workloads where async I/O is sufficient for LLM-bound operations.
+
+The server manages:
+
+- Formation lifecycle (deploy, update, rollback)
+- Multi-tenant isolation and RBAC
+- Agent orchestration and task execution
+- Memory management across three tiers
+- Tool access via MCP protocol
+- Event streaming and observability
+
+**Registry**: The MUXI Registry is Docker Hub for agents – push, pull, and share formations with version management and access control.
+
+## Use Cases
+
+- **Customer support systems**: Multi-agent teams handling tickets, refunds, inquiries
+- **Internal tooling**: Automating workflows across GitHub, Slack, Jira, etc.
+- **Document processing**: Extract, analyze, and generate reports from files
+- **Data analysis platforms**: Query databases, generate visualizations, create reports
+- **Booking and scheduling**: Coordinate calendars, send notifications, manage reservations
+- **SaaS product features**: Embed AI capabilities in your application
+
+## Licensing
+
+- **MUXI Server & Runtime**: Elastic License 2.0 (ELv2)
+- **Formations, CLI, SDKs**: Apache 2.0
+- **Agent Formation Standard**: Apache 2.0 (independent open standard)
+
+**You CAN:**
+- Use for internal projects and products
+- Build and sell products that use MUXI
+- Deploy for clients and customers
+- Self-host on your infrastructure
+
+**You CANNOT:**
+- Offer MUXI itself as a hosted service (SaaS)
+
+## Technical Details
+
+- **Response time**: <100ms average
+- **Test coverage**: 88.9% across 63,000+ test lines
+- **Observability events**: 349 distinct event types
+- **LLM cache hit rate**: ~72% (semantic caching: 92%)
+- **Deployment**: Single binary or Docker container
+- **Supported platforms**: Linux, macOS, Windows
+- **Protocol support**: HTTP/REST, WebSocket, Server-Sent Events
+
+## Comparison with Frameworks
+
+| | MUXI | LangChain/CrewAI |
+|---|---|---|
+| **Type** | Server infrastructure | Python library |
+| **Deployment** | `muxi deploy` | Write deployment code |
+| **Configuration** | Declarative `.afs` files | Imperative code |
+| **Multi-tenancy** | Built-in isolation | Build yourself |
+| **Observability** | Production monitoring included | Add external tools |
+| **Async/Scheduling** | Native support | Add Celery/etc. |
+
+Think: Flask is a framework. Nginx is infrastructure. MUXI is the Nginx for agents.
+
+## Business Model
+
+Open-source with sustainable revenue from support services, not paywalls:
+
+- Core stack is free and self-hostable forever
+- GitHub Sponsors for priority support
+- Professional services for enterprise deployments (coming soon)
+- No feature restrictions or bait-and-switch licensing
+
+**Track record**: Built by a developer whose other open-source libraries receive 20M+ monthly downloads – MUXI is production-grade from day one.
+
+## Community & Support
+
+- **Documentation**: https://muxi.org/docs
+- **GitHub**: https://github.com/muxi-ai/muxi
+- **Discussions**: https://muxi.org/community
+- **Registry**: /registry
+- **Roadmap**: https://github.com/orgs/muxi-ai/projects/1
+- **Sponsors**: https://github.com/sponsors/muxi-ai
+- **Email**: hi@muxi.org
+- **Twitter**: @muxi_ai
+
+## Who Built This?
+
+Created by Ran Aroussi (x.com/@aroussi), a 30+ year tech veteran whose open-source libraries, excluding MUXI, receive 20M+ monthly downloads. Author of "Production-Grade Agentic AI" (600+ page technical book). No VC funding, no exit timeline – built for long-term sustainability.
+
+## Quick Links
+
+- [Quickstart Guide](https://muxi.org/docs/quickstart)
+- [Installation](https://muxi.org/docs/install)
+- [Formation Spec](https://agentformation.org)
+- [API Reference](https://muxi.org/docs/reference/api)
+- [Examples](https://muxi.org/docs/examples)
+- [Contributing Guide](https://muxi.org/contributing)
+- [Changelog](https://muxi.org/changelog)
+
+## Common Questions
+
+**Do I need the Server or just the Runtime?**
+Most developers want the Server for production deployments. The Runtime is available as a Python library for custom integrations or single-tenant apps.
+
+**What LLM providers are supported?**
+All major providers: OpenAI, Anthropic, Google, Azure, AWS Bedrock, plus local models via Ollama and llama.cpp. 21 providers, 300+ models total.
+
+**What is the Agent Formation Standard?**
+An open specification for declarative AI agent systems, being donated to the Agentic AI Foundation (Linux Foundation). MUXI is the reference implementation. Formations are defined in `.afs` files (or `.yaml`) and are portable across any AFS-compliant runtime. Learn more at [agentformation.org](https://agentformation.org).
+
+**Can I contribute?**
+Yes! MUXI is community-driven. Contribute code, docs, formations, bug reports, or feature requests. See the [contributing guide](https://github.com/muxi-ai/muxi/blob/main/CONTRIBUTING.md).
+
+**What about enterprise support?**
+Professional services launching soon. Email hi@muxi.org for early access to deployment assistance, custom integrations, and SLA-backed support.
+
+---
+
+**Updated**: January 2026
+**License**: ELv2 (Server/Runtime), Apache 2.0 (CLI/SDKs/Formations)

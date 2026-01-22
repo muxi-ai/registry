@@ -1,2 +1,4 @@
 User-agent: *
-Disallow: /
+Allow: /
+Disallow: /apcu-admin
+Sitemap: https://registry.muxi.org/sitemap.xml
