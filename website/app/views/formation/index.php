@@ -237,7 +237,7 @@ tiny::layout()->default(
                     <span>View on GitHub</span>
                 </a></li>
 
-            <li><a href="mailto:report-reistry@muxi.org?subject=Report%20Formation%20<?php echo urlencode($formation['name']); ?>" class="hover:text-red-600">
+            <li><a href="mailto:dmca@muxi.org?subject=Reporting%20abuse%20or%20spam%20-%20@<?php echo htmlspecialchars($formation['registry_username']); ?>/<?php echo urlencode($formation['name']); ?>&body=Please%20provide%20as%20much%20detail%20as%20possible%20about%20the%20formation%20you're%20reporting%20(@<?php echo htmlspecialchars($formation['registry_username']); ?>/<?php echo urlencode($formation['name']); ?>).%20It's%20especially%20helpful%20to%20include%20specific%20examples%20or%20screenshots." class="hover:text-red-600">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
                         <path d="M142.41,40.22l87.46,151.87C236,202.79,228.08,216,215.46,216H40.54C27.92,216,20,202.79,26.13,192.09L113.59,40.22C119.89,29.26,136.11,29.26,142.41,40.22Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="20"></path>
                         <line x1="128" y1="144" x2="128" y2="104" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="20"></line>
