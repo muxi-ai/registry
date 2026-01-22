@@ -74,26 +74,6 @@ $defaultRobots = 'noindex, nofollow';
     <script>window.Prism = window.Prism || {}; window.Prism.manual = true;</script>
     <script defer src="<?php tiny::staticURL('/js/prism.js'); ?>"></script>
 
-    <!-- <script defer src="<?php tiny::staticURL('/js/mermaid.js'); ?>"></script> -->
-    <script type="module">
-    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
-    import elkLayouts from 'https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0/dist/mermaid-layout-elk.esm.min.mjs';
-
-    // Render Mermaid diagrams + after HTMX swaps content
-    onDocReady(() => {
-        mermaid.registerLayoutLoaders(elkLayouts);
-        mermaid.initialize({ startOnLoad: true });
-        document.body.addEventListener('htmx:afterSwap', function (evt) {
-            if (evt.detail.target.id === 'article-container' || evt.detail.target.closest('#article-container')) {
-                onDocReady(() => {
-                    mermaid.initialize({ startOnLoad: true });
-                    mermaid.run();
-                }, 100);
-            }
-        });
-    });
-    </script>
-
     <?php if (tiny::layout()->props('scripts')):
         foreach (tiny::layout()->props('scripts') as $script): ?>
             <script src="<?php tiny::staticURL('/js/' . $script); ?>.min.js"></script>
