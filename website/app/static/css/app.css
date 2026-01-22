@@ -1150,3 +1150,64 @@ ol.steps > li:before {
 :root.dark ol.steps > li:before {
   @apply text-black/80 bg-[#c2c0be] ring-[#131215];
 }
+
+pre {
+    max-width: 100% !important;
+    @apply rounded-sm
+}
+pre[class*="language-"].line-numbers {
+    @apply bg-[#1c1c21]!
+}
+pre[class*="language-"].line-numbers > code {
+    padding-top: 3px;
+    background-color: transparent !important
+}
+pre:not([class*="language-"]):not(:has(code.mermaid)) {
+    @apply my-6 rounded-md p-3 px-4;
+    @apply bg-black/5 dark:bg-white/3 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden;
+    font-size: 90%;
+    letter-spacing: -1%;
+    line-height: 1.4;
+  }
+  .tab-group pre:not([class*="language-"]):not(:has(code.mermaid)) {
+    background-color: transparent !important;
+}
+pre.language-plaintext + div.toolbar {
+    @apply hidden!
+}
+pre code {
+    @apply antialiased;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+.code-toolbar {
+    @apply relative text-[13px] antialiased!;
+}
+.code-toolbar pre code {
+    @apply antialiased!;
+    background: none !important;
+    border: none !important;
+    padding: 2px 0 0 !important;
+    margin: 0 !important;
+}
+.code-toolbar .toolbar {
+    @apply absolute top-3 right-3;
+}
+.code-toolbar .toolbar .toolbar-item button[data-copy-state^="copy"] span {
+    @apply hidden;
+}
+.code-toolbar .toolbar .toolbar-item button[data-copy-state^="copy"] {
+    @apply opacity-0;
+}
+.code-toolbar .toolbar .toolbar-item button[data-copy-state^="copy"] {
+    @apply h-4 w-4 cursor-pointer opacity-60 invert hover:opacity-100;
+    background: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGZpbGw9Im5vbmUiIHZpZXdCb3g9IjAgMCAyNCAyNCIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2U9ImN1cnJlbnRDb2xvciI+CiAgPHBhdGggc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBkPSJNMTUuNjY2IDMuODg4QTIuMjUgMi4yNSAwIDAwMTMuNSAyLjI1aC0zYy0xLjAzIDAtMS45LjY5My0yLjE2NiAxLjYzOG03LjMzMiAwYy4wNTUuMTk0LjA4NC40LjA4NC42MTJ2MGEuNzUuNzUgMCAwMS0uNzUuNzVIOWEuNzUuNzUgMCAwMS0uNzUtLjc1djBjMC0uMjEyLjAzLS40MTguMDg0LS42MTJtNy4zMzIgMGMuNjQ2LjA0OSAxLjI4OC4xMSAxLjkyNy4xODQgMS4xLjEyOCAxLjkwNyAxLjA3NyAxLjkwNyAyLjE4NVYxOS41YTIuMjUgMi4yNSAwIDAxLTIuMjUgMi4yNUg2Ljc1QTIuMjUgMi4yNSAwIDAxNC41IDE5LjVWNi4yNTdjMC0xLjEwOC44MDYtMi4wNTcgMS45MDctMi4xODVhNDguMjA4IDQ4LjIwOCAwIDAxMS45MjctLjE4NCIgLz4KPC9zdmc+Cg==")
+      50% no-repeat;
+    background-size: cover;
+}
+.code-toolbar:hover .toolbar .toolbar-item button[data-copy-state="copy-success"] {
+    background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGZpbGw9Im5vbmUiIHZpZXdCb3g9IjAgMCAyNCAyNCIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2U9ImN1cnJlbnRDb2xvciI+CiAgPHBhdGggc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBkPSJNMTEuMzUgMy44MzZjLS4wNjUuMjEtLjEuNDMzLS4xLjY2NCAwIC40MTQuMzM2Ljc1Ljc1Ljc1aDQuNWEuNzUuNzUgMCAwMC43NS0uNzUgMi4yNSAyLjI1IDAgMDAtLjEtLjY2NG0tNS44IDBBMi4yNTEgMi4yNTEgMCAwMTEzLjUgMi4yNUgxNWMxLjAxMiAwIDEuODY3LjY2OCAyLjE1IDEuNTg2bS01LjggMGMtLjM3Ni4wMjMtLjc1LjA1LTEuMTI0LjA4QzkuMDk1IDQuMDEgOC4yNSA0Ljk3MyA4LjI1IDYuMTA4VjguMjVtOC45LTQuNDE0Yy4zNzYuMDIzLjc1LjA1IDEuMTI0LjA4IDEuMTMxLjA5NCAxLjk3NiAxLjA1NyAxLjk3NiAyLjE5MlYxNi41QTIuMjUgMi4yNSAwIDAxMTggMTguNzVoLTIuMjVtLTcuNS0xMC41SDQuODc1Yy0uNjIxIDAtMS4xMjUuNTA0LTEuMTI1IDEuMTI1djExLjI1YzAgLjYyMS41MDQgMS4xMjUgMS4xMjUgMS4xMjVoOS43NWMuNjIxIDAgMS4xMjUtLjUwNCAxLjEyNS0xLjEyNVYxOC43NW0tNy41LTEwLjVoNi4zNzVjLjYyMSAwIDEuMTI1LjUwNCAxLjEyNSAxLjEyNXY5LjM3NW0tOC4yNS0zbDEuNSAxLjUgMy0zLjc1IiAvPgo8L3N2Zz4K");
+    @apply opacity-100!;
+}
