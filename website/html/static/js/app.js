@@ -591,3 +591,50 @@ function generateName(capitalize) {
     }
     return name1[getRandomInt(0, name1.length + 1)] + ' ' + name2[getRandomInt(0, name2.length + 1)];
 }
+
+
+function codeBlockWidth() {
+    // return;
+    const blocks = document.querySelectorAll('.code-toolbar');
+    const section = document.querySelector('article section');
+    if (!blocks.length || !section) {
+        return;
+    }
+    const zoom = 1;
+    blocks.forEach((block) => {
+        block.style.display = 'none';
+    });
+    const maxWidth = section.offsetWidth;
+    blocks.forEach((block) => {
+        // block.style.minWidth = (maxWidth / zoom) + 'px';
+        block.style.zoom = zoom;
+        block.style.display = 'block';
+        block.style.maxWidth = 'calc(100vw - 5.5rem)';
+    });
+
+    const prism = document.getElementById('prism');
+    if (prism && prism.parentNode) {
+        prism.parentNode.removeChild(prism);
+    }
+
+    // codeBlockWidth();
+}
+
+function refreshCodeBlocks(container) {
+    if (window.Prism) {
+        if (container && window.Prism.highlightAllUnder) {
+            window.Prism.highlightAllUnder(container);
+        } else if (window.Prism.highlightAll) {
+            window.Prism.highlightAll();
+        }
+    }
+    // Wait for Prism toolbar injection + layout before sizing.
+    window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(codeBlockWidth);
+    });
+}
+
+onDocReady(() => {
+    refreshCodeBlocks(document.getElementById('article-container') || document);
+    bindCodeBlockResize();
+});
