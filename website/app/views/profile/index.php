@@ -181,9 +181,8 @@ tiny::components()->require('FormationCard');
             <div class="divide-y border-y px-0.5 gap-4 [&>div]:flex [&>div]:items-start [&>div]:justify-between [&>div]:py-6 &>div]:my-4">
             <?php foreach (tiny::data()->formations as $formation): ?>
                 <div>
-                <!-- name, description, latest_version, github_stars, total_downloads, published_at -->
                     <div>
-                        <a href="" class="text-lg link-on-hover"><?php echo $formation['name']; ?> ›</a>
+                        <a href="<?php tiny::homeURL('/@' . tiny::data()->profile['registry_username'] . '/' . $formation['name']); ?>" class="text-lg link-on-hover"><?php echo $formation['name']; ?> ›</a>
                         <div class="text-sm opacity-60 dark:opacity-50"><?php echo $formation['description']; ?></div>
                         <div class="flex items-center opacity-60 dark:opacity-50 mt-2">
                             <span class="border rounded-full text-[10px]! subpixel-antialiased bg-white/50 dark:bg-white/5 leading-none pt-[3px] pb-1 px-1.5 mr-4">v <?php echo htmlspecialchars($formation['latest_version']); ?></span>
