@@ -35,6 +35,7 @@ RUN apk add --no-cache \
   php85-openssl \
   php85-pdo \
   php85-pdo_mysql \
+  php85-pdo_sqlite \
   php85-pgsql \
   php85-phar \
   php85-phpdbg \
