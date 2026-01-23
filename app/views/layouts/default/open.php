@@ -16,7 +16,7 @@ $defaultRobots = 'noindex, nofollow';
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no">
 
-    <script src="<?php tiny::homeURL('/analytics.js'); ?>"></script>
+    <script src="<?php tiny::homeURL('/analytics'); ?>"></script>
     <?php if (@$_SERVER['ENV'] != 'local' && @$_SERVER['SENTRY_FRONTEND']): ?>
         <script src="https://js.sentry-cdn.com/<?php echo $_SERVER['SENTRY_FRONTEND']; ?>.min.js" crossorigin="anonymous"></script>
     <?php endif; ?>
