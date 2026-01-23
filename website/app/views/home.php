@@ -39,17 +39,17 @@ tiny::components()->require('FormationCard');
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <?php foreach (tiny::data()->formations['trending'] as $formation): ?>
-                <a href="<?php tiny::homeURL('/@' . $formation['registry_username'] . '/' . $formation['name']); ?>" 
+                <a href="<?php tiny::homeURL('/@' . $formation['registry_username'] . '/' . $formation['name']); ?>"
                    class="block bg-white border border-gray-200 rounded-lg p-4 hover:border-blue-400 hover:shadow-lg transition">
-                    
+
                     <h3 class="font-semibold text-gray-900 mb-2 truncate">
                         @<?php echo htmlspecialchars($formation['registry_username']); ?>/<?php echo htmlspecialchars($formation['name']); ?>
                     </h3>
-                    
+
                     <p class="text-sm text-gray-600 mb-3 line-clamp-2">
                         <?php echo htmlspecialchars($formation['description']); ?>
                     </p>
-                    
+
                     <div class="flex justify-between text-xs text-gray-500 pt-2 border-t">
                         <span>⬇ <?php echo number_format($formation['total_downloads']); ?></span>
                         <span>⭐ <?php echo number_format($formation['github_stars']); ?></span>
@@ -76,7 +76,7 @@ tiny::components()->require('FormationCard');
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <?php foreach (tiny::data()->formations['recent'] as $formation): ?>
-                <?php tiny::components()->FormationCard(formation: $formation, showStats: true); ?>
+                <?php tiny::components()->FormationCard(formation: $formation, withUsername: true); ?>
             <?php endforeach; ?>
         </div>
     </section>
@@ -94,7 +94,7 @@ tiny::components()->require('FormationCard');
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <?php foreach (tiny::data()->formations['popular'] as $formation): ?>
-                <?php tiny::components()->FormationCard(formation: $formation, showStats: true); ?>
+                <?php tiny::components()->FormationCard(formation: $formation, withUsername: true); ?>
             <?php endforeach; ?>
         </div>
     </section>

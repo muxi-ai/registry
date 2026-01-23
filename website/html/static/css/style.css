@@ -465,6 +465,9 @@
   .\!-mt-1 {
     margin-top: calc(var(--spacing) * -1) !important;
   }
+  .-mt-1 {
+    margin-top: calc(var(--spacing) * -1);
+  }
   .-mt-1\! {
     margin-top: calc(var(--spacing) * -1) !important;
   }
@@ -492,11 +495,17 @@
   .-mt-\[3px\]\! {
     margin-top: calc(3px * -1) !important;
   }
+  .mt-0 {
+    margin-top: calc(var(--spacing) * 0);
+  }
   .mt-0\.5 {
     margin-top: calc(var(--spacing) * 0.5);
   }
   .mt-1 {
     margin-top: calc(var(--spacing) * 1);
+  }
+  .mt-1\! {
+    margin-top: calc(var(--spacing) * 1) !important;
   }
   .mt-1\.5 {
     margin-top: calc(var(--spacing) * 1.5);
@@ -512,6 +521,9 @@
   }
   .mt-5 {
     margin-top: calc(var(--spacing) * 5);
+  }
+  .mt-5\.5 {
+    margin-top: calc(var(--spacing) * 5.5);
   }
   .mt-6 {
     margin-top: calc(var(--spacing) * 6);
@@ -584,6 +596,9 @@
   }
   .mb-8 {
     margin-bottom: calc(var(--spacing) * 8);
+  }
+  .mb-10 {
+    margin-bottom: calc(var(--spacing) * 10);
   }
   .mb-12 {
     margin-bottom: calc(var(--spacing) * 12);
@@ -912,6 +927,9 @@
   }
   .items-center {
     align-items: center;
+  }
+  .items-end {
+    align-items: flex-end;
   }
   .items-start {
     align-items: flex-start;
@@ -1410,6 +1428,10 @@
   .text-xs {
     font-size: var(--text-xs);
     line-height: var(--tw-leading, var(--text-xs--line-height));
+  }
+  .text-xs\! {
+    font-size: var(--text-xs) !important;
+    line-height: var(--tw-leading, var(--text-xs--line-height)) !important;
   }
   .text-\[10px\]\! {
     font-size: 10px !important;

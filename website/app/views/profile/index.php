@@ -133,7 +133,7 @@ tiny::components()->require('FormationCard');
             <div class="tabs w-full my-4">
                 <nav role="tablist" class="w-full space-x-1 bg-black/5 dark:bg-white/5">
                     <a hx-boost="true" hx-push-url="true"
-                        href="<?php tiny::homeURL('/@' . tiny::data()->profile['registry_username'] . '?sort=recent'); ?>" role="tab" aria-selected="<?php echo tiny::data()->sort === 'recent' ? "true" : "false"; ?>" class="btn-ghost">
+                        href="?sort=recent" role="tab" aria-selected="<?php echo tiny::data()->sort === 'recent' ? "true" : "false"; ?>" class="btn-ghost">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="-ml-2 opacity-80 dark:opacity-60">
                             <g fill="none">
                                 <path d="M24 0v24H0V0zM12.594 23.258l-.012.002-.071.035-.02.004-.014-.004-.071-.036c-.01-.003-.019 0-.024.006l-.004.01-.017.428.005.02.01.013.104.074.015.004.012-.004.104-.074.012-.016.004-.017-.017-.427c-.002-.01-.009-.017-.016-.018m.264-.113-.014.002-.184.093-.01.01-.003.011.018.43.005.012.008.008.201.092c.012.004.023 0 .029-.008l.004-.014-.034-.614c-.003-.012-.01-.02-.02-.022m-.715.002a.023.023 0 0 0-.027.006l-.006.014-.034.614c0 .012.007.02.017.024l.015-.002.201-.093.01-.008.003-.011.018-.43-.003-.012-.01-.01z"></path>
@@ -143,7 +143,7 @@ tiny::components()->require('FormationCard');
                         Recent
                     </a>
                     <a hx-boost="true" hx-push-url="true"
-                        href="<?php tiny::homeURL('/@' . tiny::data()->profile['registry_username'] . '?sort=trending'); ?>" role="tab" aria-selected="<?php echo tiny::data()->sort === 'trending' ? "true" : "false"; ?>" class="btn-ghost">
+                        href="?sort=trending" role="tab" aria-selected="<?php echo tiny::data()->sort === 'trending' ? "true" : "false"; ?>" class="btn-ghost">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="-ml-2 opacity-80 dark:opacity-60 mt-px">
                             <g fill="none" fill-rule="nonzero">
                                 <path fill="currentColor" d="M17 5.5a1.5 1.5 0 0 0 0 3h.379L14 11.879l-3.44-3.44a1.5 1.5 0 0 0-2.12 0l-6.5 6.5a1.5 1.5 0 0 0 2.12 2.122l5.44-5.44 3.44 3.44a1.5 1.5 0 0 0 2.12 0l4.44-4.44V11a1.5 1.5 0 0 0 3 0V7A1.5 1.5 0 0 0 21 5.5h-4Z"></path>
@@ -152,7 +152,7 @@ tiny::components()->require('FormationCard');
                         Trending
                     </a>
                     <a hx-boost="true" hx-push-url="true"
-                        href="<?php tiny::homeURL('/@' . tiny::data()->profile['registry_username'] . '?sort=downloads'); ?>" role="tab" aria-selected="<?php echo tiny::data()->sort === 'downloads' ? "true" : "false"; ?>" class="btn-ghost">
+                        href="?sort=downloads" role="tab" aria-selected="<?php echo tiny::data()->sort === 'downloads' ? "true" : "false"; ?>" class="btn-ghost">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="-ml-2 opacity-80 dark:opacity-60">
                             <g fill="currentColor">
                                 <path d="M19.48,12.35c-1.57-4.08-7.16-4.3-5.81-10.23c0.1-0.44-0.37-0.78-0.75-0.55C9.29,3.71,6.68,8,8.87,13.62 c0.18,0.46-0.36,0.89-0.75,0.59c-1.81-1.37-2-3.34-1.84-4.75c0.06-0.52-0.62-0.77-0.91-0.34C4.69,10.16,4,11.84,4,14.37 c0.38,5.6,5.11,7.32,6.81,7.54c2.43,0.31,5.06-0.14,6.95-1.87C19.84,18.11,20.6,15.03,19.48,12.35z M10.2,17.38 c1.44-0.35,2.18-1.39,2.38-2.31c0.33-1.43-0.96-2.83-0.09-5.09c0.33,1.87,3.27,3.04,3.27,5.08C15.84,17.59,13.1,19.76,10.2,17.38z"></path>
@@ -162,7 +162,7 @@ tiny::components()->require('FormationCard');
                         Popular
                     </a>
                     <a hx-boost="true" hx-push-url="true"
-                        href="<?php tiny::homeURL('/@' . tiny::data()->profile['registry_username'] . '?sort=name'); ?>" role="tab" aria-selected="<?php echo tiny::data()->sort === 'name' ? "true" : "false"; ?>" class="btn-ghost">
+                        href="?sort=name" role="tab" aria-selected="<?php echo tiny::data()->sort === 'name' ? "true" : "false"; ?>" class="btn-ghost">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="-ml-2 opacity-80 dark:opacity-60">
                             <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
                             <path d="M11 6h9"></path>
@@ -180,34 +180,7 @@ tiny::components()->require('FormationCard');
 
             <div class="divide-y border-y px-0.5 gap-4 [&>div]:flex [&>div]:items-start [&>div]:justify-between [&>div]:py-6 &>div]:my-4">
             <?php foreach (tiny::data()->formations as $formation): ?>
-                <div>
-                    <div>
-                        <a href="<?php tiny::homeURL('/@' . tiny::data()->profile['registry_username'] . '/' . $formation['name']); ?>" class="text-lg link-on-hover"><?php echo $formation['name']; ?> ›</a>
-                        <div class="text-sm opacity-60 dark:opacity-50"><?php echo $formation['description']; ?></div>
-                        <div class="flex items-center opacity-60 dark:opacity-50 mt-2">
-                            <span class="border rounded-full text-[10px]! subpixel-antialiased bg-white/50 dark:bg-white/5 leading-none pt-[3px] pb-1 px-1.5 mr-4">v <?php echo htmlspecialchars($formation['latest_version']); ?></span>
-                            <span class="text-xs"><?php echo date('F j, Y', strtotime($formation['published_at'])); ?></span>
-                        </div>
-                    </div>
-
-                    <div class="text-right -mt-1.5">
-                        <ul class="divide-x text-sm flex items-center divider-x gap-x-2 p-0! my-0! -mx-px! [&>li]:m-0 [&>li]:pr-2 [&>li]:flex [&>li]:items-center [&>li]:space-x-2 [&>li>svg]:size-3.5 [&>li>span>strong]:pr-0.5 [&>li>span>strong]:font-semibold">
-                            <li>
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" class="px-px">
-                                    <path d="M3.2 18C1.88484 17.235 1 15.8051 1 14.1674C1 12.1053 2.40285 10.3727 4.30122 9.88197C4.30041 9.83571 4.3 9.78935 4.3 9.7429C4.3 5.46661 7.74741 2 12 2C15.6211 2 18.6584 4.51348 19.4806 7.90009C21.5395 8.69955 23 10.7089 23 13.0613C23 14.8707 22.1359 16.4772 20.8 17.4862M12 13V22M12 22L15.5 18.5M12 22L8.5 18.5" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"></path>
-                                </svg>
-                                <span><strong><?php echo number_format($formation['total_downloads']); ?></strong> Pull<?php echo tiny::data()->stats['total_downloads'] != 1 ? 's' : ''; ?></span>
-                            </li>
-                            <li>
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                    <path fill="currentColor" d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path>
-                                </svg>
-                                <span><strong><?php echo number_format($formation['github_stars']); ?></strong> Star<?php echo tiny::data()->stats['total_stars'] != 1 ? 's' : ''; ?></span>
-                            </li>
-                        </ul>
-                        <div class="text-xs mr-2 opacity-60 dark:opacity-50 -mt-1!"><?php echo $formation['license'] ?? 'MIT License'; ?></div>
-                    </div>
-                </div>
+                <?php tiny::components()->FormationCard(formation: $formation, withUsername: false); ?>
             <?php endforeach; ?>
             </div>
         <?php endif; ?>
