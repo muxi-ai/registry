@@ -1874,6 +1874,11 @@
       display: none;
     }
   }
+  .lg\:min-h-\[70dvh\] {
+    @media (width >= 64rem) {
+      min-height: 70dvh;
+    }
+  }
   .lg\:w-5\/12 {
     @media (width >= 64rem) {
       width: calc(5/12 * 100%);
