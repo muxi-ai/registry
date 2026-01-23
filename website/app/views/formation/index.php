@@ -39,7 +39,7 @@ tiny::layout()->default(
             </svg>
             Pulls <span class="badge-secondary rounded-full leading-none bg-white/50 dark:bg-white/20  pt-[3px]! pb-[2px]!"><?php echo number_format($formation['total_downloads']); ?></span>
             <?php if ($downloadsThisWeek > 0): ?>
-                <span class="badge-secondary bg-green-200/50 dark:bg-green-800 leading-none pt-[3px]! pb-[2px]! pl-1.5 pr-2">
+                <span class="badge-secondary bg-green-200/50 dark:bg-green-800 leading-none pt-[3px]! pb-[2.5px]! pl-1.5 pr-2">
                     +<?php echo number_format($downloadsThisWeek); ?> this week
                 </span>
             <?php endif; ?>
@@ -52,7 +52,7 @@ tiny::layout()->default(
 <div class="grid grid-cols-10 gap-12 my-7">
     <div class="col-span-7 h-full">
 
-        <div class="card dark:bg-transparent! shadow-xs dark:shadow-xl rounded-md plain p-0 overflow-hidden" id="readme">
+        <div class="card dark:bg-black/5! shadow-xs dark:shadow-xl rounded-md plain p-0 overflow-hidden" id="readme">
             <div class="bg-black/2 dark:bg-white/4 py-2 px-5 border-b">
                 <header class="flex items-center justify-between">
                     <ul class="divide-x text-sm flex items-center divider-x gap-x-2 p-0! my-0! -mx-px! [&>li]:m-0 [&>li]:pr-2 [&>li]:flex [&>li]:items-center [&>li]:space-x-2 [&>li>svg]:size-3.5 [&>li>span>strong]:pr-0.5 [&>li>span>strong]:font-semibold">
