@@ -35,6 +35,7 @@ config/github-app-private-key.pem
 muxi-registry.*.private-key.pem
 
 # Database
+*.db
 *.db-journal
 *.sqlite
 *.sqlite3

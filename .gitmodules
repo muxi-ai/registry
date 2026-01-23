@@ -1,3 +1,3 @@
-[submodule "website/tiny"]
-	path = website/tiny
+[submodule "tiny"]
+	path = tiny
 	url = https://github.com/ranaroussi/tiny.git
