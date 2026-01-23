@@ -24,7 +24,7 @@ class Account extends TinyController
         // Allow sorting formations by different metrics
         $sort = tiny::router()->query['sort'] ?? 'recent';
         $validSorts = ['trending', 'recent', 'downloads', 'name'];
-        
+
         if (!in_array($sort, $validSorts)) {
             $sort = 'recent';
         }
@@ -33,15 +33,15 @@ class Account extends TinyController
         if ($sort === 'trending') {
             // Trending: formations with most downloads in last 7 days
             $formations = tiny::db()->getQuery("
-                SELECT 
-                    f.*, 
-                    u.registry_username, 
+                SELECT
+                    f.*,
+                    u.registry_username,
                     u.github_username,
                     COALESCE(SUM(d.download_count), 0) as downloads_7d
                 FROM formations f
                 JOIN users u ON f.user_id = u.id
-                LEFT JOIN downloads d 
-                    ON f.id = d.formation_id 
+                LEFT JOIN downloads d
+                    ON f.id = d.formation_id
                     AND d.day >= DATE('now', '-7 days')
                 WHERE f.user_id = ? AND f.deleted_at IS NULL
                 GROUP BY f.id
