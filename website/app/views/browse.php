@@ -19,7 +19,7 @@ tiny::components()->require('FormationCard');
     </div>
 
     <!-- Sort Controls -->
-    <div class="tabs w-full mt-4 mb-10">
+    <div class="tabs w-full mt-4 mb-2">
         <nav role="tablist" class="w-full space-x-1 bg-black/5 dark:bg-white/5">
             <a hx-boost="true" hx-push-url="true"
                 href="?sort=recent" role="tab" aria-selected="<?php echo tiny::data()->sort === 'recent' ? "true" : "false"; ?>" class="btn-ghost">
@@ -118,7 +118,7 @@ tiny::components()->require('FormationCard');
             </div>
         </div>
     <?php else: ?>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div class="divide-y px-0.5 grid grid-cols-1 md:grid-cols-2 gap-x-12 [&>div]:flex [&>div]:items-start [&>div]:justify-between [&>div]:py-6 &>div]:my-4">
             <?php foreach (tiny::data()->formations as $formation): ?>
                 <?php tiny::components()->FormationCard(formation: $formation, withUsername: true); ?>
             <?php endforeach; ?>
