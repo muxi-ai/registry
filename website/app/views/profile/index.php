@@ -82,7 +82,7 @@ tiny::components()->require('FormationCard');
         </ul>
     </div>
 
-    <div class="col-span-8 h-full">
+    <div class="col-span-8 h-full min-h-[70dvh]">
         <h2 class="text-2xl font-semibold font-sans! mb-2 px-0.5">Formations</h2>
 
         <?php if (empty(tiny::data()->formations)): ?>

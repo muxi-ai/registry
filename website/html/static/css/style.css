@@ -721,6 +721,21 @@
   .min-h-96 {
     min-height: calc(var(--spacing) * 96);
   }
+  .min-h-\[50bh\] {
+    min-height: 50bh;
+  }
+  .min-h-\[50dvh\] {
+    min-height: 50dvh;
+  }
+  .min-h-\[60dvh\] {
+    min-height: 60dvh;
+  }
+  .min-h-\[70dvh\] {
+    min-height: 70dvh;
+  }
+  .min-h-\[80dvh\] {
+    min-height: 80dvh;
+  }
   .min-h-full {
     min-height: 100%;
   }
