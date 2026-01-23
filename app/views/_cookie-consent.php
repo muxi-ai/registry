@@ -69,7 +69,7 @@ if (isset($_COOKIE['cookie_consent'])) {
         <div>
             <h3>We use cookies</h3>
             <p class="notice">
-                We use essential and anonymized analytics cookies, plus optional marketing cookies, in accordance with our <a target="legal" href="<?php tiny::homeURL('privacy'); ?>" class="link">Privacy policy</a> and GDPR/CCPA laws.
+                We use essential and anonymized analytics cookies, plus optional marketing cookies, in accordance with our <a target="legal" href="https://muxi.org/privacy" class="link">Privacy policy</a> and GDPR/CCPA laws.
             </p>
 
             <div x-auto-animate>
