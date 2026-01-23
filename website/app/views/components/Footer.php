@@ -51,17 +51,17 @@ tiny::components()->register('Footer', function (...$props) {
                     </p>
                     <p class="text-xs leading-normal">
                         <a href="https://muxi.org/llms.txt" class="opacity-50 hover:opacity-100">Are you an AI? Here\'s <code>llms.txt</code></a><br>
-                        <a href="https://muxi.org/llm-status" class="flex items-center space-x-1.5 pt-1"><span class="opacity-60 hover:opacity-100">LLM Status </span><img src="https://muxi.org/llm-status/badge" alt="status" class="inline size-2.5 mt-px"></a>
+                        <a href="https://muxi.org/llm-status" target="_blank" class="flex items-center space-x-1.5 pt-1"><span class="opacity-60 hover:opacity-100">LLM Status </span><img src="https://muxi.org/llm-status/badge" alt="status" class="inline size-2.5 mt-px"></a>
                     </p>
                 </div>
                 <div class="flex gap-6 lg:w-7/12 items-start">
                     <nav class="w-1/3 [&>a]:flex [&>a]:mb-2 [&>a]:text-xs lg:[&>a]:text-sm [&>a]:font-normal [&>a]:text-inherit [&>a]:transition-all [&>a]:duration-300 [&>a]:opacity-70 [&>a]:hover:opacity-100 [&>a]:hover:font-medium [&>a]:hover:after:content-[\'→\'] [&>a]:hover:after:translate-x-1 [&>a]:hover:after:transition-transform [&>a]:hover:after:duration-300">
                         <p class="mb-3 text-xs tracking-wider text-bright opacity-70 uppercase font-semibold">Stack</p>
-                        <a href="https://muxi.org/docs/server/">MUXI Server</a>
-                        <a href="https://muxi.org/docs/runtime/">MUXI Runtime</a>
-                        <a href="https://muxi.org/docs/registry/">MUXI Registry</a>
-                        <a href="https://muxi.org/docs/cli/">MUXI CLI</a>
-                        <a href="https://muxi.org/docs/sdks/">MUXI SDKs</a>
+                        <a target="_blank" href="https://muxi.org/docs/server/">MUXI Server</a>
+                        <a target="_blank" href="https://muxi.org/docs/runtime/">MUXI Runtime</a>
+                        <a target="_blank" href="https://muxi.org/docs/registry/">MUXI Registry</a>
+                        <a target="_blank" href="https://muxi.org/docs/cli/">MUXI CLI</a>
+                        <a target="_blank" href="https://muxi.org/docs/sdks/">MUXI SDKs</a>
                     </nav>
                     <nav class="w-1/3 [&>a]:flex [&>a]:mb-2 [&>a]:text-xs lg:[&>a]:text-sm [&>a]:font-normal [&>a]:text-inherit [&>a]:transition-all [&>a]:duration-300 [&>a]:opacity-70 [&>a]:hover:opacity-100 [&>a]:hover:font-medium [&>a]:hover:after:content-[\'↗\'] [&>a]:hover:after:translate-x-1 [&>a]:hover:after:transition-transform [&>a]:hover:after:duration-300">
                         <p class="mb-3 text-xs tracking-wider text-bright opacity-70 uppercase font-semibold">Resources</p>
@@ -74,11 +74,11 @@ tiny::components()->register('Footer', function (...$props) {
                     </nav>
                     <nav class="w-1/3 [&>a]:flex [&>a]:mb-2 [&>a]:text-xs lg:[&>a]:text-sm [&>a]:font-normal [&>a]:text-inherit [&>a]:transition-all [&>a]:duration-300 [&>a]:opacity-70 [&>a]:hover:opacity-100 [&>a]:hover:font-medium [&>a]:hover:after:content-[\'›\'] [&>a]:hover:after:translate-x-1 [&>a]:hover:after:transition-transform [&>a]:hover:after:duration-300">
                         <p class="mb-3 text-xs tracking-wider text-bright opacity-70 uppercase font-semibold">Get Started</p>
-                        <a href="https://muxi.org/docs/quickstart">Quickstart</a>
-                        <a href="https://muxi.org/docs/how-it-works">How MUXI Works</a>
-                        <a href="https://muxi.org/docs/examples/">Examples</a>
-                        <a href="/">Recipes</a>
-                        <a href="https://muxi.org/docs">Docs</a>
+                        <a target="_blank" href="https://muxi.org/docs/quickstart">Quickstart</a>
+                        <a target="_blank" href="https://muxi.org/docs/how-it-works">How MUXI Works</a>
+                        <a target="_blank" href="https://muxi.org/docs/examples/">Examples</a>
+                        <a target="_blank" href="/">Recipes</a>
+                        <a target="_blank" href="https://muxi.org/docs">Docs</a>
                     </nav>
                 </div>
             </div>
@@ -88,11 +88,11 @@ tiny::components()->register('Footer', function (...$props) {
             <span class="opacity-60">Copyright &copy; '. $year .' </span><a href="https://varops.com" target="_blank" class="transition-opacity duration-300 opacity-60 hover:opacity-100">VarOps LLC</a>
             <span class="hidden md:inline opacity-60">&nbsp; &bull; &nbsp;</span>
             <br class="block md:hidden">
-            <a href="https://muxi.org/privacy" class="transition-opacity duration-300 opacity-60 hover:opacity-100">Privacy</a>
+            <a target="_blank" href="https://muxi.org/privacy" class="transition-opacity duration-300 opacity-60 hover:opacity-100">Privacy</a>
             <span class="opacity-60">&nbsp;/&nbsp; </span>
-            <a href="https://muxi.org/terms" class="transition-opacity duration-300 opacity-60 hover:opacity-100">Terms</a>
+            <a target="_blank" href="https://muxi.org/terms" class="transition-opacity duration-300 opacity-60 hover:opacity-100">Terms</a>
             <span class="opacity-60">&nbsp;/&nbsp; </span>
-            <a href="https://muxi.org/support" class="transition-opacity duration-300 opacity-60 hover:opacity-100">Support</a>
+            <a target="_blank" href="https://muxi.org/support" class="transition-opacity duration-300 opacity-60 hover:opacity-100">Support</a>
         </div>
     </footer>';
 });
