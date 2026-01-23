@@ -51,7 +51,7 @@ tiny::components()->register('Footer', function (...$props) {
                     </p>
                     <p class="text-xs leading-normal">
                         <a href="https://muxi.org/llms.txt" class="opacity-50 hover:opacity-100">Are you an AI? Here\'s <code>llms.txt</code></a><br>
-                        <a href="https://muxi.org/llm-status" target="_blank" class="flex items-center space-x-1.5 pt-1"><span class="opacity-60 hover:opacity-100">LLM Status </span><img src="https://muxi.org/llm-status/badge" alt="status" class="inline size-2.5 mt-px"></a>
+                        <a href="https://muxi.org/llm-status" target="_blank" class="flex items-center space-x-1.5 pt-1"><span class="opacity-60 hover:opacity-100">LLM Status </span><img src="https://muxi.org/llm-status/badge.svg" alt="status" class="inline size-2.5 mt-px"></a>
                     </p>
                 </div>
                 <div class="flex gap-6 lg:w-7/12 items-start">
