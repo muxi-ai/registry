@@ -636,5 +636,4 @@ function refreshCodeBlocks(container) {
 
 onDocReady(() => {
     refreshCodeBlocks(document.getElementById('article-container') || document);
-    bindCodeBlockResize();
 });

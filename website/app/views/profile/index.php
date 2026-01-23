@@ -132,7 +132,8 @@ tiny::components()->require('FormationCard');
         <?php else: ?>
             <div class="tabs w-full mb-4">
                 <nav role="tablist" class="w-full space-x-1 bg-black/5 dark:bg-white/5">
-                    <a href="<?php tiny::homeURL('/@' . tiny::data()->profile['registry_username'] . '?sort=recent'); ?>" role="tab" aria-selected="<?php echo tiny::data()->sort === 'recent' ? "true" : "false"; ?>" class="btn-ghost">
+                    <a hx-boost="true" hx-push-url="true"
+                        href="<?php tiny::homeURL('/@' . tiny::data()->profile['registry_username'] . '?sort=recent'); ?>" role="tab" aria-selected="<?php echo tiny::data()->sort === 'recent' ? "true" : "false"; ?>" class="btn-ghost">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="-ml-2 opacity-80 dark:opacity-60">
                             <g fill="none">
                                 <path d="M24 0v24H0V0zM12.594 23.258l-.012.002-.071.035-.02.004-.014-.004-.071-.036c-.01-.003-.019 0-.024.006l-.004.01-.017.428.005.02.01.013.104.074.015.004.012-.004.104-.074.012-.016.004-.017-.017-.427c-.002-.01-.009-.017-.016-.018m.264-.113-.014.002-.184.093-.01.01-.003.011.018.43.005.012.008.008.201.092c.012.004.023 0 .029-.008l.004-.014-.034-.614c-.003-.012-.01-.02-.02-.022m-.715.002a.023.023 0 0 0-.027.006l-.006.014-.034.614c0 .012.007.02.017.024l.015-.002.201-.093.01-.008.003-.011.018-.43-.003-.012-.01-.01z"></path>
@@ -141,7 +142,8 @@ tiny::components()->require('FormationCard');
                         </svg>
                         Recent
                     </a>
-                    <a href="<?php tiny::homeURL('/@' . tiny::data()->profile['registry_username'] . '?sort=trending'); ?>" role="tab" aria-selected="<?php echo tiny::data()->sort === 'trending' ? "true" : "false"; ?>" class="btn-ghost">
+                    <a hx-boost="true" hx-push-url="true"
+                        href="<?php tiny::homeURL('/@' . tiny::data()->profile['registry_username'] . '?sort=trending'); ?>" role="tab" aria-selected="<?php echo tiny::data()->sort === 'trending' ? "true" : "false"; ?>" class="btn-ghost">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="-ml-2 opacity-80 dark:opacity-60 mt-px">
                             <g fill="none" fill-rule="nonzero">
                                 <path fill="currentColor" d="M17 5.5a1.5 1.5 0 0 0 0 3h.379L14 11.879l-3.44-3.44a1.5 1.5 0 0 0-2.12 0l-6.5 6.5a1.5 1.5 0 0 0 2.12 2.122l5.44-5.44 3.44 3.44a1.5 1.5 0 0 0 2.12 0l4.44-4.44V11a1.5 1.5 0 0 0 3 0V7A1.5 1.5 0 0 0 21 5.5h-4Z"></path>
@@ -149,7 +151,8 @@ tiny::components()->require('FormationCard');
                         </svg>
                         Trending
                     </a>
-                    <a href="<?php tiny::homeURL('/@' . tiny::data()->profile['registry_username'] . '?sort=downloads'); ?>" role="tab" aria-selected="<?php echo tiny::data()->sort === 'downloads' ? "true" : "false"; ?>" class="btn-ghost">
+                    <a hx-boost="true" hx-push-url="true"
+                        href="<?php tiny::homeURL('/@' . tiny::data()->profile['registry_username'] . '?sort=downloads'); ?>" role="tab" aria-selected="<?php echo tiny::data()->sort === 'downloads' ? "true" : "false"; ?>" class="btn-ghost">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="-ml-2 opacity-80 dark:opacity-60">
                             <g fill="currentColor">
                                 <path d="M19.48,12.35c-1.57-4.08-7.16-4.3-5.81-10.23c0.1-0.44-0.37-0.78-0.75-0.55C9.29,3.71,6.68,8,8.87,13.62 c0.18,0.46-0.36,0.89-0.75,0.59c-1.81-1.37-2-3.34-1.84-4.75c0.06-0.52-0.62-0.77-0.91-0.34C4.69,10.16,4,11.84,4,14.37 c0.38,5.6,5.11,7.32,6.81,7.54c2.43,0.31,5.06-0.14,6.95-1.87C19.84,18.11,20.6,15.03,19.48,12.35z M10.2,17.38 c1.44-0.35,2.18-1.39,2.38-2.31c0.33-1.43-0.96-2.83-0.09-5.09c0.33,1.87,3.27,3.04,3.27,5.08C15.84,17.59,13.1,19.76,10.2,17.38z"></path>
@@ -158,7 +161,8 @@ tiny::components()->require('FormationCard');
                         </svg>
                         Popular
                     </a>
-                    <a href="<?php tiny::homeURL('/@' . tiny::data()->profile['registry_username'] . '?sort=name'); ?>" role="tab" aria-selected="<?php echo tiny::data()->sort === 'name' ? "true" : "false"; ?>" class="btn-ghost">
+                    <a hx-boost="true" hx-push-url="true"
+                        href="<?php tiny::homeURL('/@' . tiny::data()->profile['registry_username'] . '?sort=name'); ?>" role="tab" aria-selected="<?php echo tiny::data()->sort === 'name' ? "true" : "false"; ?>" class="btn-ghost">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="-ml-2 opacity-80 dark:opacity-60">
                             <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
                             <path d="M11 6h9"></path>
@@ -172,9 +176,6 @@ tiny::components()->require('FormationCard');
                     </a>
                 </nav>
             </div>
-
-
-
 
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

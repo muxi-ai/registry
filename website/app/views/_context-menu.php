@@ -69,7 +69,7 @@
     </div>
 </div>
 <script>
-    const logoContextMenu = {
+    var logoContextMenu = logoContextMenu || {
         visible: false,
         copyToClipboard: (data) => {
             // remove all class="" and id="" from data
