@@ -8,12 +8,12 @@ tiny::components()->require('FormationCard');
     <!-- Header -->
     <div class="flex items-center justify-between">
         <div>
-            <h1 class="text-3xl font-sans! flex items-center">Browse Formations
-                <span class="badge-secondary rounded-full mt-1.5 ml-2 text-xs!"><?php echo number_format(tiny::data()->totalCount); ?> </span>
+            <h1 class="text-4xl font-bold flex items-center mb-3">Browse Formations
+                <span class="badge-outline font-sans! rounded-full mt-1.5 ml-2 text-xs!"><?php echo number_format(tiny::data()->totalCount); ?> </span>
             </h1>
-            <p class="font-medium text-lg opacity-60 mt-2!">
+            <h3 class="text-lg font-serif font-medium -mt-1! mb-4 opacity-70">
                 Find formations to get up and running quickly
-            </p>
+            </h3>
         </div>
         <a href="https://muxi.org/docs/registry/" class="link mt-6 mr-1">Read the docs ›</a>
     </div>

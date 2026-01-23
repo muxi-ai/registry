@@ -22,7 +22,7 @@ tiny::layout()->default(
 
 <div class="flex items-center justify-between space-x-4 mt-2 mb-3">
     <div class="flex items-center space-x-2">
-        <a href="<?php echo $homeURL; ?>@<?= $formation['registry_username'] ?>"><img src="<?php echo $formation['github_avatar']; ?>" class="size-9 rounded-lg"></a>
+        <a href="<?php echo $homeURL; ?>@<?= $formation['registry_username'] ?>"><img loading="lazy" src="<?php echo $formation['github_avatar']; ?>" class="size-9 rounded-lg"></a>
         <h1 class="text-2xl font-sans! leading-none ml-1.5">
             <a href="<?php echo $homeURL; ?>@<?php echo $formation['registry_username']; ?>" class="opacity-75 hover:opacity-100 text-gold-on-hover">
                 @<?php echo htmlspecialchars($formation['registry_username']); ?>
@@ -131,7 +131,7 @@ tiny::layout()->default(
                                         </svg>
                                     </button>
                                 </div>
-                                <p class="text-xs text-neutral-500 dark:text-neutral-400 antialiased leading-normal">Copy &amp; paste this commans into your terminal to install it.<br />* Make sure you have the <a href="https://muxi.org/docs/cli/" target="_blank" class="link">MUXI CLI Tool</a> installed.</p>
+                                <p class="text-xs text-neutral-500 dark:text-neutral-400 antialiased leading-normal">Copy &amp; paste this command into your terminal to install it.<br />* Make sure you have the <a href="https://muxi.org/docs/cli/" target="_blank" class="link">MUXI CLI Tool</a> installed.</p>
                             </div>
                         </div>
                     </div>
@@ -194,7 +194,7 @@ tiny::layout()->default(
                     </svg>
                 </button>
             </div>
-            <p class="text-xs text-neutral-500 dark:text-neutral-400 antialiased leading-normal">Copy &amp; paste this commans into your terminal to install it.<br />* Make sure you have the <a href="https://muxi.org/docs/cli/" target="_blank" class="link">MUXI CLI Tool</a> installed.</p>
+            <p class="text-xs text-neutral-500 dark:text-neutral-400 antialiased leading-normal">Copy &amp; paste this command into your terminal to install it.<br />* Make sure you have the <a href="https://muxi.org/docs/cli/" target="_blank" class="link">MUXI CLI Tool</a> installed.</p>
         </div>
 
     </div>
@@ -209,8 +209,8 @@ tiny::layout()->default(
 
             <li>
                 <a href="<?php echo $homeURL; ?>@<?php echo $formation['registry_username']; ?>">
-                    <img src="<?php echo $formation['github_avatar']; ?>" class="size-4.5 -ml-[1.5px] rounded-full">
-                    <span class="-ml-[1px]">By @<?php echo htmlspecialchars($formation['registry_username']); ?></span>
+                    <img loading="lazy" src="<?php echo $formation['github_avatar']; ?>" class="size-4.5 -ml-[1.5px] rounded-full">
+                    <span class="-ml-px">By @<?php echo htmlspecialchars($formation['registry_username']); ?></span>
                 </a>
             </li>
 

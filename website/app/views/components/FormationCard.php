@@ -27,7 +27,7 @@ tiny::components()->register('FormationCard', function (
     return <<<EOF
     <div class="@container">
         <div>
-            <a href="{$homeURL}@{$username}/{$name}" class="text-lg link-on-hover">{$display} ›</a>
+            <a href="{$homeURL}@{$username}/{$name}" class="text-lg link-on-hover font-medium hover:font-semibold!">{$display} ›</a>
             <div class="text-sm opacity-60 dark:opacity-50">{$description}</div>
             <div class="flex items-center opacity-60 dark:opacity-50 mt-2">
                 <span class="border rounded-full text-[10px]! subpixel-antialiased bg-white/50 dark:bg-white/5 leading-none pt-[3px] pb-1 px-1.5 mr-4">v {$version}</span>
