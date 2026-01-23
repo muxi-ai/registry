@@ -222,7 +222,7 @@ tiny::layout()->default(
                 </a></li>
 
             <?php if (!$formation['license']): ?>
-                <li><a href="https://github.com/<?php echo htmlspecialchars($formation['github_repo']);  ?>/blob/main/LICENSE" class="text-gold-on-hover">
+                <li><a target="_blank" href="https://github.com/<?php echo htmlspecialchars($formation['github_repo']);  ?>/blob/main/LICENSE" class="text-gold-on-hover">
                         <svg viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                             <path d="M8.75.75V2h.985c.304 0 .603.08.867.231l1.29.736c.038.022.08.033.124.033h2.234a.75.75 0 0 1 0 1.5h-.427l2.111 4.692a.75.75 0 0 1-.154.838l-.53-.53.529.531-.001.002-.002.002-.006.006-.006.005-.01.01-.045.04c-.21.176-.441.327-.686.45C14.556 10.78 13.88 11 13 11a4.498 4.498 0 0 1-2.023-.454 3.544 3.544 0 0 1-.686-.45l-.045-.04-.016-.015-.006-.006-.004-.004v-.001a.75.75 0 0 1-.154-.838L12.178 4.5h-.162c-.305 0-.604-.079-.868-.231l-1.29-.736a.245.245 0 0 0-.124-.033H8.75V13h2.5a.75.75 0 0 1 0 1.5h-6.5a.75.75 0 0 1 0-1.5h2.5V3.5h-.984a.245.245 0 0 0-.124.033l-1.289.737c-.265.15-.564.23-.869.23h-.162l2.112 4.692a.75.75 0 0 1-.154.838l-.53-.53.529.531-.001.002-.002.002-.006.006-.016.015-.045.04c-.21.176-.441.327-.686.45C4.556 10.78 3.88 11 3 11a4.498 4.498 0 0 1-2.023-.454 3.544 3.544 0 0 1-.686-.45l-.045-.04-.016-.015-.006-.006-.004-.004v-.001a.75.75 0 0 1-.154-.838L2.178 4.5H1.75a.75.75 0 0 1 0-1.5h2.234a.249.249 0 0 0 .125-.033l1.288-.737c.265-.15.564-.23.869-.23h.984V.75a.75.75 0 0 1 1.5 0Zm2.945 8.477c.285.135.718.273 1.305.273s1.02-.138 1.305-.273L13 6.327Zm-10 0c.285.135.718.273 1.305.273s1.02-.138 1.305-.273L3 6.327Z"></path>
                         </svg>
@@ -296,9 +296,9 @@ tiny::layout()->default(
             <hr class="my-8">
             <!-- Danger Zone -->
             <div x-data="{ showDeleteModal: false, deleteGithub: false, confirmName: '', deleting: false }">
-                <h3 class="text-base font-semibold mt-6 text-red-700">⚠️ Danger Zone</h3>
-                <p class="mt-2!">
-                    Permanently delete this formation from the registry.
+                <h3 class="text-base font-semibold mt-6 text-red-600 dark:text-red-500">Danger Zone</h3>
+                <p class="mt-2! text-red-500 dark:text-red-400">
+                    Permanently delete this formation from the registry, and optionally from GitHub.
                 </p>
                 <button @click="showDeleteModal = true" class="btn-destructive">Delete Formation</button>
 
@@ -320,7 +320,7 @@ tiny::layout()->default(
                                 </svg>
                                 Warning: This action cannot be undone.
                             </h2>
-                            <section class="block leading-normal opacity-90 pl-px">
+                            <section class="block leading-normal opacity-90 pt-1 pl-px">
                                 <span class="subpixel-antialiased whitespace-nowrap font-mono">@<?php echo htmlspecialchars($formation['registry_username']); ?>/<?php echo htmlspecialchars($formation['name']); ?></span>
                                 will be permanently deleted from the registry.
                             </section>
