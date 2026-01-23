@@ -6,7 +6,7 @@ tiny::components()->require('FormationCard');
 <div class="grid gap-x-8 my-5 relative">
 
     <!-- Header -->
-    <div class="flex items-center justify-between">
+    <header class="flex items-center justify-between">
         <div>
             <h1 class="text-4xl font-bold flex items-center mb-3">Browse Formations
                 <span class="badge-outline font-sans! rounded-full mt-1.5 ml-2 text-xs!"><?php echo number_format(tiny::data()->totalCount); ?> </span>
@@ -16,7 +16,7 @@ tiny::components()->require('FormationCard');
             </h3>
         </div>
         <a href="https://muxi.org/docs/registry/" class="link mt-6 mr-1">Read the docs ›</a>
-    </div>
+    </header>
 
     <!-- Sort Controls -->
     <div class="tabs w-full mt-4 mb-2">
@@ -118,7 +118,7 @@ tiny::components()->require('FormationCard');
             </div>
         </div>
     <?php else: ?>
-        <div class="divide-y px-0.5 grid grid-cols-1 md:grid-cols-2 gap-x-12 [&>div]:flex [&>div]:items-start [&>div]:justify-between [&>div]:py-6 &>div]:my-4">
+        <div class="divide-y border-y pt-2 pb-4 px-0.5 grid grid-cols-1 md:grid-cols-2 gap-x-12 [&>div]:flex [&>div]:items-start [&>div]:justify-between [&>div]:py-6 &>div]:my-4">
             <?php foreach (tiny::data()->formations as $formation): ?>
                 <?php tiny::components()->FormationCard(formation: $formation, withUsername: true); ?>
             <?php endforeach; ?>

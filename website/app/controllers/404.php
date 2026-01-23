@@ -23,7 +23,7 @@
         if (str_starts_with(tiny::router()->controller, '@')) {
             // Check if this is a formation page (@user/formation) or profile (@user)
             $section = tiny::router()->section;
-            
+
             if ($section) {
                 // @user/formation - route to formation controller
                 tiny::controller('_formation', true);
