@@ -26,7 +26,10 @@ try {
 /* -------------------------------------- */
 // Sentry stuff
 if (@$_SERVER['ENV'] != 'local' && isset($_SERVER['SENTRY_DSN'])) {
-    \Sentry\init(['dsn' => $_SERVER['SENTRY_DSN']]);
+    \Sentry\init([
+        'dsn' => $_SERVER['SENTRY_DSN'],
+        'traces_sample_rate' => ((float)($_SERVER['SENTRY_SAMPLE_RATE'] ?? 1.0)),
+    ]);
     \Sentry\captureLastError();
 }
 
