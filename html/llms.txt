@@ -141,7 +141,7 @@ The registry is GitHub-backed:
 
 ## Related Resources
 
-- **MUXI Server**: https://muxi.org - The infrastructure that runs formations
+- **MUXI Stack**: https://muxi.org - The infrastructure that runs formations
 - **Agent Formation Standard**: https://agentformation.org - The open spec
 - **MUXI Documentation**: https://muxi.org/docs
 - **GitHub**: https://github.com/muxi-ai
@@ -154,9 +154,8 @@ The registry is GitHub-backed:
 
 ## Licensing
 
-- **Registry**: Apache 2.0
-- **Formations**: Individual licenses (check each formation)
-- **MUXI Server**: Elastic License 2.0 (ELv2)
+- **MUXI Server and Runtime**: Elastic License 2.0 (ELv2)
+- **Everything else**: Apache 2.0
 
 ---
 
