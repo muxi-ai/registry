@@ -4,7 +4,7 @@
   "description": "Build tools for Tiny website",
   "scripts": {
     "css:watch": "tailwindcss -i ./style.css -o ../html/static/css/style.css --watch",
-    "css:build": "tailwindcss -i ./style.css -o ../html/static/css/style.css --minify",
+    "css:build": "tailwindcss -i ./style.css -o ../html/static/css/style.min.css --minify",
     "react:watch": "webpack --mode development --watch",
     "react:build": "webpack --mode production",
     "watch": "concurrently \"npm run css:watch\" \"npm run react:watch\"",

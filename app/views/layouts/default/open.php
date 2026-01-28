@@ -30,8 +30,8 @@ $defaultRobots = 'noindex, nofollow';
     <title><?php echo tiny::layout()->props('title') ? htmlspecialchars(strip_tags(tiny::layout()->props('title'))) : $defaultTitle; ?><?php echo $titleAppend; ?></title>
     <meta name="description" content="<?php echo tiny::layout()->props('description') ? htmlspecialchars(strip_tags(tiny::layout()->props('description'))) : $defaultDescription; ?>">
 
-    <link rel="stylesheet" type="text/css" href="<?php tiny::staticURL('/css/style.css' . (@$_SERVER['ENV'] == 'local' ? '?' . time() : '')); ?>" media="all">
-    <link rel="preload" href="<?php tiny::staticURL('/css/fonts.css'); ?>" as="style" onload="this.rel='stylesheet'">
+    <link rel="stylesheet" type="text/css" href="<?php tiny::staticURL((@$_SERVER['ENV'] == 'local' ? '/css/style.css?' . time() : '/css/style.min.css')); ?>" media="all">
+    <link rel="preload" href="<?php tiny::staticURL('/css/fonts.min.css'); ?>" as="style" onload="this.rel='stylesheet'">
 
     <!-- favicon for light and dark mode -->
     <link href="<?php tiny::staticURL('/favicon-dark.png'); ?>" rel="icon" type="image/png" media="(prefers-color-scheme: light)">
@@ -68,12 +68,11 @@ $defaultRobots = 'noindex, nofollow';
     <script type="speculationrules">{ "prefetch": [{ "where": { "href_matches": "/*" }, "eagerness": "moderate" }] }</script>
     <script defer src="<?php tiny::staticURL('/js/alpine.combo.min.js'); ?>"></script>
     <script defer src="<?php tiny::staticURL('/js/htmx.min.js'); ?>"></script>
-    <script src="<?php tiny::staticURL('/js/theme.js'); ?>"></script>
-    <script src="<?php tiny::staticURL('/js/app.js'); ?>"></script>
+    <script src="<?php tiny::staticURL('/js/theme.min.js'); ?>"></script>
+    <?php /* <script src="<?php tiny::staticURL('/js/app.min.js'); ?>"></script> */ ?>
 
     <script>window.Prism = window.Prism || {}; window.Prism.manual = true;</script>
-    <script defer src="<?php tiny::staticURL('/js/prism.js'); ?>"></script>
-
+    <script defer src="<?php tiny::staticURL('/js/prism.min.js'); ?>"></script>
     <?php if (tiny::layout()->props('scripts')):
         foreach (tiny::layout()->props('scripts') as $script): ?>
             <script src="<?php tiny::staticURL('/js/' . $script); ?>.min.js"></script>
