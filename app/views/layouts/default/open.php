@@ -30,7 +30,7 @@ $defaultRobots = 'noindex, nofollow';
     <title><?php echo tiny::layout()->props('title') ? htmlspecialchars(strip_tags(tiny::layout()->props('title'))) : $defaultTitle; ?><?php echo $titleAppend; ?></title>
     <meta name="description" content="<?php echo tiny::layout()->props('description') ? htmlspecialchars(strip_tags(tiny::layout()->props('description'))) : $defaultDescription; ?>">
 
-    <link rel="stylesheet" type="text/css" href="<?php tiny::staticURL((@$_SERVER['ENV'] == 'local' ? '/css/style.css?' . time() : '/css/style.min.css')); ?>" media="all">
+    <link rel="stylesheet" type="text/css" href="<?php tiny::staticURL((@$_SERVER['ENV'] == 'local' ? '/css/style.css?' . time() : '/css/style.min.css?v='. @$_SERVER['APP_VERSION'])); ?>" media="all">
     <link rel="preload" href="<?php tiny::staticURL('/css/fonts.min.css'); ?>" as="style" onload="this.rel='stylesheet'">
 
     <!-- favicon for light and dark mode -->
