@@ -322,9 +322,6 @@
   .top-4 {
     top: calc(var(--spacing) * 4);
   }
-  .top-5 {
-    top: calc(var(--spacing) * 5);
-  }
   .top-16 {
     top: calc(var(--spacing) * 16);
   }
@@ -501,9 +498,6 @@
   }
   .mt-2\! {
     margin-top: calc(var(--spacing) * 2) !important;
-  }
-  .mt-2\.5 {
-    margin-top: calc(var(--spacing) * 2.5);
   }
   .mt-3 {
     margin-top: calc(var(--spacing) * 3);
@@ -1323,9 +1317,6 @@
   }
   .whitespace-nowrap {
     white-space: nowrap;
-  }
-  .text-\[\#281e19\] {
-    color: #281e19;
   }
   .text-\[\#302621\] {
     color: #302621;
@@ -5110,6 +5101,18 @@ pre[class*="language-"].line-numbers > code {
   display: block;
   padding-right: 0.8em;
   text-align: right;
+}
+#muxi-wordmark {
+  margin-top: calc(var(--spacing) * 3) !important;
+}
+body.scrolled #muxi-wordmark {
+  margin-top: calc(var(--spacing) * 2.5) !important;
+}
+header#header form {
+  top: calc(var(--spacing) * 5);
+}
+body.scrolled header#header form {
+  top: calc(var(--spacing) * 3.5);
 }
 h1, h2 {
   font-family: var(--font-serif);

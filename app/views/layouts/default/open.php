@@ -95,7 +95,7 @@ $defaultRobots = 'noindex, nofollow';
             <nav aria-label="Global">
                 <div class="lg:flex items-center justify-between gap-6">
                     <a href="<?php tiny::homeURL(); ?>" @contextmenu="logoContextMenu.toggle(event)" @click.outside="logoContextMenu.hide()" class="flex items-center space-x-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3060.31 990.81" class="h-11 mt-2.5" id="muxi-wordmark">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3060.31 990.81" class="h-11" id="muxi-wordmark">
                             <g class="text-[#d69a54] dark:text-[#e8a450]" fill="currentColor">
                                 <path d="m687.32 438.13c-.76 36.37 3.12 72.29-13.62 104.64-17.01 31.02-51.34 52.23-74.45 40.63-48.02-24.77-1.91-146.67-94.64-98.14-20.13 11.78-38.15 29.93-50.77 50-25.67 40.44-23.17 86.93-50.19 124.45-13.75 18.84-36.87 28.21-59.99 28.27-23.12-.06-46.25-9.43-59.99-28.27-27.01-37.52-24.52-84.01-50.19-124.45-12.61-20.06-30.64-38.22-50.76-50-92.73-48.52-46.62 73.37-94.64 98.14-23.11 11.59-57.45-9.62-74.45-40.63-16.75-32.35-12.87-68.27-13.63-104.64v-249.62c4.14-46.94 46.88-76.34 86.87-99.52 31.27-18.09 90.19-52.1 90.19-52.1 53.31-32.55 107.24-37.07 166.61-36.89 59.36-.19 113.3 4.33 166.61 36.88 0 0 58.92 34.01 90.19 52.1 39.99 23.17 82.72 52.58 86.87 99.52v249.62h-.02z" />
                             </g>
@@ -109,7 +109,7 @@ $defaultRobots = 'noindex, nofollow';
                         <span class="font-medium text-xs uppercase text-[#c88b45] dark:text-[#e8a550] -ml-8">/ Registry</span>
                     </a>
 
-                    <form action="<?php tiny::homeURL('/search'); ?>" method="GET" class="w-sm max-w-[calc(100vw-2rem)] top-5 z-100 group fixed left-1/2 transform -translate-x-1/2 xl:-ml-2">
+                    <form action="<?php tiny::homeURL('/search'); ?>" method="GET" class="w-sm max-w-[calc(100vw-2rem)] z-100 group fixed left-1/2 transform -translate-x-1/2 xl:-ml-2">
                         <button class="absolute left-0 top-0 h-full px-2.5">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" class="size-5 opacity-80 hover:opacity-100 group:has-focus-within:opacity-100">
                                 <path d="M15 15L21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
