@@ -1,5 +1,5 @@
 <?php
-tiny::layout()->default(title: 'MUXI Registry - Docker Hub for AI Formations', emptyLayout: false);
+tiny::layout()->default(title: 'Discover & Share AI Formations', emptyLayout: false);
 tiny::components()->require('FormationCard');
 ?>
 

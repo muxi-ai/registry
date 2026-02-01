@@ -1,7 +1,7 @@
 <?php
 echo '<!-- v. ' . $_SERVER['APP_VERSION'] . " -->\n";
 
-$titleAppend = ' | MUXI Registry';
+$titleAppend = ' › MUXI Registry';
 $defaultTitle = 'Publish and discover AI agent formations';
 $defaultDescription = 'MUXI Registry is Docker Hub for AI formations - a platform where developers share, discover, and deploy complete, AI agent formations instantly. Stop building from scratch. Start with battle-tested formations from the community.';
 $defaultRobots = 'noindex, nofollow';
