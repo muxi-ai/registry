@@ -7,7 +7,7 @@ tiny::components()->require('FormationCard');
 <div class="grid grid-cols-12 gap-x-10 my-5 relative">
     <div class="col-span-8 h-full lg:min-h-[64dvh]">
         <h1 class="text-4xl font-bold mb-4">Welcome to the Registry</h1>
-        <h3 class="text-lg font-serif font-medium -mt-1! mb-4 opacity-70">Find ready-to-use formations or publish your own for others to discover.</h3>
+        <h3 class="text-lg font-medium -mt-1! mb-4 opacity-70">Find ready-to-use formations or publish your own for others to discover.</h3>
 
         <?php if (!empty(tiny::data()->formations['trending'])): ?>
             <!-- trending -->

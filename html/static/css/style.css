@@ -5115,7 +5115,6 @@ body.scrolled header#header form {
   top: calc(var(--spacing) * 3.5);
 }
 h1, h2 {
-  font-family: var(--font-serif);
   font-optical-sizing: auto;
   font-synthesis: none;
   text-rendering: optimizeLegibility;

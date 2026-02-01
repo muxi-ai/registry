@@ -11,7 +11,7 @@ tiny::components()->require('FormationCard');
             <h1 class="text-4xl font-bold flex items-center mb-3">Browse Formations
                 <span class="badge-outline font-sans! rounded-full mt-1.5 ml-2 text-xs!"><?php echo number_format(tiny::data()->totalCount); ?> </span>
             </h1>
-            <h3 class="text-lg font-serif font-medium -mt-1! mb-4 opacity-70">
+            <h3 class="text-lg font-medium -mt-1! mb-4 opacity-70">
                 Find formations to get up and running quickly
             </h3>
         </div>

@@ -24,7 +24,7 @@ body.scrolled header#header form {
     @apply top-3.5
 }
 h1, h2 {
-    @apply font-serif;
+    /* @apply font-serif; */
     font-optical-sizing: auto;
     font-synthesis: none;
     text-rendering: optimizeLegibility;
