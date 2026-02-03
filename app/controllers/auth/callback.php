@@ -51,6 +51,10 @@ class AuthCallback extends TinyController
         // Store oauth token
         $ghUser->github_oauth_token = $accessToken;
 
+        // Check if user already exists (for telemetry action)
+        $existingUser = tiny::model('user')->findUserByGitHubId($ghUser->id);
+        $isNewUser = empty($existingUser);
+
         try {
             // Upsert the GitHub user in our database and capture the Tiny user record.
             $user = tiny::model('user')->createOrUpdateUser($ghUser);
@@ -63,8 +67,8 @@ class AuthCallback extends TinyController
             tiny::redirect($e);
         }
 
-        // Send telemetry for registry signup (fire and forget)
-        $this->sendTelemetry($ghUser);
+        // Send telemetry for registry signup/signin (fire and forget)
+        $this->sendTelemetry($ghUser, $isNewUser ? 'signup' : 'signin');
 
         // create session
         tiny::model('user')->setSession($user['id']);
@@ -170,13 +174,14 @@ class AuthCallback extends TinyController
     }
 
     /**
-     * Send registry signup data to telemetry endpoint.
+     * Send registry signup/signin data to telemetry endpoint.
      * Non-blocking - failures are logged but don't affect the auth flow.
      *
      * @param \stdClass $ghUser GitHub user data
+     * @param string $action 'signup' for new users, 'signin' for returning users
      * @return void
      */
-    private function sendTelemetry(\stdClass $ghUser): void
+    private function sendTelemetry(\stdClass $ghUser, string $action): void
     {
         try {
             $payload = [
@@ -184,6 +189,7 @@ class AuthCallback extends TinyController
                 'username' => $ghUser->login ?? null,
                 'name' => $ghUser->name ?? null,
                 'source' => 'registry',
+                'action' => $action,
                 'country' => tiny::geos()->getUserCountry(),
             ];
 
