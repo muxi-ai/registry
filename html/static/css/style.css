@@ -987,8 +987,8 @@
   .\!bg-\[var\(--secondary-hover\)\] {
     background-color: var(--secondary-hover) !important;
   }
-  .bg-\[\#f9f8f4\] {
-    background-color: #f9f8f4;
+  .bg-\[\#fbfbf8\] {
+    background-color: #fbfbf8;
   }
   .bg-black\/2 {
     background-color: color-mix(in srgb, #000 2%, transparent);
@@ -5121,7 +5121,7 @@ h1, h2 {
   letter-spacing: -1.5%;
 }
 :root {
-  --bg-color: #f9f8f4;
+  --bg-color: #fbfbf8;
   --text-color: #3f322a;
   --text-gold: #c88b45;
 }
@@ -5224,7 +5224,7 @@ footer#footer [data-tooltip]:before {
 html, body {
   margin: calc(var(--spacing) * 0);
   width: 100%;
-  background-color: #f9f8f4;
+  background-color: #fbfbf8;
   padding: calc(var(--spacing) * 0);
   color: #3f322a;
   &:where(.dark, .dark *) {
@@ -5382,7 +5382,7 @@ body.scrolled:has(div#announcement) header#header {
   }
 }
 .bg-color {
-  background-color: #f9f8f4;
+  background-color: #fbfbf8;
   &:where(.dark, .dark *) {
     background-color: #131215;
   }
@@ -5792,7 +5792,7 @@ body:has(#hero-demo-video) {
   backdrop-filter: var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,) var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-opacity,) var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,);
 }
 body.show-menu #header {
-  background-color: #f9f8f4;
+  background-color: #fbfbf8;
   --tw-backdrop-blur:  ;
   -webkit-backdrop-filter: var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,) var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-opacity,) var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,);
   backdrop-filter: var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,) var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-opacity,) var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,);
@@ -5832,9 +5832,9 @@ body.show-menu #header {
       -webkit-backdrop-filter: var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,) var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-opacity,) var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,);
       backdrop-filter: var(--tw-backdrop-blur,) var(--tw-backdrop-brightness,) var(--tw-backdrop-contrast,) var(--tw-backdrop-grayscale,) var(--tw-backdrop-hue-rotate,) var(--tw-backdrop-invert,) var(--tw-backdrop-opacity,) var(--tw-backdrop-saturate,) var(--tw-backdrop-sepia,);
     }
-    --tw-gradient-from: #f9f8f4;
+    --tw-gradient-from: #fbfbf8;
     --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
-    --tw-gradient-via: #f9f8f480;
+    --tw-gradient-via: #fbfbf880;
     --tw-gradient-via-stops: var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-via) var(--tw-gradient-via-position), var(--tw-gradient-to) var(--tw-gradient-to-position);
     --tw-gradient-stops: var(--tw-gradient-via-stops);
     --tw-gradient-to: transparent;
@@ -5931,7 +5931,7 @@ body.show-menu #header {
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
   }
   z-index: 50;
-  background-color: #f9f8f4;
+  background-color: #fbfbf8;
   @media (width >= 64rem) {
     background-color: transparent !important;
   }
@@ -7808,7 +7808,7 @@ ol.steps > li:before {
   color: var(--color-white);
   --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(8px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
   box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
-  --tw-ring-color: #f9f8f4;
+  --tw-ring-color: #fbfbf8;
   font-size: var(--text-md);
   line-height: 1;
 }

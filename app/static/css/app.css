@@ -35,7 +35,7 @@ h1, h2 {
 /* Your custom styles go here */
 
 :root {
-    --bg-color: #f9f8f4;
+    --bg-color: #fbfbf8;
     --text-color: #3f322a;
     --text-gold: #c88b45;
 
@@ -82,7 +82,7 @@ footer#footer [data-tooltip]:before {
 
 /* Base styles */
 html, body {
-    @apply bg-[#f9f8f4] dark:bg-[#131215] text-[#3f322a] dark:text-[#c2c0be] m-0 p-0 w-full;
+    @apply bg-[#fbfbf8] dark:bg-[#131215] text-[#3f322a] dark:text-[#c2c0be] m-0 p-0 w-full;
     letter-spacing: calc(var(--text-md) * -0.25%);
 }
 html {
@@ -152,7 +152,7 @@ body.scrolled:has(div#announcement) header#header {
     }
 }
 .bg-color {
-    @apply bg-[#f9f8f4] dark:bg-[#131215];
+    @apply bg-[#fbfbf8] dark:bg-[#131215];
 }
 
 .text-color {
@@ -281,7 +281,7 @@ body:has(#hero-demo-video) {
     @apply backdrop-blur h-20;
 }
 body.show-menu #header {
-    @apply bg-[#f9f8f4] dark:bg-[#131215] backdrop-blur-none
+    @apply bg-[#fbfbf8] dark:bg-[#131215] backdrop-blur-none
 }
 @media (min-width: 1024px) { /* lg */
     #header {
@@ -292,7 +292,7 @@ body.show-menu #header {
     body.scrolled #header {
         @apply backdrop-blur;
         @apply bg-transparent 2xl:backdrop-blur-none;
-        @apply 2xl:bg-linear-to-b from-[#f9f8f4] dark:from-[#131215] via-[#f9f8f480] dark:via-[#13121580] to-transparent;
+        @apply 2xl:bg-linear-to-b from-[#fbfbf8] dark:from-[#131215] via-[#fbfbf880] dark:via-[#13121580] to-transparent;
         @apply inset-x-0 max-w-full h-19 -top-2 pr-4 pl-6;
     }
     body.scrolled #header .hide-on-scrolled {
@@ -319,7 +319,7 @@ body.show-menu #header {
 
 #header ul {
     @apply fixed inset-x-0 lg:relative hidden lg:flex items-center lg:gap-x-6 m-0! rounded-b-lg py-4 top-18 lg:top-0 shadow-lg lg:shadow-none;
-    @apply bg-[#f9f8f4] dark:bg-[#131215] z-50 lg:bg-transparent!;
+    @apply bg-[#fbfbf8] dark:bg-[#131215] z-50 lg:bg-transparent!;
     font-size: var(--text-md);
     line-height: var(--text-md--line-height);
 }
@@ -1158,7 +1158,7 @@ ol.steps > li:before {
   content: counter(step-counter);
   @apply absolute size-7 rounded-full -left-12 z-9 -mt-1 flex items-center justify-center justify-items-center;
   @apply font-semibold text-white bg-[#3f322a];
-  @apply ring-8 ring-[#f9f8f4];
+  @apply ring-8 ring-[#fbfbf8];
   font-size: var(--text-md);
   line-height: 1;
 }
