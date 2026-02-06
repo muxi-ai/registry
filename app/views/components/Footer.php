@@ -82,7 +82,7 @@ tiny::components()->register('Footer', function (...$props) {
         </div>
 
         <div class="pt-10 mt-10 pb-12 mx-auto max-w-7xl text-[13px] text-center leading-relaxed! border-t dark:border-white/5 group">
-            <span class="opacity-60">Copyright &copy; '. $year .' </span><a href="https://varops.com" target="_blank" class="transition-opacity duration-300 opacity-60 hover:opacity-100">VarOps LLC</a>
+            <span class="opacity-60">&copy; '. $year .' MUXI </span>
             <span class="hidden md:inline opacity-60">&nbsp; &bull; &nbsp;</span>
             <br class="block md:hidden">
             <a target="_blank" href="https://muxi.org/privacy" class="transition-opacity duration-300 opacity-60 hover:opacity-100">Privacy</a>
