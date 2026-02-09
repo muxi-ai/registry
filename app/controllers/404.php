@@ -19,21 +19,6 @@
      */
     public function get($request, $response)
     {
-        // Route social-style profile URLs to the profile controller when present.
-        if (str_starts_with(tiny::router()->controller, '@')) {
-            // Check if this is a formation page (@user/formation) or profile (@user)
-            $section = tiny::router()->section;
-
-            if ($section) {
-                // @user/formation - route to formation controller
-                tiny::controller('_formation', true);
-            } else {
-                // @user - route to profile controller
-                tiny::controller('_profile', true);
-            }
-            return;
-        }
-
         if (isset(tiny::user()->email)) {
             // Create payload with user information and requested URL
             // This data can be used for error tracking and analytics
