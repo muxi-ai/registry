@@ -22,7 +22,7 @@ $defaultRobots = 'noindex, nofollow';
     <?php endif; ?>
 
     <meta name="robots" content="<?php echo tiny::layout()->props('robots') ? strip_tags(tiny::layout()->props('robots')) : $defaultRobots ?>">
-    <link rel="llm-context" href="<?php tiny::homeURL('llms.txt'); ?>" type="text/plain" />
+    <link rel="llm-context" href="<?php tiny::homeURL('/llms.txt'); ?>" type="text/plain" />
     <?php if (@tiny::layout()->props('alternate')): ?>
         <link rel="alternate" type="text/markdown" href="<?php echo tiny::layout()->props('alternate'); ?>">
     <?php endif; ?>
