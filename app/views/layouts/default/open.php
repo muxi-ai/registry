@@ -71,7 +71,7 @@ $defaultRobots = 'noindex, nofollow';
     <script src="<?php tiny::staticURL('/js/theme.min.js'); ?>"></script>
     <?php /* <script src="<?php tiny::staticURL('/js/app.min.js'); ?>"></script> */ ?>
 
-    <script>window.Prism = window.Prism || {}; window.Prism.manual = true;</script>
+    <script>window.Prism = window.Prism || {}; // window.Prism.manual = true;</script>
     <script defer src="<?php tiny::staticURL('/js/prism.min.js'); ?>"></script>
     <?php if (tiny::layout()->props('scripts')):
         foreach (tiny::layout()->props('scripts') as $script): ?>
