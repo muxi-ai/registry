@@ -84,7 +84,7 @@ class Account extends TinyController
             $github->setToken($githubToken);
             $ghOrgs = $github->getUserOrgs();
             foreach ($ghOrgs as $org) {
-                $role = $github->getOrgMembership($org['login']);
+                $role = $github->getOrgMembership($org['login'], $user->github_username);
                 if ($role === 'admin') {
                     // Check if org has a registry profile
                     $registryUser = tiny::db()->getOne('users', ['github_username' => $org['login']]);

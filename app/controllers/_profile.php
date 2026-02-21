@@ -102,7 +102,7 @@ class Profile extends TinyController
                 tiny::helpers(['github']);
                 $github = tiny::github();
                 $github->setToken($githubToken);
-                $role = $github->getOrgMembership($profile['github_username']);
+                $role = $github->getOrgMembership($profile['github_username'], tiny::user()->github_username);
                 $isOrgAdmin = ($role === 'admin');
             }
         }
