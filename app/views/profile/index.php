@@ -62,7 +62,7 @@ tiny::components()->require('FormationCard');
         </div>
 
         <?php if (tiny::data()->profile['bio']): ?>
-            <p class="my-5! text-base subpixel-antialiased leading-[1.8] opacity-80 text-pretty"><?php echo preg_replace('/@([a-zA-Z0-9_-]+)/', '<a href="/@$1" class="text-black dark:text-white font-medium hover:text-blue-500!">@$1</a>', htmlspecialchars(tiny::data()->profile['bio'])); ?></p>
+            <p class="my-5! text-base subpixel-antialiased leading-[1.8] opacity-80 text-pretty"><?php echo preg_replace('/@([a-zA-Z0-9_-]+)/', '<a href="/@$1" class="text-black dark:text-white font-medium hover:text-blue-500!">@$1</a>', htmlspecialchars(str_replace('@muxi-ai', '@muxi', tiny::data()->profile['bio']))); ?></p>
         <?php endif; ?>
 
 
