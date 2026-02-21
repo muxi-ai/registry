@@ -1,6 +1,7 @@
 <?php
+$name = trim(htmlspecialchars(tiny::data()->profile['first_name'] . ' ' . tiny::data()->profile['last_name']));
 tiny::layout()->default(
-    title: '@' . htmlspecialchars(tiny::data()->profile['registry_username']) . ' (' . htmlspecialchars(tiny::data()->profile['first_name'] . ' ' . tiny::data()->profile['last_name']) . ')',
+    title: '@' . htmlspecialchars(tiny::data()->profile['registry_username']) . ($name ? ' (' . $name . ')' : ''),
     emptyLayout: false
 );
 
