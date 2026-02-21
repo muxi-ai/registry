@@ -21,6 +21,17 @@
     {
         // Route social-style profile URLs to the profile controller when present.
         if (str_starts_with(tiny::router()->controller, '@')) {
+            $username = substr(tiny::router()->controller, 1);
+
+            // Redirect GitHub usernames to their registry username if mapped
+            $reserved = tiny::db()->getOne('reserved_usernames', ['github_username' => $username]);
+            if ($reserved && $reserved['registry_username'] !== $username) {
+                $section = tiny::router()->section;
+                $path = '/@' . $reserved['registry_username'] . ($section ? '/' . $section : '');
+                tiny::redirect($path, 301);
+                return;
+            }
+
             // Check if this is a formation page (@user/formation) or profile (@user)
             $section = tiny::router()->section;
 
