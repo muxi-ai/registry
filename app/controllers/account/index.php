@@ -75,9 +75,32 @@ class Account extends TinyController
             WHERE user_id = ? AND deleted_at IS NULL
         ", [$user->id]);
 
+        // Fetch user's GitHub organizations where they are admin
+        $adminOrgs = [];
+        $githubToken = tiny::model('user')->getGitHubAccessTokenByUserId((int)$user->id);
+        if ($githubToken) {
+            tiny::helpers(['github']);
+            $github = tiny::github();
+            $github->setToken($githubToken);
+            $ghOrgs = $github->getUserOrgs();
+            foreach ($ghOrgs as $org) {
+                $role = $github->getOrgMembership($org['login']);
+                if ($role === 'admin') {
+                    // Check if org has a registry profile
+                    $registryUser = tiny::db()->getOne('users', ['github_username' => $org['login']]);
+                    $adminOrgs[] = [
+                        'login' => $org['login'],
+                        'avatar_url' => $org['avatar_url'] ?? '',
+                        'registry_username' => $registryUser ? $registryUser['registry_username'] : $org['login'],
+                    ];
+                }
+            }
+        }
+
         tiny::data()->formations = $formations;
         tiny::data()->stats = $stats;
         tiny::data()->sort = $sort;
+        tiny::data()->adminOrgs = $adminOrgs;
 
         $response->render('account/index');
     }

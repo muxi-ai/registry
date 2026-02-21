@@ -94,10 +94,24 @@ class Profile extends TinyController
             WHERE user_id = ? AND deleted_at IS NULL
         ", [$profile['id']]);
 
+        // Check if current user is an admin of this org profile
+        $isOrgAdmin = false;
+        if (@tiny::user()->id && strtolower($profile['github_type'] ?? '') === 'organization') {
+            $githubToken = tiny::model('user')->getGitHubAccessTokenByUserId((int)tiny::user()->id);
+            if ($githubToken) {
+                tiny::helpers(['github']);
+                $github = tiny::github();
+                $github->setToken($githubToken);
+                $role = $github->getOrgMembership($profile['github_username']);
+                $isOrgAdmin = ($role === 'admin');
+            }
+        }
+
         tiny::data()->profile = $profile;
         tiny::data()->formations = $formations;
         tiny::data()->stats = $stats;
         tiny::data()->sort = $sort;
+        tiny::data()->isOrgAdmin = $isOrgAdmin;
 
         $response->render('profile/index');
     }

@@ -319,6 +319,12 @@
   .top-0 {
     top: calc(var(--spacing) * 0);
   }
+  .top-1 {
+    top: calc(var(--spacing) * 1);
+  }
+  .top-1\.5 {
+    top: calc(var(--spacing) * 1.5);
+  }
   .top-4 {
     top: calc(var(--spacing) * 4);
   }
@@ -327,6 +333,9 @@
   }
   .top-20 {
     top: calc(var(--spacing) * 20);
+  }
+  .top-\[5px\] {
+    top: 5px;
   }
   .-right-1 {
     right: calc(var(--spacing) * -1);
@@ -433,6 +442,9 @@
   .-my-6\! {
     margin-block: calc(var(--spacing) * -6) !important;
   }
+  .my-0 {
+    margin-block: calc(var(--spacing) * 0);
+  }
   .my-0\! {
     margin-block: calc(var(--spacing) * 0) !important;
   }
@@ -457,8 +469,14 @@
   .\!-mt-1 {
     margin-top: calc(var(--spacing) * -1) !important;
   }
+  .-mt-0\! {
+    margin-top: calc(var(--spacing) * -0) !important;
+  }
   .-mt-0\.5\! {
     margin-top: calc(var(--spacing) * -0.5) !important;
+  }
+  .-mt-1 {
+    margin-top: calc(var(--spacing) * -1);
   }
   .-mt-1\! {
     margin-top: calc(var(--spacing) * -1) !important;
@@ -628,8 +646,14 @@
   .ml-4 {
     margin-left: calc(var(--spacing) * 4);
   }
+  .ml-6 {
+    margin-left: calc(var(--spacing) * 6);
+  }
   .block {
     display: block;
+  }
+  .block\! {
+    display: block !important;
   }
   .contents {
     display: contents;
@@ -708,6 +732,12 @@
     width: calc(var(--spacing) * 20);
     height: calc(var(--spacing) * 20);
   }
+  .h-3 {
+    height: calc(var(--spacing) * 3);
+  }
+  .h-3\.5 {
+    height: calc(var(--spacing) * 3.5);
+  }
   .h-4 {
     height: calc(var(--spacing) * 4);
   }
@@ -716,9 +746,6 @@
   }
   .h-6 {
     height: calc(var(--spacing) * 6);
-  }
-  .h-11 {
-    height: calc(var(--spacing) * 11);
   }
   .h-12 {
     height: calc(var(--spacing) * 12);
@@ -776,6 +803,12 @@
   }
   .max-w-xl {
     max-width: var(--container-xl);
+  }
+  .min-w-3 {
+    min-width: calc(var(--spacing) * 3);
+  }
+  .min-w-3\.5 {
+    min-width: calc(var(--spacing) * 3.5);
   }
   .min-w-4 {
     min-width: calc(var(--spacing) * 4);
@@ -1267,6 +1300,9 @@
   .text-xs\! {
     font-size: var(--text-xs) !important;
     line-height: var(--tw-leading, var(--text-xs--line-height)) !important;
+  }
+  .text-\[8px\] {
+    font-size: 8px;
   }
   .text-\[9px\] {
     font-size: 9px;

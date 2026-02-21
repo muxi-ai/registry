@@ -115,12 +115,25 @@ class Formation extends TinyController
         ", [$formation['id']]);
         $weeklyChart = $this->fillMissingDays($weeklyChartRaw, 7);
 
-        // Check if current user is owner/publisher (for delete permissions)
+        // Check if current user is owner/publisher or org admin (for delete permissions)
         $canDelete = false;
         if (@tiny::user()->id) {
             $userId = tiny::user()->id;
             $canDelete = ($formation['user_id'] == $userId) ||
                          ($formation['published_by_user_id'] == $userId);
+
+            // If formation belongs to an org, check if current user is an admin
+            if (!$canDelete && strtolower($formation['github_type']) === 'organization') {
+                $orgUsername = $formation['github_username'];
+                $githubToken = tiny::model('user')->getGitHubAccessTokenByUserId($userId);
+                if ($githubToken) {
+                    tiny::helpers(['github']);
+                    $github = tiny::github();
+                    $github->setToken($githubToken);
+                    $role = $github->getOrgMembership($orgUsername, tiny::user()->github_username);
+                    $canDelete = ($role === 'admin');
+                }
+            }
         }
 
         // Pass all formation data to the detail view for rendering.

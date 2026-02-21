@@ -135,11 +135,25 @@ class ApiFormations extends TinyController
             ], 404);
         }
 
-        // Check ownership: must be owner OR the one who published it
+        // Check ownership: must be owner, publisher, or org admin
         $isOwner = ($formation['owner_user_id'] == $user->id);
         $isPublisher = ($formation['published_by_user_id'] == $user->id);
+        $isOrgAdmin = false;
 
         if (!$isOwner && !$isPublisher) {
+            // Check if formation belongs to an org the user is admin of
+            $ownerUser = tiny::db()->getOne('users', ['id' => $formation['owner_user_id']]);
+            if ($ownerUser && strtolower($ownerUser['github_type'] ?? '') === 'organization') {
+                $githubToken = tiny::model('user')->getGitHubAccessTokenByUserId($user->id);
+                if ($githubToken) {
+                    $this->github->setToken($githubToken);
+                    $role = $this->github->getOrgMembership($ownerUser['github_username'], $user->github_username);
+                    $isOrgAdmin = ($role === 'admin');
+                }
+            }
+        }
+
+        if (!$isOwner && !$isPublisher && !$isOrgAdmin) {
             return $response->sendJSON([
                 'error' => true,
                 'message' => 'You do not have permission to delete this formation',
@@ -540,17 +554,35 @@ class ApiFormations extends TinyController
             $tokenPreview = substr($githubToken, 0, 10) . '...' . substr($githubToken, -4);
             error_log("🔑 Using OAuth token for user: {$user->registry_username}, token: {$tokenPreview}");
 
-            // 7. If org specified, verify membership and get org user
+            // 7. If org specified, verify admin role and get/create org user
             $ownerUserId = $user->id; // Default to authenticated user
             if ($orgName) {
-                if (!$this->github->isOrgMember($orgName, $user->github_username)) {
-                    throw new Exception("You are not a member of organization: $orgName");
+                $role = $this->github->getOrgMembership($orgName, $user->github_username);
+                if ($role !== 'admin') {
+                    throw new Exception("You must be an admin of organization: $orgName");
                 }
 
-                // Get the org's user record from database
+                // Get or create the org's user record in database
                 $orgUser = tiny::db()->getOne('users', ['github_username' => $orgName]);
                 if (!$orgUser) {
-                    throw new Exception("Organization not found in registry: $orgName");
+                    // Lazy-create org record from GitHub
+                    $ghOrg = $this->github->getOrg($orgName);
+                    if (!$ghOrg) {
+                        throw new Exception("Organization not found on GitHub: $orgName");
+                    }
+                    tiny::db()->insert('users', [
+                        'github_id' => $ghOrg['id'],
+                        'github_username' => $ghOrg['login'],
+                        'registry_username' => $ghOrg['login'],
+                        'github_avatar' => $ghOrg['avatar_url'] ?? '',
+                        'github_email' => $ghOrg['email'] ?? '',
+                        'github_type' => 'organization',
+                        'is_verified' => false,
+                        'created_at' => date('Y-m-d H:i:s'),
+                        'last_seen_at' => date('Y-m-d H:i:s'),
+                    ]);
+                    $orgUser = tiny::db()->getOne('users', ['github_username' => $orgName]);
+                    error_log("🏢 Auto-created org user record for: {$orgName} (ID: {$orgUser['id']})");
                 }
                 $ownerUserId = $orgUser['id'];
                 error_log("🏢 Using org user ID: {$ownerUserId} for formation ownership");
