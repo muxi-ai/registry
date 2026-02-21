@@ -37,7 +37,7 @@ tiny::layout()->default(
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" class="px-px">
                 <path d="M3.2 18C1.88484 17.235 1 15.8051 1 14.1674C1 12.1053 2.40285 10.3727 4.30122 9.88197C4.30041 9.83571 4.3 9.78935 4.3 9.7429C4.3 5.46661 7.74741 2 12 2C15.6211 2 18.6584 4.51348 19.4806 7.90009C21.5395 8.69955 23 10.7089 23 13.0613C23 14.8707 22.1359 16.4772 20.8 17.4862M12 13V22M12 22L15.5 18.5M12 22L8.5 18.5" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"></path>
             </svg>
-            Pulls <span class="badge-secondary rounded-full leading-none bg-white/50 dark:bg-white/20  pt-[3px]! pb-[2px]!"><?php echo number_format($formation['total_downloads']); ?></span>
+            Pulls <span class="badge-secondary rounded-full leading-none bg-black/10 dark:bg-white/20  pt-[3px]! pb-[2px]!"><?php echo number_format($formation['total_downloads']); ?></span>
             <?php if ($downloadsThisWeek > 0): ?>
                 <span class="badge-secondary bg-green-200/50 dark:bg-green-800 leading-none pt-[3px]! pb-[2.5px]! pl-1.5 pr-2">
                     +<?php echo number_format($downloadsThisWeek); ?> this week
