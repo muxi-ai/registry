@@ -24,9 +24,9 @@ class ApiUser extends TinyController
             ], 401);
         }
 
-        $section = tiny::router()->section;
+        $slug = tiny::router()->slug;
 
-        if ($section === 'orgs') {
+        if ($slug === 'orgs') {
             return $this->listOrgs($user, $response);
         }
 
