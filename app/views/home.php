@@ -114,7 +114,7 @@ tiny::components()->require('FormationCard');
                     <span>Pulling a formation</span>
                 </h3>
                 <p class="-mt-2! leading-[1.8] text-[13px] opacity-80">Install any formation with a single command.</p>
-                <pre class="-my-6!"><code class="leading-[1.7]">$ muxi <span class="text-green-600 dark:text-green-500">pull</span> <span class="opacity-80">@muxi/starter-formation</span></code></pre>
+                <pre class="-my-6!"><code class="leading-[1.7]">$ muxi <span class="text-green-600 dark:text-green-500">pull</span> <span class="opacity-80">@muxi/hello-world</span></code></pre>
                 <p class="text-xs text-neutral-500 dark:text-neutral-400 antialiased leading-normal mb-0!">Copy &amp; paste this command into your terminal to install it *</p>
             </div>
 
