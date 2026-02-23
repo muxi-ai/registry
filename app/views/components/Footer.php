@@ -21,7 +21,7 @@ tiny::components()->register('Footer', function (...$props) {
                     </a>
                     <p class="my-6 text-sm text-black opacity-70">
                         MUXI is open-source AI application server.
-                        Licensed under <a class="text-bright hover:border-b-2 font-medium" target="_blank" href="https://muxi.org/go/licensing">Elastic License 2.0 and Apache 2.0</a>.
+                        Licensed under <a class="text-bright hover:border-b-2 font-medium" target="_blank" href="https://muxi.org/licensing">Elastic License 2.0 and Apache 2.0</a>.
                     </p>
                     <p class="pt-2 flex items-center space-x-4 [&>a]:hover:scale-125 [&>a]:transform-scale [&>a]:duration-300 [&>a]:text-black [&>a]:dark:text-[#fcf0df] [&>a]:opacity-50 [&>a]:hover:opacity-100">
                         <a target="_blank" href="https://muxi.org/go/github" target="github">
@@ -69,12 +69,12 @@ tiny::components()->register('Footer', function (...$props) {
                     </nav>
                     <nav class="w-1/3 [&>a]:flex [&>a]:mb-2 [&>a]:text-xs lg:[&>a]:text-sm [&>a]:font-normal [&>a]:text-inherit [&>a]:transition-all [&>a]:duration-300 [&>a]:opacity-70 [&>a]:hover:opacity-100 [&>a]:hover:font-medium [&>a]:hover:after:content-[\'↗\'] [&>a]:hover:after:translate-x-1 [&>a]:hover:after:transition-transform [&>a]:hover:after:duration-300">
                         <p class="mb-3 text-xs tracking-wider text-bright opacity-70 uppercase font-semibold">Resources</p>
-                        <a target="_blank" href="https://muxi.org/go/luma">Workshops</a>
-                        <a target="_blank" href="https://muxi.org/go/community">Discussions</a>
-                        <a target="_blank" href="https://muxi.org/go/changelog">Changelog</a>
-                        <a target="_blank" href="https://muxi.org/go/roadmap">Roadmap</a>
-                        <a target="_blank" href="https://muxi.org/go/contributing">Contributing</a>
-                        <a target="_blank" href="https://muxi.org/go/sponsors" class="whitespace-nowrap opacity-90! hover:opacity-100!">GitHub <span class="animate-rainbow-text ml-1">Sponsors</span></a>
+                        <a target="_blank" href="https://muxi.org/workshops">Workshops</a>
+                        <a target="_blank" href="https://muxi.org/community">Discussions</a>
+                        <a target="_blank" href="https://muxi.org/changelog">Changelog</a>
+                        <a target="_blank" href="https://muxi.org/roadmap">Roadmap</a>
+                        <a target="_blank" href="https://muxi.org/contributing">Contributing</a>
+                        <a target="_blank" href="https://muxi.org/sponsors" class="whitespace-nowrap opacity-90! hover:opacity-100!">GitHub <span class="animate-rainbow-text ml-1">Sponsors</span></a>
                     </nav>
                     <nav class="w-1/3 [&>a]:flex [&>a]:mb-2 [&>a]:text-xs lg:[&>a]:text-sm [&>a]:font-normal [&>a]:text-inherit [&>a]:transition-all [&>a]:duration-300 [&>a]:opacity-70 [&>a]:hover:opacity-100 [&>a]:hover:font-medium [&>a]:hover:after:content-[\'›\'] [&>a]:hover:after:translate-x-1 [&>a]:hover:after:transition-transform [&>a]:hover:after:duration-300">
                         <p class="mb-3 text-xs tracking-wider text-bright opacity-70 uppercase font-semibold">Get Started</p>
