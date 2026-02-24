@@ -22,15 +22,15 @@ tiny::layout()->default(
 
 <div class="flex items-center justify-between space-x-4 mt-2 mb-3">
     <div class="flex items-center space-x-2">
-        <a href="<?php echo $homeURL; ?>@<?= $formation['registry_username'] ?>"><img loading="lazy" src="<?php echo $formation['github_avatar']; ?>" class="size-9 rounded-lg"></a>
-        <h1 class="text-2xl font-sans! leading-none ml-1.5">
-            <a href="<?php echo $homeURL; ?>@<?php echo $formation['registry_username']; ?>" class="opacity-75 hover:opacity-100 text-gold-on-hover">
+        <a href="<?php echo $homeURL; ?>@<?= $formation['registry_username'] ?>"><img loading="lazy" src="<?php echo $formation['github_avatar']; ?>" class="size-9 rounded-lg shrink-0"></a>
+        <h1 class="text-2xl font-sans! leading-none lg:ml-1.5">
+            <a href="<?php echo $homeURL; ?>@<?php echo $formation['registry_username']; ?>" class="opacity-75 hover:opacity-100 text-gold-on-hover hidden lg:inline">
                 @<?php echo htmlspecialchars($formation['registry_username']); ?>
             </a>
             <span class="opacity-40 px-1">/</span>
             <span class="font-semibold"><?php echo htmlspecialchars($formation['name']); ?></span>
         </h1>
-        <span class="border rounded-full text-[10px]! subpixel-antialiased bg-white/50 dark:bg-white/5 leading-none pt-[3px] pb-1 px-1.5 ml-2 mt-0.5">v <?php echo htmlspecialchars($formation['latest_version']); ?></span>
+        <span class="whitespace-nowrap border rounded-full text-[10px]! subpixel-antialiased bg-white/50 dark:bg-white/5 leading-none pt-[3px] pb-1 px-1.5 ml-2 mt-0.5">v <?php echo htmlspecialchars($formation['latest_version']); ?></span>
     </div>
     <div class="flex items-center space-x-2 pt-px">
         <button class="btn-sm-ghost pointer-events-none">
@@ -49,7 +49,7 @@ tiny::layout()->default(
 <hr>
 
 
-<div class="grid grid-cols-10 gap-12 my-7">
+<div class="lg:grid grid-cols-10 gap-12 my-7">
     <div class="col-span-7 h-full">
 
         <div class="card dark:bg-black/5! shadow-xs dark:shadow-xl rounded-md plain p-0 overflow-hidden" id="readme">

@@ -3,10 +3,10 @@ tiny::layout()->default(title: 'Browse Formations - MUXI Registry', emptyLayout:
 tiny::components()->require('FormationCard');
 ?>
 
-<div class="grid gap-x-8 my-5 relative">
+<div class="lg:grid gap-x-8 my-5 relative">
 
     <!-- Header -->
-    <header class="flex items-center justify-between">
+    <header class="lg:flex items-center justify-between mb-8">
         <div>
             <h1 class="text-4xl font-bold flex items-center mb-3">Browse Formations
                 <span class="badge-outline font-sans! rounded-full mt-1.5 ml-2 text-xs!"><?php echo number_format(tiny::data()->totalCount); ?> </span>

@@ -15,13 +15,13 @@
     @apply mt-3!
 }
 body.scrolled #muxi-wordmark {
-    @apply mt-2.5!
+    /* @apply mt-2.5! */
 }
 header#header form {
-    @apply top-5
+    @apply top-7.5 lg:top-5
 }
-body.scrolled header#header form {
-    @apply top-3.5
+body header#header {
+    @apply -mt-1 lg:mt-0
 }
 h1, h2 {
     /* @apply font-serif; */

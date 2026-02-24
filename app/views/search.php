@@ -7,7 +7,7 @@ tiny::layout()->default(title: $pageTitle, emptyLayout: false);
 tiny::components()->require('FormationCard');
 ?>
 
-<div class="grid gap-x-8 my-5 relative">
+<div class="lg:grid gap-x-8 my-5 relative">
 
     <?php if (!empty(tiny::data()->query)): ?>
         <!-- Header -->

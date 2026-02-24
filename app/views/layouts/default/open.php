@@ -93,9 +93,9 @@ $defaultRobots = 'noindex, nofollow';
         <div class="bg-black/10 backdrop-blur-xs fixed top-20 inset-0 z-10" :class="showMenu ? 'block lg:hidden' : 'hidden'"></div>
         <header id="header">
             <nav aria-label="Global">
-                <div class="lg:flex items-center justify-between gap-6">
-                    <a href="<?php tiny::homeURL(); ?>" @contextmenu="logoContextMenu.toggle(event)" @click.outside="logoContextMenu.hide()" class="flex items-center space-x-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3060.31 990.81" class="h-12" id="muxi-wordmark">
+                <div class="lg:flex items-center justify-between gap-6 w-full">
+                    <a href="<?php tiny::homeURL(); ?>" @contextmenu="logoContextMenu.toggle(event)" @click.outside="logoContextMenu.hide()" class="flex items-center space-x-2 max-w-10 lg:max-w-none overflow-hidden">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3060.31 990.81" class="scale-110 origin-top-left lg:scale-100 h-13 lg:h-12 shrink-0" id="muxi-wordmark">
                             <path class="text-[#d69a54] dark:text-[#e8a450]" fill="currentColor" d="m687.3 438.1c-.8 36.4 3.1 72.3-13.6 104.6-17 31-51.3 52.2-74.5 40.6-48-24.8-1.9-146.7-94.6-98.1-20.1 11.8-38.1 29.9-50.8 50-25.7 40.4-23.2 86.9-50.2 124.5-13.8 18.8-36.9 28.2-60 28.3-23.1 0-46.2-9.4-60-28.3-27-37.5-24.5-84-50.2-124.5-12.6-20.1-30.6-38.2-50.8-50-92.7-48.5-46.6 73.4-94.6 98.1-23.1 11.6-57.5-9.6-74.4-40.6-16.7-32.3-12.8-68.2-13.6-104.6v-249.6c4.1-46.9 46.9-76.3 86.9-99.5 31.3-18.1 90.2-52.1 90.2-52.1 53.3-32.6 107.2-37.1 166.6-36.9 59.4-.2 113.3 4.3 166.6 36.9 0 0 58.9 34 90.2 52.1 40 23.2 82.7 52.6 86.9 99.5v249.6z" />
                             <g class="text-[#302621] dark:text-[#f5e4d1]" fill="currentColor">
                                 <path d="m1139.8 372.7c-1.8-7.9-47-175.1-58.7-218.2-1.6-5.9-7-10-13.1-10h-131.8c-7.5 0-13.6 6.1-13.6 13.6v344.1c0 7.5 6.1 13.6 13.6 13.6h74.3c7.5 0 13.7-6.1 13.6-13.7-.6-52.5-2.7-238.5-3-251 3.3 12.9 60.4 208.7 73.8 255 1.7 5.8 7 9.8 13 9.8h63.3c6.1 0 11.4-4 13-9.8 13.8-48.7 73.8-260.6 73.8-261 0 .2-2.5 202-3.2 257.1 0 7.5 6 13.8 13.6 13.8h74.3c7.5 0 13.6-6.1 13.6-13.6v-344.1c0-7.5-6.1-13.6-13.6-13.6h-132.2c-6.1 0-11.6 4.1-13.1 10.1-11.5 43.1-56 210.2-57.8 218.1q0 0 0 0z" />
@@ -107,7 +107,7 @@ $defaultRobots = 'noindex, nofollow';
                         <span class="font-medium text-xs uppercase text-[#c88b45] dark:text-[#e8a550] -ml-8">/ Registry</span>
                     </a>
 
-                    <form action="<?php tiny::homeURL('/search'); ?>" method="GET" class="w-sm max-w-[calc(100vw-2rem)] z-100 group fixed left-1/2 transform -translate-x-1/2 xl:-ml-2">
+                    <form action="<?php tiny::homeURL('/search'); ?>" method="GET" class="w-60 lg:w-sm max-w-[calc(100vw-2rem)] z-100 group fixed left-1/2 transform -translate-x-1/2 xl:-ml-2">
                         <button class="absolute left-0 top-0 h-full px-2.5">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" class="size-5 opacity-80 hover:opacity-100 group:has-focus-within:opacity-100">
                                 <path d="M15 15L21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>

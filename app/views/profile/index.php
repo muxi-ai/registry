@@ -9,8 +9,8 @@ tiny::layout()->default(
 tiny::components()->require('FormationCard');
 ?>
 
-<div class="grid grid-cols-12 gap-x-8 my-5 relative">
-    <div class="col-span-4 h-full">
+<div class="lg:grid grid-cols-12 gap-x-8 my-5 relative">
+    <div class="col-span-4 h-full mb-8">
 
         <div class="relative w-fit">
             <?php if (tiny::data()->profile['github_avatar']): ?>

@@ -3,11 +3,29 @@ tiny::layout()->default(title: 'Discover & Share AI Formations', emptyLayout: fa
 tiny::components()->require('FormationCard');
 ?>
 
+<div class="alert mb-9 pt-5 -mt-2">
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="size-5 mt-0.5 opacity-90">
+        <g fill="none" fill-rule="evenodd">
+            <path fill="currentColor" d="M19 4.741V8a3 3 0 1 1 0 6v3c0 1.648-1.881 2.589-3.2 1.6l-2.06-1.546A8.658 8.658 0 0 0 10 15.446v2.844a2.71 2.71 0 0 1-5.316.744l-1.57-5.496a4.7 4.7 0 0 1 3.326-7.73l3.018-.168a9.344 9.344 0 0 0 4.19-1.259l2.344-1.368C17.326 2.236 19 3.197 19 4.741M5.634 15.078l.973 3.407A.71.71 0 0 0 8 18.29v-3.01l-1.56-.087a4.723 4.723 0 0 1-.806-.115M17 4.741 14.655 6.11A11.343 11.343 0 0 1 10 7.604v5.819c1.787.246 3.488.943 4.94 2.031L17 17zM8 7.724l-1.45.08a2.7 2.7 0 0 0-.17 5.377l.17.015 1.45.08zM19 10v2a1 1 0 0 0 .117-1.993z"></path>
+        </g>
+    </svg>
+    <h2 class="text-lg">Big things are coming!</h2>
+    <section class="text-balanced">
+        <p class="mt-2! mb-0!">
+            Currently, <a href="/@muxi/hello-muxi" class="link whitespace-nowrap"><code>@muxi/hello-muxi</code></a> is the only formation here.
+            Run it, see agents collaborate in real time, and get your name on the guestbook.
+        </p>
+        <p class="my-2!">
+            More formations are shipping soon. Want yours listed first? Build one and push it with the <code class="whitespace-nowrap">muxi push</code> command using the <a href="https://muxi.org/docs/cli" target="_blank" class="link">MUXI CLI</a>.
+        </p>
+    </section>
+</div>
 
-<div class="grid grid-cols-12 gap-x-10 my-5 relative">
-    <div class="col-span-8 h-full lg:min-h-[64dvh]">
+<div class="lg:grid grid-cols-12 gap-x-10 my-5 relative">
+    <div class="col-span-8 h-full lg:min-h-[64dvh] mb-10">
         <h1 class="text-4xl font-bold mb-4">Welcome to the Registry</h1>
         <h3 class="text-lg font-medium -mt-1! mb-4 opacity-70">Find ready-to-use formations or publish your own for others to discover.</h3>
+
 
         <?php if (!empty(tiny::data()->formations['trending'])): ?>
             <!-- trending -->
@@ -51,6 +69,7 @@ tiny::components()->require('FormationCard');
             <?php endforeach; ?>
         </div>
 
+        <?php /*
         <!-- most popular -->
         <header class="flex items-center justify-between">
             <h2 class="text-xl font-semibold mb-4 font-sans! flex items-center gap-x-2 mt-8">
@@ -71,16 +90,15 @@ tiny::components()->require('FormationCard');
                 <?php tiny::components()->FormationCard(formation: $formation, withUsername: true); ?>
             <?php endforeach; ?>
         </div>
-
-
+        */ ?>
     </div>
 
     <!-- sidebar -->
     <div class="col-span-4 h-full">
+        <?php /*
         <!-- active publishers -->
-        <section>
+        <section  class="mb-12">
             <h2 class="text-xl font-semibold mb-4">Active publishers</h2>
-
             <div class="flex flex-wrap gap-2">
                 <?php foreach (tiny::data()->activeUsers as $user): ?>
                     <a href="<?php tiny::homeURL('/@' . $user['registry_username']); ?>" class="block relative w-fit" data-tooltip="@<?php echo htmlspecialchars($user['registry_username']); ?>">
@@ -99,11 +117,11 @@ tiny::components()->require('FormationCard');
                     </a>
                 <?php endforeach; ?>
             </div>
-
         </section>
+        */ ?>
 
         <!-- Getting Started -->
-        <section class="mt-12">
+        <section>
             <h2 class="text-xl font-semibold mb-4">Getting started</h2>
 
             <div class="card p-5 shadow-xs">
@@ -114,7 +132,7 @@ tiny::components()->require('FormationCard');
                     <span>Pulling a formation</span>
                 </h3>
                 <p class="-mt-2! leading-[1.8] text-[13px] opacity-80">Install any formation with a single command.</p>
-                <pre class="-my-6!"><code class="leading-[1.7]">$ muxi <span class="text-green-600 dark:text-green-500">pull</span> <span class="opacity-80">@muxi/hello-muxi</span></code></pre>
+                <pre class="-my-6!"><code class="leading-[1.7] subpixel-antialiased!">$ muxi <span class="text-green-600 dark:text-green-500">pull</span> <span class="opacity-80">@muxi/hello-muxi</span></code></pre>
                 <p class="text-xs text-neutral-500 dark:text-neutral-400 antialiased leading-normal mb-0!">Copy &amp; paste this command into your terminal to install it *</p>
             </div>
 
@@ -126,7 +144,7 @@ tiny::components()->require('FormationCard');
                     <span>Publishing a formation</span>
                 </h3>
                 <p class="-mt-2! leading-[1.8] text-[13px] opacity-80">Share your formations with the community.</p>
-                <pre class="-my-6!"><code class="leading-[1.7]">$ muxi <span class="text-green-600 dark:text-green-500">login</span
+                <pre class="-my-6!"><code class="leading-[1.7] subpixel-antialiased!">$ muxi <span class="text-green-600 dark:text-green-500">login</span
                 ><br>$ cd path/to/your/formation<br
                 >$ muxi <span class="text-green-600 dark:text-green-500">push</span></code></pre>
                 <p class="text-xs text-neutral-500 dark:text-neutral-500 antialiased leading-normal mb-0!">Copy &amp; paste these commands into your terminal to push publish a formation *</p>
