@@ -12,7 +12,7 @@ tiny::components()->require('FormationCard');
     <h2 class="text-lg">Big things are coming!</h2>
     <section class="text-balanced">
         <p class="mt-2! mb-0!">
-            Currently, <a href="/@muxi/hello-muxi" class="link whitespace-nowrap"><code>@muxi/hello-muxi</code></a> is the only formation here.
+            Currently, <a href="/@muxi/hello-muxi" class="link whitespace-nowrap"><code>@muxi/hello-muxi</code></a> is the only official formation here.
             Run it, see agents collaborate in real time, and get your name on the guestbook.
         </p>
         <p class="my-2!">
