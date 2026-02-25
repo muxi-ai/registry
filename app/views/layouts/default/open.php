@@ -142,10 +142,10 @@ $defaultRobots = 'noindex, nofollow';
                             </div>
                         </li>
                     </ul>
-                    <div class="relative z-10 inline-flex items-center space-x-3 lg:justify-end">
-                        <?php if (isset(tiny::user()->id)): ?>
-                            <a href="<?php echo tiny::homeURL('/account'); ?>" class="flex items-center text-sm" xclass="btn btn-outline pr-5 pl-2 h-11s"  data-side="bottom" data-align="end" data-tooltip="Account settings">
-                                <img src="<?php echo tiny::user()->github_avatar; ?>" loading="lazy" class="shrink-0 size-7.5 rounded-full" />
+                    <div classs="relative z-10 inline-flex items-center space-x-3 lg:justify-end">
+                        <?php if (isset(tiny::user()->github_username)): ?>
+                            <a href="<?php echo tiny::homeURL('/account'); ?>" class="flex items-center text-sm" data-side="bottom" data-align="end" data-tooltip="Account settings">
+                                <img src="<?php echo tiny::user()->github_avatar; ?>" loading="lazy" class="shrink-0 min-w-7.5 size-7.5 rounded-full" />
                             </a>
                         <?php else: ?>
                             <a href="<?php echo tiny::homeURL('/auth/signin'); ?>" class="btn btn-primary px-2.5 lg:pr-3.5">

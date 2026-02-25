@@ -667,6 +667,9 @@
   .table {
     display: table;
   }
+  .aspect-square {
+    aspect-ratio: 1 / 1;
+  }
   .size-2\.5 {
     width: calc(var(--spacing) * 2.5);
     height: calc(var(--spacing) * 2.5);
@@ -710,6 +713,10 @@
   .size-7\.5 {
     width: calc(var(--spacing) * 7.5);
     height: calc(var(--spacing) * 7.5);
+  }
+  .size-7\.5\! {
+    width: calc(var(--spacing) * 7.5) !important;
+    height: calc(var(--spacing) * 7.5) !important;
   }
   .size-9 {
     width: calc(var(--spacing) * 9);
@@ -759,6 +766,9 @@
   .w-6 {
     width: calc(var(--spacing) * 6);
   }
+  .w-7\.5 {
+    width: calc(var(--spacing) * 7.5);
+  }
   .w-48 {
     width: calc(var(--spacing) * 48);
   }
@@ -795,6 +805,12 @@
   .min-w-4 {
     min-width: calc(var(--spacing) * 4);
   }
+  .min-w-5 {
+    min-width: calc(var(--spacing) * 5);
+  }
+  .min-w-7\.5 {
+    min-width: calc(var(--spacing) * 7.5);
+  }
   .min-w-sm {
     min-width: var(--container-sm);
   }
@@ -803,6 +819,9 @@
   }
   .shrink-0 {
     flex-shrink: 0;
+  }
+  .shrink-0\! {
+    flex-shrink: 0 !important;
   }
   .border-collapse {
     border-collapse: collapse;
