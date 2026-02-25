@@ -1,4 +1,12 @@
-<div></div>
+<template x-if="showAnnouncement">
+<div id="announcement">
+    <div>
+        🚧 MUXI is in early public preview. Expect rough edges, rapid changes, and
+        <a href="https://github.com/muxi-ai/muxi/discussions/7" target="_blank">please report bugs</a>
+    </div>
+    <button @click="showAnnouncement=false; document.cookie = 'hide_announcement=1; path=/';">🆇</button>
+</div>
+</template>
 <?php /*
 <div id="announcement"><div>
 

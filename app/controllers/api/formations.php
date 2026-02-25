@@ -904,6 +904,14 @@ class ApiFormations extends TinyController
                 'download_count' => 1
             ]);
         }
+
+        // Update total_downloads on the formation
+        tiny::db()->execute(
+            "UPDATE formations SET total_downloads = (
+                SELECT COALESCE(SUM(download_count), 0) FROM downloads WHERE formation_id = ?
+            ) WHERE id = ?",
+            [$formationId, $formationId]
+        );
     }
 
     /**

@@ -87,9 +87,7 @@ $defaultRobots = 'noindex, nofollow';
 
 <body class="mx-10 <?php echo tiny::layout()->props('bodyClass') ? strip_tags(tiny::layout()->props('bodyClass')) : ''; ?>" :class="showMenu ? 'show-menu' : ''">
     <?php if (!tiny::layout()->props('emptyLayout')): ?>
-        <template x-if="showAnnouncement">
-            <?php tiny::render('_announcement'); ?>
-        </template>
+        <?php tiny::render('_announcement'); ?>
         <div class="bg-black/10 backdrop-blur-xs fixed top-20 inset-0 z-10" :class="showMenu ? 'block lg:hidden' : 'hidden'"></div>
         <header id="header">
             <nav aria-label="Global">
@@ -107,7 +105,7 @@ $defaultRobots = 'noindex, nofollow';
                         <span class="font-medium text-xs uppercase text-[#c88b45] dark:text-[#e8a550] -ml-8">/ Registry</span>
                     </a>
 
-                    <form action="<?php tiny::homeURL('/search'); ?>" method="GET" class="w-60 lg:w-sm max-w-[calc(100vw-2rem)] z-100 group fixed left-1/2 transform -translate-x-1/2 xl:-ml-2">
+                    <form action="<?php tiny::homeURL('/search'); ?>" method="GET" class="w-60 lg:w-sm max-w-[calc(100vw-2rem)] z-100 group absolute left-1/2 transform -translate-x-1/2 xl:-ml-2">
                         <button class="absolute left-0 top-0 h-full px-2.5">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" class="size-5 opacity-80 hover:opacity-100 group:has-focus-within:opacity-100">
                                 <path d="M15 15L21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
