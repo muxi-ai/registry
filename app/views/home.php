@@ -19,7 +19,6 @@ tiny::components()->require('FormationCard');
             More formations are shipping soon. Want yours listed first? Build one and push it with the <code class="whitespace-nowrap">muxi push</code> command using the <a href="https://muxi.org/docs/cli" target="_blank" class="link">MUXI CLI</a>.
         </p>
     </section>
-</div>
 
 <div class="lg:grid grid-cols-12 gap-x-10 my-5 relative">
     <div class="col-span-8 h-full lg:min-h-[64dvh] mb-10">

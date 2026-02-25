@@ -436,14 +436,14 @@ class Formation extends TinyController
         $yamlPath = null;
 
         foreach ($files as $file) {
-            if (basename($file) === 'formation.yaml') {
+            if (basename($file) === 'formation.yaml' || basename($file) === 'formation.afs') {
                 $yamlPath = $file;
                 break;
             }
         }
 
         if (!$yamlPath || !file_exists($yamlPath)) {
-            error_log("⚠️ formation.yaml not found in downloaded archive");
+            error_log("⚠️ formation.yaml/formation.afs not found in downloaded archive");
             return null;
         }
 

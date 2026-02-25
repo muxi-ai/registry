@@ -432,10 +432,13 @@ class ApiFormations extends TinyController
             // 1b. Security cleanup: Remove sensitive files and macOS artifacts
             $this->removeSensitiveFiles($tempDir);
 
-            // 2. Parse formation.yaml
+            // 2. Parse formation.yaml or formation.afs
             $formationYamlPath = $tempDir . '/formation.yaml';
             if (!file_exists($formationYamlPath)) {
-                throw new Exception('formation.yaml not found in ZIP archive');
+                $formationYamlPath = $tempDir . '/formation.afs';
+            }
+            if (!file_exists($formationYamlPath)) {
+                throw new Exception('formation.yaml or formation.afs not found in ZIP archive');
             }
 
             $formationData = $this->parseSimpleYaml($formationYamlPath);
