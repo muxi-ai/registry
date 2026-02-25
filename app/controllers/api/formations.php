@@ -1051,17 +1051,18 @@ PROMPT;
             $relativePath = str_replace($tempDir . '/', '', $file);
             $structure['files'][] = $relativePath;
 
+            $isYamlOrAfs = preg_match('/\.(yaml|afs)$/', $relativePath);
+
             // Count component types based on file patterns
-            if (strpos($relativePath, 'agent') !== false && strpos($relativePath, '.yaml') !== false) {
+            if (strpos($relativePath, 'agent') !== false && $isYamlOrAfs) {
                 $structure['components']['agents']++;
-            } elseif (strpos($relativePath, 'mcp') !== false || strpos($relativePath, 'server') !== false) {
+            } elseif ((strpos($relativePath, 'mcp') !== false || strpos($relativePath, 'server') !== false) && $isYamlOrAfs) {
                 $structure['components']['mcps']++;
-            } elseif (strpos($relativePath, 'sop') !== false || strpos($relativePath, 'procedure') !== false) {
+            } elseif ((strpos($relativePath, 'sop') !== false || strpos($relativePath, 'procedure') !== false) && $isYamlOrAfs) {
                 $structure['components']['sops']++;
-            } elseif (strpos($relativePath, 'trigger') !== false) {
+            } elseif (strpos($relativePath, 'trigger') !== false && $isYamlOrAfs) {
                 $structure['components']['triggers']++;
             } elseif (strpos($relativePath, 'knowledge/') !== false && strpos($relativePath, '.md') !== false) {
-                // Only count .md files that are in a knowledge/ directory
                 $structure['components']['knowledge']++;
             }
         }

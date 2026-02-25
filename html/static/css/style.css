@@ -565,9 +565,6 @@
   .mr-4 {
     margin-right: calc(var(--spacing) * 4);
   }
-  .-mb-1 {
-    margin-bottom: calc(var(--spacing) * -1);
-  }
   .-mb-2 {
     margin-bottom: calc(var(--spacing) * -2);
   }
@@ -576,9 +573,6 @@
   }
   .mb-0\! {
     margin-bottom: calc(var(--spacing) * 0) !important;
-  }
-  .mb-1 {
-    margin-bottom: calc(var(--spacing) * 1);
   }
   .mb-2 {
     margin-bottom: calc(var(--spacing) * 2);
@@ -738,14 +732,8 @@
   .h-6 {
     height: calc(var(--spacing) * 6);
   }
-  .h-12 {
-    height: calc(var(--spacing) * 12);
-  }
   .h-13 {
     height: calc(var(--spacing) * 13);
-  }
-  .h-14 {
-    height: calc(var(--spacing) * 14);
   }
   .h-full {
     height: 100%;
@@ -776,12 +764,6 @@
   }
   .w-60 {
     width: calc(var(--spacing) * 60);
-  }
-  .w-64 {
-    width: calc(var(--spacing) * 64);
-  }
-  .w-72 {
-    width: calc(var(--spacing) * 72);
   }
   .w-80 {
     width: calc(var(--spacing) * 80);
@@ -1678,11 +1660,6 @@
   .md\:grid-cols-2 {
     @media (width >= 48rem) {
       grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
-  .lg\:mt-0 {
-    @media (width >= 64rem) {
-      margin-top: calc(var(--spacing) * 0);
     }
   }
   .lg\:ml-1\.5 {
@@ -6288,6 +6265,11 @@ details table th:last-of-type, details table td:last-of-type {
       background-color: color-mix(in oklab, var(--color-white) 4%, transparent);
     }
   }
+}
+.table td {
+  width: auto !important;
+  text-wrap: pretty;
+  white-space: normal !important;
 }
 .accordion details {
   width: 100%;
