@@ -91,7 +91,7 @@ class ApiFormations extends TinyController
     public function delete($request, $response)
     {
         error_log("🚀 DELETE method called! URI: " . tiny::router()->uri);
-        
+
         // Authentication required
         $user = tiny::user();
         if (!$user) {
@@ -164,7 +164,7 @@ class ApiFormations extends TinyController
         $deleteGithub = isset($_GET['delete_github']) && $_GET['delete_github'] === 'true';
         $formationId = $formation['id'];
         $githubRepo = $formation['github_repo'];
-        
+
         error_log("🔍 Delete request: deleteGithub=" . ($deleteGithub ? 'true' : 'false') . ", _GET=" . json_encode($_GET) . ", REQUEST_URI=" . $_SERVER['REQUEST_URI']);
 
         try {
@@ -172,7 +172,7 @@ class ApiFormations extends TinyController
             // This allows republishing a formation with the same name
             $deletedAt = date('Y-m-d H:i:s');
             $deletedName = $name . '_deleted_' . time();
-            
+
             tiny::db()->update('formations', [
                 'name' => $deletedName,
                 'deleted_at' => $deletedAt
@@ -255,7 +255,7 @@ class ApiFormations extends TinyController
 
         // Get formations owned by or published by the user (exclude soft-deleted)
         $formations = tiny::db()->getQuery("
-            SELECT 
+            SELECT
                 f.id,
                 f.name,
                 f.description,
@@ -268,7 +268,7 @@ class ApiFormations extends TinyController
                 u.registry_username
             FROM formations f
             JOIN users u ON f.user_id = u.id
-            WHERE (f.user_id = ? OR f.published_by_user_id = ?) 
+            WHERE (f.user_id = ? OR f.published_by_user_id = ?)
               AND f.deleted_at IS NULL
             ORDER BY f.published_at DESC
         ", [$user->id, $user->id]);
@@ -342,7 +342,6 @@ class ApiFormations extends TinyController
         // Validate file is a ZIP
         $finfo = finfo_open(FILEINFO_MIME_TYPE);
         $mimeType = finfo_file($finfo, $uploadedFile['tmp_name']);
-        finfo_close($finfo);
 
         if (!in_array($mimeType, ['application/zip', 'application/x-zip-compressed'])) {
             return $response->sendJSON([
@@ -658,7 +657,7 @@ class ApiFormations extends TinyController
                     'version' => $version,
                     'github_repo' => $fullRepoName,
                     'registry_url' => tiny::getHomeURL("/@{$user->registry_username}/{$formationData['id']}", true),
-                    'download_url' => $asset['browser_download_url'] ?? null
+                    'download_url' => is_array($asset) ? ($asset['browser_download_url'] ?? null) : ($asset->browser_download_url ?? null)
                 ]
             ];
 
