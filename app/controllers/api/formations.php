@@ -648,15 +648,21 @@ class ApiFormations extends TinyController
             error_log("🗄️ Owner user ID: {$ownerUserId}, Published by user ID: {$user->id}");
             $formation = $this->storeFormationInDatabase($ownerUserId, $formationData, $repo, $release, $user->id);
 
+            // Determine the registry owner name (org or user)
+            $ownerRegistryUsername = $user->registry_username;
+            if ($orgName && isset($orgUser)) {
+                $ownerRegistryUsername = $orgUser['registry_username'];
+            }
+
             return [
                 'status' => 'ok',
                 'message' => 'Formation published successfully',
                 'formation' => [
                     'name' => $formationData['id'],
-                    'user' => $user->registry_username,
+                    'user' => $ownerRegistryUsername,
                     'version' => $version,
                     'github_repo' => $fullRepoName,
-                    'registry_url' => tiny::getHomeURL("/@{$user->registry_username}/{$formationData['id']}", true),
+                    'registry_url' => tiny::getHomeURL("/@{$ownerRegistryUsername}/{$formationData['id']}", true),
                     'download_url' => is_array($asset) ? ($asset['browser_download_url'] ?? null) : ($asset->browser_download_url ?? null)
                 ]
             ];

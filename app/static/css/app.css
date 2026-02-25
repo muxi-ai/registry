@@ -418,7 +418,9 @@ details table th:last-of-type, details table td:last-of-type {
 .table thead th {
     @apply bg-black/2 dark:bg-white/4
 }
-
+.table td {
+    @apply whitespace-normal!
+}
 /* Accordion */
 .accordion details {
     @apply w-full overflow-hidden transition-[height] duration-300 border-b border-[#e9e0d2] dark:border-white/5;
