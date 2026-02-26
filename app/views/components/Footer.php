@@ -69,17 +69,18 @@ tiny::components()->register('Footer', function (...$props) {
                     </nav>
                     <nav class="w-1/3 [&>a]:flex [&>a]:mb-2 [&>a]:text-xs lg:[&>a]:text-sm [&>a]:font-normal [&>a]:text-inherit [&>a]:transition-all [&>a]:duration-300 [&>a]:opacity-70 [&>a]:hover:opacity-100 [&>a]:hover:font-medium [&>a]:hover:after:content-[\'↗\'] [&>a]:hover:after:translate-x-1 [&>a]:hover:after:transition-transform [&>a]:hover:after:duration-300">
                         <p class="mb-3 text-xs tracking-wider text-bright opacity-70 uppercase font-semibold">Resources</p>
-                        <a target="_blank" href="https://muxi.org/workshops">Workshops</a>
                         <a target="_blank" href="https://muxi.org/community">Discussions</a>
                         <a target="_blank" href="https://muxi.org/changelog">Changelog</a>
                         <a target="_blank" href="https://muxi.org/roadmap">Roadmap</a>
                         <a target="_blank" href="https://muxi.org/contributing">Contributing</a>
                         <a target="_blank" href="https://muxi.org/sponsors" class="whitespace-nowrap opacity-90! hover:opacity-100!">GitHub <span class="animate-rainbow-text ml-1">Sponsors</span></a>
+                        <a href="https://muxi.org/brand">Brand Assets</a>
                     </nav>
                     <nav class="w-1/3 [&>a]:flex [&>a]:mb-2 [&>a]:text-xs lg:[&>a]:text-sm [&>a]:font-normal [&>a]:text-inherit [&>a]:transition-all [&>a]:duration-300 [&>a]:opacity-70 [&>a]:hover:opacity-100 [&>a]:hover:font-medium [&>a]:hover:after:content-[\'›\'] [&>a]:hover:after:translate-x-1 [&>a]:hover:after:transition-transform [&>a]:hover:after:duration-300">
                         <p class="mb-3 text-xs tracking-wider text-bright opacity-70 uppercase font-semibold">Get Started</p>
                         <a href="https://muxi.org/docs/quickstart">Quickstart</a>
                         <a href="https://muxi.org/docs/how-it-works">How MUXI Works</a>
+                        <a target="_blank" href="https://muxi.org/workshops">Workshops</a>
                         <a href="https://muxi.org/docs/examples/">Examples</a>
                         <a href="/">Recipes</a>
                         <a href="https://muxi.org/docs">Docs</a>
