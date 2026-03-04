@@ -196,10 +196,10 @@ class User extends TinyModel
             'last_seen_at' => date('Y-m-d H:i:s'),
         ];
 
-        if ($ghUser->github_refresh_token) {
+        if (!empty($ghUser->github_refresh_token)) {
             $payload['github_refresh_token'] = tiny::cypher()->encrypt($ghUser->github_refresh_token, @$_SERVER['TINY_CRYPTO_SECRET']);
         }
-        if ($ghUser->github_token_expires_at) {
+        if (!empty($ghUser->github_token_expires_at)) {
             $payload['github_token_expires_at'] = $ghUser->github_token_expires_at;
         }
 
