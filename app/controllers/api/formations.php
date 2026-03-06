@@ -1180,11 +1180,11 @@ MD;
                 return $release;
             }
         } catch (Exception $e) {
-            error_log("📦 No existing release for {$tagName}: " . $e->getMessage());
+            tiny::log("No existing release for {$tagName}", $e->getMessage());
         }
 
         // Create new release
-        error_log("📦 Creating release for {$repoName} tag {$tagName}...");
+        tiny::log("Creating release for {$repoName} tag {$tagName}");
         try {
             $release = $this->github->createRelease($repoName, [
                 'tag_name' => $tagName,
@@ -1194,14 +1194,14 @@ MD;
                 'prerelease' => false
             ]);
         } catch (Exception $e) {
-            error_log("❌ createRelease FAILED: " . $e->getMessage());
+            tiny::log("createRelease FAILED", $e->getMessage());
             throw new Exception("Failed to create GitHub release for {$tagName}: " . $e->getMessage());
         }
 
-        error_log("📦 createRelease response: " . json_encode($release));
+        tiny::log("createRelease response", $release);
 
         if (!$release || !isset($release['id'])) {
-            error_log("❌ createRelease returned: " . json_encode($release));
+            tiny::log("createRelease returned unexpected", $release);
             throw new Exception("Failed to create GitHub release for {$tagName}");
         }
 
