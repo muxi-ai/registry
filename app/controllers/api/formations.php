@@ -663,7 +663,7 @@ class ApiFormations extends TinyController
                     'version' => $version,
                     'github_repo' => $fullRepoName,
                     'registry_url' => tiny::getHomeURL("/@{$ownerRegistryUsername}/{$formationData['id']}", true),
-                    'download_url' => is_array($asset) ? ($asset['browser_download_url'] ?? null) : ($asset->browser_download_url ?? null)
+                    'download_url' => $asset['browser_download_url'] ?? null
                 ]
             ];
 
@@ -1458,66 +1458,53 @@ MD;
 
         $lines = explode("\n", $content);
         $data = [];
-        $currentKey = null;
-        $multilineValue = '';
-        $inMultiline = false;
 
         foreach ($lines as $line) {
-            // Skip empty lines
             $trimmed = trim($line);
-            if (empty($trimmed)) {
-                if ($inMultiline) {
-                    $multilineValue .= "\n";
-                }
+
+            // Skip empty lines and comments
+            if (empty($trimmed) || $trimmed[0] === '#') {
                 continue;
             }
 
-            // Skip comments
-            if (strpos($trimmed, '#') === 0) {
+            // Only parse non-indented lines (top-level keys)
+            if ($line[0] === ' ' || $line[0] === "\t") {
                 continue;
             }
 
-            // Check if this is a continuation of multiline value
-            if ($inMultiline && (strpos($line, '  ') === 0 || strpos($line, "\t") === 0)) {
-                $multilineValue .= "\n" . trim($line);
+            // Parse key: value pairs
+            $colonPos = strpos($trimmed, ':');
+            if ($colonPos === false) {
                 continue;
             }
 
-            // End multiline if we were in one
-            if ($inMultiline) {
-                $data[$currentKey] = $multilineValue;
-                $inMultiline = false;
-                $multilineValue = '';
+            $key = trim(substr($trimmed, 0, $colonPos));
+            $value = trim(substr($trimmed, $colonPos + 1));
+
+            // Remove inline comments
+            if (($commentPos = strpos($value, ' #')) !== false) {
+                $value = trim(substr($value, 0, $commentPos));
             }
 
-            // Parse key-value pair
-            if (strpos($trimmed, ':') !== false) {
-                list($key, $value) = explode(':', $trimmed, 2);
-                $key = trim($key);
-                $value = trim($value);
-
-                // Remove quotes if present
-                if (preg_match('/^["\'](.+)["\']$/', $value, $matches)) {
-                    $value = $matches[1];
-                }
-
-                // Check if value is empty or multiline indicator (multiline start)
-                if (empty($value) || $value === '|' || $value === '>') {
-                    $currentKey = $key;
-                    $inMultiline = true;
-                    $multilineValue = '';
-                } else {
-                    $data[$key] = $value;
-                }
+            // Skip keys with empty values (nested blocks like server:, agents:, llm:)
+            if ($value === '' || $value === '|' || $value === '>') {
+                continue;
             }
+
+            // Skip list indicators
+            if ($value[0] === '-' || $value[0] === '[') {
+                continue;
+            }
+
+            // Remove quotes
+            if (preg_match('/^["\'](.+)["\']$/', $value, $matches)) {
+                $value = $matches[1];
+            }
+
+            $data[$key] = $value;
         }
 
-        // Handle last multiline value
-        if ($inMultiline && $currentKey) {
-            $data[$currentKey] = $multilineValue;
-        }
-
-        return $data;
+        return empty($data) ? false : $data;
     }
 
     /**
