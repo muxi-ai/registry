@@ -591,8 +591,19 @@ class ApiFormations extends TinyController
             }
 
             // 8. Create/verify GitHub repository
-            $repoName = "muxi-{$formationData['id']}";
-            $fullRepoName = "$githubOwner/$repoName";
+            // Check if formation already exists in DB with a known github_repo
+            $existingFormation = tiny::db()->getOneQuery(
+                "SELECT github_repo FROM formations WHERE user_id = ? AND name = ? AND deleted_at IS NULL",
+                [$ownerUserId, $formationData['id']]
+            );
+
+            if ($existingFormation && !empty($existingFormation['github_repo'])) {
+                $fullRepoName = $existingFormation['github_repo'];
+                $repoName = basename($fullRepoName);
+            } else {
+                $repoName = "muxi-{$formationData['id']}";
+                $fullRepoName = "$githubOwner/$repoName";
+            }
 
             $repo = $this->createOrGetGitHubRepo($githubOwner, $repoName, $formationData);
 
