@@ -1185,13 +1185,18 @@ MD;
 
         // Create new release
         error_log("📦 Creating release for {$repoName} tag {$tagName}...");
-        $release = $this->github->createRelease($repoName, [
-            'tag_name' => $tagName,
-            'name' => $tagName,
-            'body' => $formationData['description'] ?? "Release $tagName",
-            'draft' => false,
-            'prerelease' => false
-        ]);
+        try {
+            $release = $this->github->createRelease($repoName, [
+                'tag_name' => $tagName,
+                'name' => $tagName,
+                'body' => $formationData['description'] ?? "Release $tagName",
+                'draft' => false,
+                'prerelease' => false
+            ]);
+        } catch (Exception $e) {
+            error_log("❌ createRelease FAILED: " . $e->getMessage());
+            throw new Exception("Failed to create GitHub release for {$tagName}: " . $e->getMessage());
+        }
 
         error_log("📦 createRelease response: " . json_encode($release));
 
