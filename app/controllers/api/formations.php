@@ -1184,6 +1184,7 @@ MD;
         }
 
         // Create new release
+        error_log("📦 Creating release for {$repoName} tag {$tagName}...");
         $release = $this->github->createRelease($repoName, [
             'tag_name' => $tagName,
             'name' => $tagName,
@@ -1191,6 +1192,8 @@ MD;
             'draft' => false,
             'prerelease' => false
         ]);
+
+        error_log("📦 createRelease response: " . json_encode($release));
 
         if (!$release || !isset($release['id'])) {
             error_log("❌ createRelease returned: " . json_encode($release));
