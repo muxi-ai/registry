@@ -606,6 +606,9 @@ class ApiFormations extends TinyController
             $version = $formationData['version'];
             $release = $this->createGitHubRelease($fullRepoName, $version, $formationData);
 
+            error_log("🔍 Release response: " . json_encode($release ? array_keys($release) : 'NULL'));
+            error_log("🔍 Release id: " . ($release['id'] ?? 'MISSING'));
+
             // 12. Repack and upload as release asset
             $zipPath = $this->repackFormation($tempDir, $formationData['id']);
             $asset = $this->uploadReleaseAsset($fullRepoName, $release['id'], $zipPath, 'formation.zip');
@@ -1171,17 +1174,31 @@ MD;
 
         // Check if release already exists
         try {
-            return $this->github->getRelease($repoName, $tagName);
+            $release = $this->github->getRelease($repoName, $tagName);
+            if ($release && isset($release['id'])) {
+                error_log("📦 Existing release found: {$tagName} (id: {$release['id']})");
+                return $release;
+            }
         } catch (Exception $e) {
-            // Create new release
-            return $this->github->createRelease($repoName, [
-                'tag_name' => $tagName,
-                'name' => $tagName,
-                'body' => $formationData['description'] ?? "Release $tagName",
-                'draft' => false,
-                'prerelease' => false
-            ]);
+            error_log("📦 No existing release for {$tagName}: " . $e->getMessage());
         }
+
+        // Create new release
+        $release = $this->github->createRelease($repoName, [
+            'tag_name' => $tagName,
+            'name' => $tagName,
+            'body' => $formationData['description'] ?? "Release $tagName",
+            'draft' => false,
+            'prerelease' => false
+        ]);
+
+        if (!$release || !isset($release['id'])) {
+            error_log("❌ createRelease returned: " . json_encode($release));
+            throw new Exception("Failed to create GitHub release for {$tagName}");
+        }
+
+        error_log("📦 New release created: {$tagName} (id: {$release['id']})");
+        return $release;
     }
 
     /**
