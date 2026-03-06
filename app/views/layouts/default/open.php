@@ -54,7 +54,7 @@ $defaultRobots = 'noindex, nofollow';
     <meta property="og:type" content="website" />
     <meta property="og:title" content="<?php echo tiny::layout()->props('title') ? htmlspecialchars(strip_tags(tiny::layout()->props('title'))) : $defaultTitle; ?><?php echo $titleAppend; ?>" />
     <meta property="og:description" content="<?php echo tiny::layout()->props('description') ? htmlspecialchars(strip_tags(tiny::layout()->props('description'))) : $defaultDescription; ?>" />
-    <meta property="og:image" content="<?php tiny::layout()->props('ogImage') ?: tiny::staticURL('img/ogcard.webp'); ?>" />
+    <meta property="og:image" content="<?php echo tiny::layout()->props('ogImage') ?: tiny::getStaticURL('img/ogcard.webp'); ?>" />
 
     <!-- Twitter Meta Tags -->
     <meta name="twitter:card" content="summary_large_image" />
@@ -63,7 +63,7 @@ $defaultRobots = 'noindex, nofollow';
     <meta property="twitter:url" content="<?php echo tiny::router()->permalink; ?>" />
     <meta name="twitter:title" content="<?php echo tiny::layout()->props('title') ? htmlspecialchars(strip_tags(tiny::layout()->props('title'))) : 'Open-source infrastructure for AI agents' ?><?php echo $titleAppend; ?>" />
     <meta name="twitter:description" content="<?php echo tiny::layout()->props('description') ? htmlspecialchars(strip_tags(tiny::layout()->props('description'))) : $defaultDescription; ?>" />
-    <meta name="twitter:image" content="<?php tiny::layout()->props('ogImage') ?: tiny::staticURL('img/ogcard.webp'); ?>" />
+    <meta name="twitter:image" content="<?php echo tiny::layout()->props('ogImage') ?: tiny::getStaticURL('img/ogcard.webp'); ?>" />
 
     <script type="speculationrules">{ "prefetch": [{ "where": { "href_matches": "/*" }, "eagerness": "moderate" }] }</script>
     <script defer src="<?php tiny::staticURL('/js/alpine.combo.min.js'); ?>"></script>
