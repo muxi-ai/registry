@@ -606,9 +606,6 @@ class ApiFormations extends TinyController
             $version = $formationData['version'];
             $release = $this->createGitHubRelease($fullRepoName, $version, $formationData);
 
-            error_log("🔍 Release response: " . json_encode($release ? array_keys($release) : 'NULL'));
-            error_log("🔍 Release id: " . ($release['id'] ?? 'MISSING'));
-
             // 12. Repack and upload as release asset
             $zipPath = $this->repackFormation($tempDir, $formationData['id']);
             $asset = $this->uploadReleaseAsset($fullRepoName, $release['id'], $zipPath, 'formation.zip');
@@ -1180,11 +1177,10 @@ MD;
                 return $release;
             }
         } catch (Exception $e) {
-            tiny::log("No existing release for {$tagName}", $e->getMessage());
+            // No existing release, will create new one
         }
 
         // Create new release
-        tiny::log("Creating release for {$repoName} tag {$tagName}");
         try {
             $release = $this->github->createRelease($repoName, [
                 'tag_name' => $tagName,
@@ -1194,15 +1190,12 @@ MD;
                 'prerelease' => false
             ]);
         } catch (Exception $e) {
-            tiny::log("createRelease FAILED", $e->getMessage());
             throw new Exception("Failed to create GitHub release for {$tagName}: " . $e->getMessage());
         }
 
-        tiny::log("createRelease response", $release);
-
         if (!$release || !isset($release['id'])) {
-            tiny::log("createRelease returned unexpected", $release);
-            throw new Exception("Failed to create GitHub release for {$tagName}");
+            $ghMessage = $release['message'] ?? 'unknown error';
+            throw new Exception("GitHub could not create release {$tagName}: {$ghMessage}");
         }
 
         error_log("📦 New release created: {$tagName} (id: {$release['id']})");
