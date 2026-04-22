@@ -13,6 +13,13 @@ class Home extends TinyController
      */
     public function get($request, $response)
     {
+
+        if ($request->isMarkdownRequest()) {
+            $llmsContent = file_get_contents(tiny::config()->public_path . '/llms.txt');
+            $response->sendMarkdown($llmsContent, 200, true);
+            return;
+        }
+
         // Aggregate totals for the hero metrics displayed at the top of the homepage.
         $stats = tiny::db()->getOneQuery("
             SELECT
@@ -23,7 +30,7 @@ class Home extends TinyController
 
         // Fetch trending formations (last 7 days) - the hottest content right now
         $trendingFormations = tiny::db()->getQuery("
-            SELECT 
+            SELECT
                 f.id,
                 f.name,
                 f.description,
@@ -35,8 +42,8 @@ class Home extends TinyController
                 COALESCE(SUM(d.download_count), 0) as downloads_7d
             FROM formations f
             JOIN users u ON f.user_id = u.id
-            LEFT JOIN downloads d 
-                ON f.id = d.formation_id 
+            LEFT JOIN downloads d
+                ON f.id = d.formation_id
                 AND d.day >= DATE('now', '-7 days')
             WHERE f.deleted_at IS NULL
             GROUP BY f.id
@@ -47,7 +54,7 @@ class Home extends TinyController
 
         // Fetch the most recently published formations to power the "New arrivals" list.
         $recentFormations = tiny::db()->getQuery("
-            SELECT 
+            SELECT
                 f.*,
                 u.registry_username,
                 u.github_avatar
@@ -60,7 +67,7 @@ class Home extends TinyController
 
         // Surface the top downloaded formations so visitors see what the community values.
         $popularFormations = tiny::db()->getQuery("
-            SELECT 
+            SELECT
                 f.*,
                 u.registry_username,
                 u.github_avatar
