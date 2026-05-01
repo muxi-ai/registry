@@ -643,12 +643,12 @@ class ApiFormations extends TinyController
                 'published_at' => date('Y-m-d H:i:s'),
                 'body' => $formationData['description'] ?? "Release v{$version}",
                 'assets' => [[
-                    'browser_download_url' => "https://github.com/$fullRepoName/releases/download/v{$version}/formation.zip"
+                    'browser_download_url' => "https://github.com/$fullRepoName/v{$version}/formation.zip"
                 ]]
             ];
 
             $asset = [
-                'browser_download_url' => "https://github.com/$fullRepoName/releases/download/v{$version}/formation.zip"
+                'browser_download_url' => "https://github.com/$fullRepoName/v{$version}/formation.zip"
             ];
             */
 
@@ -861,7 +861,7 @@ class ApiFormations extends TinyController
     {
         $downloadUrl = null;
         if ($formation['latest_version']) {
-            $downloadUrl = "https://github.com/{$formation['github_repo']}/releases/download/v{$formation['latest_version']}/formation.zip";
+            $downloadUrl = "https://github.com/{$formation['github_repo']}/v{$formation['latest_version']}/formation.zip";
         }
 
         return [
