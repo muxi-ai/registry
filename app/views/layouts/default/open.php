@@ -43,7 +43,8 @@ $defaultRobots = 'noindex, nofollow';
             "url": "https://aroussi.com"
         },
         "sameAs": [
-            "https://www.wikidata.org/wiki/Q140196048"
+            "https://www.wikidata.org/wiki/Q140196048",
+            "https://github.com/muxi-org",
         ]
     }
     </script>
