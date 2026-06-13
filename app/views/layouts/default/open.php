@@ -27,6 +27,24 @@ $defaultRobots = 'noindex, nofollow';
         <link rel="alternate" type="text/markdown" href="<?php echo tiny::layout()->props('alternate'); ?>">
     <?php endif; ?>
 
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "@id": "https://muxi.org/#software",
+        "name": "MUXI",
+        "url": "https://muxi.org",
+        "applicationCategory": "DeveloperApplication",
+        "description": "Open-source infrastructure for production AI agents",
+        "author": {
+            "@type": "Person",
+            "@id": "https://aroussi.com/#person",
+            "name": "Ran Aroussi",
+            "url": "https://aroussi.com"
+        }
+    }
+    </script>
+
     <title><?php echo tiny::layout()->props('title') ? htmlspecialchars(strip_tags(tiny::layout()->props('title'))) : $defaultTitle; ?><?php echo $titleAppend; ?></title>
     <meta name="description" content="<?php echo tiny::layout()->props('description') ? htmlspecialchars(strip_tags(tiny::layout()->props('description'))) : $defaultDescription; ?>">
 
