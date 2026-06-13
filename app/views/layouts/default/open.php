@@ -44,7 +44,7 @@ $defaultRobots = 'noindex, nofollow';
         },
         "sameAs": [
             "https://www.wikidata.org/wiki/Q140196048",
-            "https://github.com/muxi-org",
+            "https://github.com/muxi-ai"
         ]
     }
     </script>
